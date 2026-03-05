@@ -1,2 +1,0 @@
-Revisited Home after visiting 8 screens. Data displays correctly (cached or refreshed).
-STATUS: PASS

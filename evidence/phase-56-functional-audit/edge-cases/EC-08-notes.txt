@@ -1,1 +1,0 @@
-Discover tab loaded. Search for gibberish returns empty results gracefully.

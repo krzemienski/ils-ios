@@ -1,3 +1,0 @@
-Active profile: Local Backend
-Active profile indicator visible and matches API.
-STATUS: PASS

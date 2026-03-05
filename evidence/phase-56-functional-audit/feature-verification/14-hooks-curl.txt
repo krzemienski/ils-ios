@@ -1,5 +1,0 @@
-Hook event types: ['SessionStart', 'PostToolUse']
-  SessionStart: 1 hook groups
-    type=command, cmd=node "/Users/nick/.claude/hooks/gsd-check-update.js"
-  PostToolUse: 1 hook groups
-    type=command, cmd=node "/Users/nick/.claude/hooks/gsd-context-monitor.js"

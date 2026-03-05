@@ -1,3 +1,0 @@
-Memory warning command: exit=0
-App survived memory pressure. UI functional after warning.
-STATUS: PASS

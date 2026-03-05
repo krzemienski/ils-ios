@@ -1,3 +1,0 @@
-Hook event types: ['SessionStart', 'PostToolUse']
-Total hook groups: 2
-Populated state

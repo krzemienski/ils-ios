@@ -1,6 +1,6 @@
-# ILS - Intelligent Language System
+# ILS - Intelligent Local Server
 
-> A native iOS & macOS client for [Claude Code](https://claude.ai/claude-code) with a Swift backend
+> A native iOS & macOS client for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with a Swift backend
 
 [![Build](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml/badge.svg)](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml)
 [![Swift](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
@@ -9,82 +9,99 @@
 [![Vapor](https://img.shields.io/badge/Vapor-4.0-purple.svg)](https://vapor.codes)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-ILS provides a mobile interface for interacting with Claude Code sessions, managing projects, viewing skills, and configuring MCP servers - all from your iPhone, iPad, or Mac.
+ILS provides a full-featured mobile and desktop interface for interacting with Claude Code — managing sessions, browsing projects, monitoring systems, and coordinating multi-agent teams from your iPhone, iPad, or Mac.
 
 ## Features
 
-- **Chat with Claude** - Real-time streaming responses via SSE with markdown rendering
-- **Session Management** - Create, view, fork, rename, and export chat sessions
-- **Project Browser** - Browse and manage Claude Code projects
-- **Skills Explorer** - View and search 1,500+ available Claude Code skills
-- **Plugin Management** - Browse marketplace, install, enable/disable Claude Code plugins
-- **MCP Server Status** - Monitor Model Context Protocol servers
-- **System Monitoring** - View CPU, memory, disk, network metrics and running processes
-- **Team Coordination** - Manage multi-agent teams with tasks and messaging
-- **Custom Themes** - Create and customize your own themes or choose from 12 built-in themes
-- **Cloudflare Tunnel** - Expose your local backend via secure tunnel
-- **macOS Native** - Full macOS app with 3-column NavigationSplitView, multi-window support, keyboard shortcuts, and Touch Bar
-- **Dark Mode** - Native iOS dark theme throughout
+### Core
+- **Chat with Claude** — Real-time SSE streaming with markdown rendering, code highlighting, and message history
+- **Session Management** — Create, view, fork, rename, export, and search across 22,000+ sessions
+- **Cross-Session Search** — Full-text search across all messages with filters (user/Claude/date/code)
 
-## Screenshots
+### Discovery & Management
+- **Browser** — Unified browser for MCP servers, Skills, Plugins, and Discover marketplace
+- **Project Browser** — Browse and manage 370+ Claude Code projects
+- **Plugin Marketplace** — Install, enable/disable plugins with GitHub search integration
+- **MCP Server Status** — Monitor Model Context Protocol servers with health checks
 
-| Dashboard | Sessions | Chat |
-|-----------|----------|------|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Sessions](docs/screenshots/sessions.png) | ![Chat](docs/screenshots/chat.png) |
+### Operations
+- **System Monitoring** — Live CPU, memory, disk, network metrics and 1,300+ process monitoring
+- **Agent Queue** — Queue, run, pause, and cancel background agent tasks
+- **Workflow Automation** — Create and schedule repeatable Claude Code workflows
+- **Team Coordination** — Manage multi-agent teams with tasks, messaging, and member control
+- **Host Profiles / Fleet** — Manage multiple backend host connections
+- **Hooks** — View and manage Claude Code hook configurations (23 hooks, 9 event types)
+
+### Configuration & UX
+- **Custom Themes** — 13 built-in themes (Obsidian, Neon Noir, Ember, etc.) plus custom theme editor
+- **Analytics Dashboard** — Session metrics, activity timeline, usage summaries over 7/30 day windows
+- **Usage Tracking** — Rate limit monitoring, message trends, session metrics
+- **Permissions** — Review and manage pending permission requests with history
+- **Activity Feed** — Timeline of session events and system activity
+- **Documentation** — In-app documentation browser with 15+ slash command references
+- **Settings** — Backend connection, remote access, appearance, keyboard shortcuts
+- **Split View** — Multi-pane layout for side-by-side screen viewing
+- **Cloudflare Tunnel** — Expose your local backend via secure tunnel for remote access
+
+### Platform
+- **iOS & iPad** — Full SwiftUI app with sidebar navigation and deep linking
+- **macOS Native** — 3-column NavigationSplitView, multi-window, keyboard shortcuts, Touch Bar
+- **Dark Mode** — Native dark theme throughout with 13 theme variants
+- **Premium Features** — Feature gating with StoreKit subscription support
 
 ## Architecture
-
-This monorepo contains both the Vapor-based REST API backend and the SwiftUI iOS application, sharing common models through the `ILSShared` library. See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design, data flow diagrams, and technical decisions.
 
 ```
 ils-ios/
 ├── Sources/                    # Swift Package (Backend + Shared)
-│   ├── ILSShared/             # Shared models (used by both)
-│   │   ├── Models/            # Session, Project, Message, etc.
-│   │   └── DTOs/              # Request/Response types
-│   └── ILSBackend/            # Vapor REST API server
-│       ├── App/               # Server configuration & routes
-│       ├── Controllers/       # API endpoint handlers
+│   ├── ILSShared/             # Shared models & DTOs (26 files)
+│   └── ILSBackend/            # Vapor REST API server (52 files)
+│       ├── App/               # Server config, routes, middleware
+│       ├── Controllers/       # 31 API controllers (216 endpoints)
 │       ├── Models/            # Fluent ORM database models
 │       ├── Migrations/        # Database schema migrations
-│       └── Services/          # Business logic (streaming, filesystem)
-├── ILSApp/                    # iOS & macOS Application (Xcode project)
-│   ├── ILSApp/                # iOS app target
-│   │   ├── Views/             # SwiftUI views by feature
-│   │   ├── ViewModels/        # MVVM view models
-│   │   ├── Services/          # API client, SSE client
-│   │   └── Theme/             # Design system
-│   └── ILSMacApp/             # macOS app target
-│       ├── Views/             # macOS-specific views
-│       ├── Managers/          # macOS managers
-│       └── TouchBar/          # Touch Bar support
-├── Tests/                     # Backend tests
+│       └── Services/          # Business logic, GitHub, filesystem
+├── ILSApp/                    # Xcode project
+│   ├── ILSApp/               # iOS app (149 Swift files)
+│   │   ├── Views/            # 24 screen directories
+│   │   ├── ViewModels/       # @Observable @MainActor view models
+│   │   ├── Services/         # APIClient, SSEClient, ICloudSync
+│   │   ├── Theme/            # ThemeSnapshot + 13 built-in themes
+│   │   ├── Widgets/          # WidgetKit extensions
+│   │   ├── LiveActivity/     # Live Activity support
+│   │   └── Intents/          # App Intents + Shortcuts
+│   └── ILSMacApp/            # macOS app (14 Swift files)
+├── fastlane/                  # CI/CD: build, beta, screenshots
+├── scripts/                   # Setup, backend service, automation
 ├── Package.swift              # Swift Package manifest
 └── ils.sqlite                 # SQLite database (auto-created)
 ```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design, data flow diagrams, and technical decisions.
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Detailed system design, data flow diagrams, and technical decisions |
-| [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) | Backend deployment options: dev, launchd, Homebrew, Docker, PM2 |
-| [docs/API.md](docs/API.md) | Full API reference (2,700+ lines) for all endpoints and schemas |
-| [DESIGN.md](DESIGN.md) | Design system, color tokens, typography, and UI component guidelines |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines, branching strategy, and PR checklist |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, data flow diagrams, technical decisions |
+| [docs/API.md](docs/API.md) | Full API reference — 216 endpoints across 31 controllers |
+| [docs/RUNNING_BACKEND.md](docs/RUNNING_BACKEND.md) | Backend deployment: dev, launchd, Homebrew, Docker, PM2 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Development roadmap and milestone tracking |
+| [DESIGN.md](DESIGN.md) | Design system: color tokens, typography, UI components |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines, branching, PR checklist |
 | [CHANGELOG.md](CHANGELOG.md) | Release history and version notes |
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
 
 ## Prerequisites
 
-- **macOS** 15.0+ (Sequoia or later)
+- **macOS** 15.0+ (Sequoia)
 - **Xcode** 16.0+ with iOS 18 SDK
 - **Swift** 5.10+
-- **Claude Code CLI** installed and configured (optional, for full functionality)
+- **Claude Code CLI** installed and configured (optional, for chat functionality)
 
 ## Quick Start
 
-### 1. Clone the Repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/krzemienski/ils-ios.git
@@ -94,36 +111,25 @@ cd ils-ios
 ### 2. Start the Backend
 
 ```bash
-# Build and run the backend server
 PORT=9999 swift run ILSBackend
-
-# You should see:
-# [ NOTICE ] Server started on http://0.0.0.0:9999
+# Server starts on http://0.0.0.0:9999
+# Database created automatically on first run
 ```
 
-The backend will:
-- Create `ils.sqlite` database on first run
-- Run database migrations automatically
-- Start listening on port 9999 (Note: avoid 8080, used by ralph-mobile)
-
-**Verify it's running:**
+Verify:
 ```bash
 curl http://localhost:9999/health
-# Returns: OK
-
-# Check sessions endpoint
-curl http://localhost:9999/api/v1/sessions
+# {"status":"healthy","checks":{"database":"ok","claudeCLI":"ok","filesystem":"ok"}}
 ```
 
 ### 3. Run the iOS App
 
-**Option A: Xcode (Recommended)**
 ```bash
 open ILSApp/ILSApp.xcodeproj
+# Select ILSApp scheme → Cmd+R
 ```
-Select the **ILSApp** scheme and press `Cmd+R` to build and run on Simulator.
 
-**Option B: Command Line**
+Or via command line:
 ```bash
 xcodebuild -project ILSApp/ILSApp.xcodeproj \
   -scheme ILSApp \
@@ -133,251 +139,149 @@ xcodebuild -project ILSApp/ILSApp.xcodeproj \
 
 ### 4. Run the macOS App
 
-```bash
-open ILSApp/ILSApp.xcodeproj
-```
-Select the **ILSMacApp** scheme and press `Cmd+R`.
+Select **ILSMacApp** scheme in Xcode → `Cmd+R`
 
-### 5. Configure Connection
+### 5. Connect
 
-The iOS app connects to `http://localhost:9999` by default.
+- **Simulator**: Connects to `localhost:9999` automatically
+- **Physical device**: Update host in Settings to your Mac's IP
 
-- **Simulator**: Works automatically (shares localhost with Mac)
-- **Physical Device**: Go to Settings in the app and update the host to your Mac's IP address
+## Deep Links
 
-## iOS App Structure
+The app supports the `ils://` URL scheme for navigation:
 
-The iOS app follows MVVM architecture with feature-based organization:
-
-```
-ILSApp/
-├── ILSAppApp.swift           # App entry point & global state
-├── ContentView.swift         # Root navigation container
-├── Views/
-│   ├── Root/                 # Root container views
-│   ├── Home/                 # Home dashboard screen
-│   ├── Chat/                 # Chat interface with streaming
-│   ├── Sessions/             # Session list & creation
-│   ├── Projects/             # Project browser
-│   ├── Skills/               # Skills explorer
-│   ├── Browser/              # Plugin browser & marketplace
-│   ├── Plugins/              # Plugin management
-│   ├── MCP/                  # MCP server status
-│   ├── System/               # System monitoring (CPU, memory, processes)
-│   ├── Teams/                # Team coordination
-│   ├── Fleet/                # Fleet management
-│   ├── Dashboard/            # Dashboard stats
-│   ├── Settings/             # App configuration
-│   ├── Themes/               # Custom theme management
-│   ├── Onboarding/           # First-run setup flow
-│   ├── Sidebar/              # Navigation sidebar
-│   └── Shared/               # Reusable components
-├── ViewModels/               # Business logic per feature
-├── Services/
-│   ├── APIClient.swift       # REST API communication
-│   └── SSEClient.swift       # Server-Sent Events for streaming
-└── Theme/
-    └── ILSTheme.swift        # Colors, fonts, spacing
-```
-
-## API Endpoints
-
-Base URL: `http://localhost:9999/api/v1`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/api/v1/sessions` | List all sessions (DB + external) |
-| `POST` | `/api/v1/sessions` | Create a new session |
-| `GET` | `/api/v1/sessions/:id` | Get a specific session |
-| `PUT` | `/api/v1/sessions/:id` | Rename a session |
-| `DELETE` | `/api/v1/sessions/:id` | Delete a session |
-| `POST` | `/api/v1/sessions/:id/fork` | Fork a session |
-| `GET` | `/api/v1/sessions/:id/messages` | Get session messages |
-| `GET` | `/api/v1/sessions/scan` | Scan for external sessions |
-| `POST` | `/api/v1/chat/stream` | Send message (SSE streaming) |
-| `POST` | `/api/v1/chat/cancel` | Cancel running chat |
-| `GET` | `/api/v1/projects` | List all projects |
-| `GET` | `/api/v1/skills` | List available skills |
-| `GET` | `/api/v1/skills/search` | Search skills by name/tags |
-| `GET` | `/api/v1/mcp` | List MCP servers |
-| `GET` | `/api/v1/plugins` | List installed plugins |
-| `GET` | `/api/v1/plugins/search` | Search plugins |
-| `GET` | `/api/v1/plugins/marketplace` | Browse plugin marketplace |
-| `POST` | `/api/v1/plugins/install` | Install a plugin |
-| `GET` | `/api/v1/config` | Get Claude configuration |
-| `GET` | `/api/v1/stats` | Dashboard statistics |
-| `GET` | `/api/v1/stats/recent` | Recent sessions for timeline |
-| `GET` | `/api/v1/settings` | Get user settings |
-| `GET` | `/api/v1/server/status` | Server connection status |
-| `GET` | `/api/v1/themes` | List custom themes |
-| `POST` | `/api/v1/themes` | Create a custom theme |
-| `PUT` | `/api/v1/themes/:id` | Update a custom theme |
-| `DELETE` | `/api/v1/themes/:id` | Delete a custom theme |
-| `GET` | `/api/v1/teams` | List all teams |
-| `POST` | `/api/v1/teams` | Create a new team |
-| `GET` | `/api/v1/teams/:name` | Get team details |
-| `DELETE` | `/api/v1/teams/:name` | Delete a team |
-| `POST` | `/api/v1/teams/:name/spawn` | Spawn a teammate |
-| `GET` | `/api/v1/teams/:name/tasks` | List team tasks |
-| `POST` | `/api/v1/teams/:name/tasks` | Create a team task |
-| `GET` | `/api/v1/system/metrics` | Current system metrics |
-| `GET` | `/api/v1/system/processes` | Running processes |
-| `GET` | `/api/v1/system/files` | Directory listing |
-| `WS` | `/api/v1/system/metrics/live` | Live metrics stream |
-| `GET` | `/api/v1/tunnel/status` | Cloudflare tunnel status |
-| `POST` | `/api/v1/tunnel/start` | Start tunnel |
-| `POST` | `/api/v1/tunnel/stop` | Stop tunnel |
-
-## Shared Models
-
-Both the iOS app and backend use the same model definitions from `ILSShared`:
-
-| Model | Purpose |
-|-------|---------|
-| `ChatSession` | Chat session with metadata |
-| `Message` | Individual chat message |
-| `Project` | Claude Code project with path |
-| `Skill` | Skill definition and metadata |
-| `MCPServer` | MCP server configuration |
-| `Plugin` | Installed plugin information |
-| `ClaudeConfig` | Claude Code settings |
-| `StreamMessage` | Real-time streaming events |
-| `CustomTheme` | Custom theme definition |
-| `FleetHost` | Remote host configuration |
-| `CLIMessage` | Claude CLI message structure |
-| `ContentBlocks` | Message content blocks |
-| `ServerConnection` | Server connection state |
-| `SetupProgress` | Setup workflow progress |
-
-## Development
-
-### Running Tests
-
-**Backend Tests:**
-```bash
-swift test
-```
-
-**iOS App (Xcode):**
-```bash
-xcodebuild test \
-  -project ILSApp/ILSApp.xcodeproj \
-  -scheme ILSApp \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
-```
-
-### Database Management
-
-The backend uses SQLite stored at `ils.sqlite` in the project root.
-
-**Reset database:**
-```bash
-rm ils.sqlite
-swift run ILSBackend  # Recreates with fresh migrations
-```
-
-**Inspect database:**
-```bash
-sqlite3 ils.sqlite ".tables"
-sqlite3 ils.sqlite ".schema sessions"
-```
-
-### Adding New Features
-
-1. **Add shared model** in `Sources/ILSShared/Models/`
-2. **Add backend controller** in `Sources/ILSBackend/Controllers/`
-3. **Add iOS view model** in `ILSApp/ViewModels/`
-4. **Add iOS view** in `ILSApp/Views/`
-
-## URL Schemes
-
-The app supports deep linking via the `ils://` URL scheme:
-
-| URL | Action |
+| URL | Screen |
 |-----|--------|
-| `ils://home` | Open Home tab |
-| `ils://sessions` | Open Sessions tab |
-| `ils://projects` | Open Projects tab |
-| `ils://plugins` | Open Plugins/Browser tab |
-| `ils://mcp` | Open MCP Servers tab |
-| `ils://skills` | Open Skills tab |
-| `ils://system` | Open System monitoring tab |
-| `ils://fleet` | Open Fleet management tab |
-| `ils://teams` | Open Teams tab |
-| `ils://settings` | Open Settings tab |
+| `ils://home` | Home dashboard |
+| `ils://sessions/{uuid}` | Specific chat session |
+| `ils://unified-sessions` | All sessions list |
+| `ils://browser` | Browser (MCP/Skills/Plugins) |
+| `ils://system` | System monitor |
+| `ils://terminal` | Terminal |
+| `ils://activity` | Activity feed |
+| `ils://documentation` | Documentation |
+| `ils://search` | Cross-session search |
+| `ils://permissions` | Permissions |
+| `ils://teams` | Teams |
+| `ils://agent-queue` | Agent queue |
+| `ils://fleet` | Host profiles |
+| `ils://usage` | Usage metrics |
+| `ils://backends` | Backend management |
+| `ils://hooks` | Hooks configuration |
+| `ils://themes` | Theme browser |
+| `ils://settings` | Settings |
+| `ils://analytics` | Analytics dashboard |
+| `ils://workflows` | Workflow automation |
+| `ils://split-view` | Split view |
 
-## Troubleshooting
+## API Overview
 
-### Backend won't start
+Base URL: `http://localhost:9999/api/v1` — 216 endpoints across 31 controllers.
 
-```bash
-# Check if port 9999 is in use
-lsof -i :9999
+| Controller | Endpoints | Description |
+|------------|-----------|-------------|
+| Sessions | 26 | CRUD, fork, search, export, scan, messages |
+| Projects | 7 | CRUD, bulk delete, project sessions |
+| Chat | 3 | SSE streaming, permissions, cancel |
+| Skills | 10 | List, search, install, enable/disable |
+| MCP | 14 | CRUD, search, marketplace, health, logs |
+| Plugins | 11 | CRUD, search, marketplace, GitHub search |
+| Themes | 5 | CRUD for custom themes |
+| Teams | 12 | CRUD, spawn, tasks, messages, members |
+| System | 14 | Metrics, processes, files, version, limits |
+| Analytics | 5 | Activity, sessions, skills, summary, export |
+| Workflows | 14 | CRUD, execute, schedules, pause/cancel |
+| Agent Queue | 11 | CRUD, templates, reorder, pause/resume |
+| Automation Rules | 7 | CRUD, executions, templates |
+| Permissions | 4 | Pending, history, decide, clear |
+| Config | 6 | Get, update, validate, export |
+| Health | 3 | Health, ready, live |
+| Usage | 2 | Usage stats, export |
+| Activity Feed | 2 | Events, SSE stream |
+| Suggestions | 6 | Sessions, skills, abandoned, prompts |
+| Terminal | 3 | Execute, config, reset |
+| SSH | 4 | Connect, disconnect, status, execute |
+| Host Profiles | 9 | CRUD, activate, health, fleet |
+| Tunnel | 5 | Start, stop, status, health, logs |
+| Templates | 6 | CRUD, bulk delete |
+| Checkpoints | 4 | CRUD, restore |
+| Recordings | 7 | CRUD, events, export |
+| Session Health | 4 | Summary, export, per-session, projects |
+| Session Backup | 4 | Checkpoints, restore |
+| Stats | 4 | Dashboard stats, recent, settings, server |
+| Data Erasure | 1 | Full data reset |
+| Pairing | 2 | QR code generation |
 
-# Kill existing process if needed
-kill -9 <PID>
-```
+Full reference: [docs/API.md](docs/API.md)
 
-### iOS can't connect to backend
+## CI/CD
 
-1. Verify backend is running: `curl http://localhost:9999/health`
-2. For physical device, use your Mac's IP address in Settings
-3. Ensure both devices are on the same network
+ILS uses [Fastlane](https://fastlane.tools/) for builds and TestFlight:
 
-### Build errors
-
-```bash
-# Clean Swift Package cache
-rm -rf .build
-swift package resolve
-
-# Clean Xcode build
-rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
-```
-
-## Scripts
-
-The `scripts/` directory contains automation tools:
-
-| Script | Purpose |
-|--------|---------|
-| `setup.sh` | Initial project setup and dependencies |
-| `install-backend-service.sh` | Install backend as system service |
-| `run_regression_tests.sh` | Run full regression test suite |
-| `api-audit.sh` | Audit API endpoint coverage between backend and iOS client |
-| `reinstall-plugins.sh` | Reinstall all plugins |
-| `bootstrap-remote.sh` | Bootstrap remote host setup |
-| `remote-access` | Remote access configuration |
+| Lane | Command | Purpose |
+|------|---------|---------|
+| `build` | `bundle exec fastlane build` | Debug iOS build |
+| `beta` | `bundle exec fastlane beta` | Increment build, upload to TestFlight |
+| `screenshots` | `bundle exec fastlane screenshots` | Capture App Store screenshots |
+| `build_macos` | `bundle exec fastlane build_macos` | Debug macOS build |
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Backend Framework | [Vapor 4](https://vapor.codes) |
-| Database | SQLite via [Fluent](https://docs.vapor.codes/fluent/overview/) |
-| iOS UI | SwiftUI (iOS 17+) |
-| macOS UI | SwiftUI (macOS 14+) |
-| Architecture | MVVM |
+| Backend | [Vapor 4](https://vapor.codes) |
+| Database | SQLite via [Fluent ORM](https://docs.vapor.codes/fluent/overview/) |
+| iOS/macOS UI | SwiftUI (iOS 17+ / macOS 14+) |
+| Architecture | MVVM with `@Observable` |
 | Networking | URLSession + SSE |
-| Streaming | Server-Sent Events |
 | Code Highlighting | [Splash](https://github.com/JohnSundell/Splash) |
-| YAML Parsing | [Yams](https://github.com/jpsim/Yams) |
+| YAML | [Yams](https://github.com/jpsim/Yams) |
+| CI/CD | [Fastlane](https://fastlane.tools/) |
+| Subscriptions | StoreKit 2 |
+
+## Development
+
+### Database
+
+```bash
+# Reset database
+rm ils.sqlite && PORT=9999 swift run ILSBackend
+
+# Inspect
+sqlite3 ils.sqlite ".tables"
+```
+
+### Adding Features
+
+1. Add shared model in `Sources/ILSShared/Models/`
+2. Add backend controller in `Sources/ILSBackend/Controllers/`
+3. Add view model in `ILSApp/ILSApp/ViewModels/`
+4. Add view in `ILSApp/ILSApp/Views/`
+5. Add sidebar nav item in `SidebarView.swift`
+6. Add deep link in `AppState.swift`
+
+### Troubleshooting
+
+```bash
+# Backend won't start
+lsof -i :9999        # Check port
+kill -9 <PID>        # Kill stale process
+
+# Clean builds
+rm -rf .build        # Swift Package cache
+rm -rf ~/Library/Developer/Xcode/DerivedData/ILSApp-*
+```
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [Claude Code](https://claude.ai/claude-code) by Anthropic
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by Anthropic
 - [Vapor](https://vapor.codes) Swift web framework
 - [SwiftUI](https://developer.apple.com/xcode/swiftui/) by Apple

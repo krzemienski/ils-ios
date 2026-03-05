@@ -1,3 +1,0 @@
-Total sessions: 22432
-Large data set confirmed
-Sessions list rendered. LazyVStack handles pagination. No crash.

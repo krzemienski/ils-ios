@@ -1,3 +1,0 @@
-snake_case found: []
-camelCase found: ['messageCount', 'createdAt']
-PASS

@@ -74,12 +74,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-03-05
+
+### Added
+
+#### iOS App — 12 New Screens
+- **Workflow Automation** — Create, schedule, execute, pause/cancel repeatable Claude Code workflows
+- **Analytics Dashboard** — Session metrics, activity timeline, usage summaries (7/30 day)
+- **Agent Queue** — Queue, run, pause, resume, cancel background agent tasks
+- **Cross-Session Search** — Full-text search across all messages with user/Claude/date/code filters
+- **Activity Feed** — Timeline of session events and system activity
+- **Permissions Manager** — Review pending permission requests with approval history
+- **Hooks Viewer** — Browse 23 Claude Code hooks across 9 event types
+- **Usage Metrics** — Rate limit monitoring, message trends, session statistics
+- **Documentation Browser** — In-app reference for 15+ slash commands
+- **Backend Manager** — Multi-backend connection management
+- **Split View** — Multi-pane layout for side-by-side screens
+- **Terminal** — Execute commands with quick action chips (Status, ls, pwd, Git)
+
+#### iOS App — Enhancements
+- **Smart Paste** — Auto-detect pasted content type (code, URLs, JSON) with formatting
+- **iCloud Sync** — Auto-disable gracefully when iCloud account unavailable
+- **Sidebar Navigation** — All 22 screens accessible via sidebar with Workflows added
+- **Premium Features** — Feature gating with StoreKit 2 subscription support
+- **WidgetKit Extensions** — Home screen widgets
+- **Live Activity** — Real-time session status on Lock Screen
+- **App Intents** — Siri Shortcuts integration
+
+#### Backend — 15 New Controllers (86 new endpoints)
+- WorkflowsController (14 endpoints) — CRUD, execute, schedules, pause/cancel
+- AgentQueueController (11) — CRUD, templates, reorder, pause/resume/cancel
+- AnalyticsController (5) — Activity, sessions, skills, summary, export
+- AutomationRulesController (7) — CRUD, executions, templates
+- PermissionsController (4) — Pending, history, decide, clear
+- ActivityFeedController (2) — Events list, SSE stream
+- UsageController (2) — Stats, export
+- SuggestionsController (6) — Sessions, skills, abandoned, prompts, feedback
+- TerminalController (3) — Execute, config, reset
+- SSHController (4) — Connect, disconnect, status, execute
+- SessionHealthController (4) — Summary, export, per-session, projects
+- SessionBackupController (4) — Checkpoints, restore
+- RecordingController (7) — CRUD, events, export
+- CheckpointsController (4) — CRUD, restore
+- HostProfileController (9) — Fleet management, activation, health
+
+#### Backend — Improvements
+- Graceful degradation for GitHub search endpoints (return empty results vs 502)
+- Auto-run pending database migrations on startup
+
+#### macOS App
+- Full macOS app with NavigationSplitView, multi-window, keyboard shortcuts, Touch Bar
+
+### Fixed
+- Workflows screen unreachable — missing sidebar nav item and deep link handler
+- iCloud sync showing false "Sync error" on simulator/devices without iCloud accounts
+- ChatInputBar broken .onPaste smart paste integration removed
+- Cross-platform build fixes after worktree merges
+- GitHub search endpoints (skills, MCP, plugins) returning 502 when API unreachable
+
+### Changed
+- Backend port default: 9999 (was 9090)
+- API prefix: `/api/v1` auto-added by APIClient
+- Architecture: `@Observable` replaces `ObservableObject`, `ThemeSnapshot` struct replaces protocol
+- Navigation: `ActiveScreen` enum with 22 cases replaces tab-based navigation
+
+---
+
 ## [Unreleased]
 
 ### Planned
-- iPad optimization with split view
 - watchOS companion app
 - Push notifications for session activity
 - Offline mode with sync
-- Multiple backend profiles
-- Export/import session history

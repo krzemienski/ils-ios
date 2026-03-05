@@ -1,1 +1,0 @@
-{"error":"Missing required field: scope","reason":"Missing required field: scope","code":"VALIDATION_ERROR","success":false}App should show error state or toast, not crash

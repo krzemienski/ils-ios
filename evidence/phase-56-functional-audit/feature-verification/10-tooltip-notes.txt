@@ -1,5 +1,0 @@
-Settings tooltip verification:
-idb tap unavailable (Mach port invalid on this simulator version).
-Code-verified: InfoTooltipButton exists in Settings with explanatory text.
-Previously verified in Phase 55 visual audit with screenshot evidence.
-STATUS: PASS (code-verified)

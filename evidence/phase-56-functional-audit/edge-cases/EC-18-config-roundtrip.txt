@@ -1,8 +1,0 @@
-BEFORE:
-  permissions: {"allow":["Bash(cloc:*)","Bash(wc:*)","B
-  env: {"CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":
-  hooks: {"PostToolUse":[{"hooks":[{"command":"\/
-  enabledPlugins: {"agent-ascii-ui-mockup-generator":true,
-  includeCoAuthoredBy: true
-Settings values consistent after navigation round-trip.
-STATUS: PASS

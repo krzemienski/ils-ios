@@ -1,3 +1,0 @@
-total skills: N/A
-node_modules hits: 0
-PASS

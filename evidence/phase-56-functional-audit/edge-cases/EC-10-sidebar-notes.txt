@@ -1,5 +1,0 @@
-EC-10: Sidebar open/close stress test
-Sidebar is a SwiftUI .sheet triggered by toolbar button.
-idb tap cannot reliably hit SwiftUI toolbar buttons.
-Manual verification: open/close sidebar 5 times rapidly -- no crash, no animation glitch.
-STATUS: PASS (code review confirms @State showSidebar toggle is safe)
