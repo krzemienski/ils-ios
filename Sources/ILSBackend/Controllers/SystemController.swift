@@ -1,4 +1,5 @@
 import Vapor
+import Fluent
 import ILSShared
 
 /// Actor for safe WebSocket cancellation signaling across concurrency boundaries.
@@ -15,6 +16,8 @@ actor WebSocketCancellation {
 /// - `GET /system/processes` — running processes with optional sort
 /// - `GET /system/files` — directory listing restricted to home
 /// - `WS  /system/metrics/live` — live metrics stream every 2 seconds
+/// - `GET /system/version/current` — current Claude Code CLI version
+/// - `GET /system/version/history` — version history records
 struct SystemController: RouteCollection {
     let metricsService = SystemMetricsService()
 
@@ -26,6 +29,9 @@ struct SystemController: RouteCollection {
         system.get("files", use: self.files)
         system.webSocket("metrics", "live", onUpgrade: self.liveMetrics)
         system.get("metrics", "source", use: self.metricsSource)
+
+        system.get("version", "current", use: self.currentVersion)
+        system.get("version", "history", use: self.versionHistory)
     }
 
     // MARK: - REST Endpoints
@@ -199,6 +205,44 @@ struct SystemController: RouteCollection {
         let data = try encoder.encode(response)
         return Response(status: .ok, headers: ["Content-Type": "application/json"], body: .init(data: data))
     }
+
+    // MARK: - Version Endpoints
+
+    /// GET /system/version/current — returns the most recent version record.
+    @Sendable
+    func currentVersion(req: Request) async throws -> APIResponse<CurrentVersionResponse> {
+        guard let latest = try await VersionHistoryModel.query(on: req.db)
+            .sort(\.$detectedAt, .descending)
+            .first() else {
+            throw Abort(.notFound, reason: "No version history found")
+        }
+
+        let response = CurrentVersionResponse(
+            version: latest.version,
+            installMethod: latest.installMethod,
+            binaryPath: nil,
+            detectedAt: latest.detectedAt ?? Date()
+        )
+
+        return APIResponse(success: true, data: response)
+    }
+
+    /// GET /system/version/history — returns all version records ordered by detection date.
+    @Sendable
+    func versionHistory(req: Request) async throws -> APIResponse<VersionHistoryResponse> {
+        let records = try await VersionHistoryModel.query(on: req.db)
+            .sort(\.$detectedAt, .descending)
+            .all()
+
+        let entries = records.map { $0.toShared() }
+
+        let response = VersionHistoryResponse(
+            entries: entries,
+            totalCount: entries.count
+        )
+
+        return APIResponse(success: true, data: response)
+    }
 }
 
 // MARK: - Live Metrics WebSocket Message
@@ -234,3 +278,5 @@ private struct LiveMetricsMessage: Codable, Sendable {
 extension SystemMetricsResponse: Content {}
 extension ProcessInfoResponse: Content {}
 extension FileEntryResponse: Content {}
+extension CurrentVersionResponse: Content {}
+extension VersionHistoryResponse: Content {}
