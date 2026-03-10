@@ -179,11 +179,6 @@ struct ErrorPatternsView: View {
                         Task {
                             await viewModel.resolvePattern(pattern)
                         }
-                    },
-                    onApplyFix: { fix in
-                        // Fix application requires a session — not available here;
-                        // the action is surfaced but disabled without a session ID.
-                        // Navigation to a session is handled by the caller (e.g. AnalyticsView).
                     }
                 )
             }
@@ -320,8 +315,6 @@ private struct ErrorPatternRow: View {
     let onToggle: () -> Void
     /// Callback fired when the "Mark Resolved" button is tapped.
     let onResolve: () -> Void
-    /// Callback fired when a suggested fix row is tapped.
-    let onApplyFix: (ErrorFix) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -477,51 +470,33 @@ private struct ErrorPatternRow: View {
         .padding(.bottom, theme.spacingXS)
     }
 
-    /// A single suggested fix row with confidence bar and apply button.
+    /// A single suggested fix row with confidence bar.
     private func fixRow(fix: ErrorFix) -> some View {
-        HStack(alignment: .top, spacing: theme.spacingSM) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(fix.description)
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textPrimary)
-                    .lineLimit(2)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(fix.description)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+                .lineLimit(2)
 
-                // Confidence progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(theme.bgSecondary)
-                            .frame(height: 4)
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(confidenceColor(for: fix.confidence).gradient)
-                            .frame(
-                                width: geo.size.width * min(max(fix.confidence, 0), 1),
-                                height: 4
-                            )
-                    }
+            // Confidence progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(theme.bgSecondary)
+                        .frame(height: 4)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(confidenceColor(for: fix.confidence).gradient)
+                        .frame(
+                            width: geo.size.width * min(max(fix.confidence, 0), 1),
+                            height: 4
+                        )
                 }
-                .frame(height: 4)
-
-                Text("\(fix.successCount) successful • \(fix.failureCount) failed")
-                    .font(.system(size: 10, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
             }
+            .frame(height: 4)
 
-            Spacer()
-
-            Button {
-                onApplyFix(fix)
-            } label: {
-                Text("Apply")
-                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(theme.textOnAccent)
-                    .padding(.horizontal, theme.spacingSM)
-                    .padding(.vertical, theme.spacingXS)
-                    .background(theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Apply fix: \(fix.description)")
+            Text("\(fix.successCount) successful • \(fix.failureCount) failed")
+                .font(.system(size: 10, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
         }
         .padding(.horizontal, theme.spacingMD)
         .padding(.vertical, theme.spacingXS)

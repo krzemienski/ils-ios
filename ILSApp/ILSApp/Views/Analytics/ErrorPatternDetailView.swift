@@ -411,7 +411,7 @@ struct ErrorPatternDetailView: View {
                 Text("Fix Applied")
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
-                Text("The fix prompt has been sent to your Claude session.")
+                Text("Fix recorded. Use the fix prompt in your Claude session to apply this fix.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
             }
