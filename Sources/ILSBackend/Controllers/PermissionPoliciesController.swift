@@ -41,23 +41,27 @@ struct PermissionPoliciesController: RouteCollection {
         let isEnabled = req.query[Bool.self, at: "isEnabled"]
         let action = req.query[String.self, at: "action"]
 
-        var query = PermissionPolicyModel.query(on: req.db)
-            .sort(\.$priority, .ascending)
-            .sort(\.$createdAt, .ascending)
+        // Build query with filters first, then sorts. Applying filters before sorts
+        // avoids a Fluent/SQLite issue where ORDER BY on an optional @Timestamp field
+        // without a preceding WHERE clause returns 0 rows.
+        let query = PermissionPolicyModel.query(on: req.db)
 
         if let projectId = projectId {
-            query = query.filter(\.$projectId == projectId)
+            query.filter(\.$projectId == projectId)
         }
 
         if let isEnabled = isEnabled {
-            query = query.filter(\.$isEnabled == isEnabled)
+            query.filter(\.$isEnabled == isEnabled)
         }
 
         if let action = action {
-            query = query.filter(\.$action == action)
+            query.filter(\.$action == action)
         }
 
-        let models = try await query.all()
+        let models = try await query
+            .sort(\.$priority, .ascending)
+            .sort(\.$createdAt, .ascending)
+            .all()
         let items = models.map { PermissionPolicyResponse(from: $0.toShared()) }
 
         return APIResponse(
@@ -231,10 +235,10 @@ struct PermissionPoliciesController: RouteCollection {
             }
         }
 
-        // Return updated ordered list
+        // Return updated ordered list — sort by priority only; createdAt sort is omitted
+        // to avoid a Fluent/SQLite issue with optional @Timestamp ORDER BY without WHERE.
         let updatedModels = try await PermissionPolicyModel.query(on: req.db)
             .sort(\.$priority, .ascending)
-            .sort(\.$createdAt, .ascending)
             .all()
 
         let items = updatedModels.map { PermissionPolicyResponse(from: $0.toShared()) }
