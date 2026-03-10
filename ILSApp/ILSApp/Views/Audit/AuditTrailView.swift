@@ -51,18 +51,9 @@ struct AuditTrailView: View {
         }
         .sheet(item: $selectedAction) { action in
             AuditActionDetailSheet(action: action) { actionToRollback in
-                viewModel.requestRollback(action: actionToRollback)
+                // Execute directly — detail sheet already confirmed with the user
+                Task { await viewModel.rollbackAction(actionId: actionToRollback.id) }
             }
-        }
-        .alert("Rollback This Action?", isPresented: $viewModel.showRollbackConfirmation, presenting: viewModel.pendingRollbackAction) { action in
-            Button("Rollback", role: .destructive) {
-                Task { await viewModel.executeRollback() }
-            }
-            Button("Cancel", role: .cancel) {
-                viewModel.cancelRollback()
-            }
-        } message: { action in
-            Text(rollbackAlertMessage(for: action))
         }
         .alert("Rollback Failed", isPresented: Binding(
             get: { viewModel.rollbackError != nil },
@@ -300,19 +291,6 @@ struct AuditTrailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - Helpers
-
-    private func rollbackAlertMessage(for action: AuditAction) -> String {
-        if let filePath = action.filePath, !filePath.isEmpty {
-            let fileName = (filePath as NSString).lastPathComponent
-            return "This will restore \"\(fileName)\" to its state before this action. The rollback will be recorded in the audit trail."
-        }
-        if let command = action.command, !command.isEmpty {
-            let preview = String(command.prefix(60))
-            return "This will attempt to reverse: \(preview). The rollback will be recorded in the audit trail."
-        }
-        return "This will attempt to reverse the action. The rollback will be recorded in the audit trail."
-    }
 }
 
 // MARK: - AuditActionType Display Helpers

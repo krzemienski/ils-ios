@@ -200,14 +200,24 @@ class AuditTrailViewModel: BaseViewModel {
 
         do {
             let path = "/audit-actions/\(actionId.uuidString.lowercased())/rollback"
-            let response: APIResponse<RollbackResultItem> = try await client.post(
+            let response: APIResponse<RollbackResponse> = try await client.post(
                 path,
                 body: EmptyBody()
             )
             isRollingBack = false
 
-            guard let result = response.data, result.succeeded else {
-                let msg = response.data?.errorMessage ?? "Rollback failed"
+            guard let rollbackResponse = response.data,
+                  let result = rollbackResponse.results.first else {
+                rollbackError = RollbackError.failed("Rollback returned no result")
+                AppLogger.shared.error(
+                    "Rollback failed: no result returned",
+                    category: "audit"
+                )
+                return false
+            }
+
+            guard result.succeeded else {
+                let msg = result.errorMessage ?? "Rollback failed"
                 rollbackError = RollbackError.failed(msg)
                 AppLogger.shared.error(
                     "Rollback failed: \(msg)",
