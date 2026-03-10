@@ -379,7 +379,7 @@ struct BrowserView: View {
                 Task { await mcpVM.toggleEnabled(server) }
             } label: {
                 Image(systemName: server.isEnabled ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.system(size: theme.fontTitle3))
                     .foregroundStyle(server.isEnabled ? theme.success : theme.textTertiary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
@@ -453,7 +453,7 @@ struct BrowserView: View {
             } label: {
                 Image(systemName: favoritesManager.isFavorite(skillName: skill.name) ? "star.fill" : "star")
                     .foregroundStyle(favoritesManager.isFavorite(skillName: skill.name) ? theme.warning : theme.textTertiary)
-                    .font(.system(size: 18))
+                    .font(.system(size: theme.fontBody))
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
@@ -466,7 +466,7 @@ struct BrowserView: View {
             } label: {
                 Image(systemName: skill.isActive ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(skill.isActive ? theme.success : theme.textTertiary)
-                    .font(.system(size: 22))
+                    .font(.system(size: theme.fontTitle3))
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
@@ -888,7 +888,7 @@ struct BrowserView: View {
                 } else if entries.isEmpty {
                     VStack(spacing: theme.spacingSM) {
                         Image(systemName: "server.rack")
-                            .font(.system(size: 40))
+                            .font(.system(size: theme.fontTitle1 * 1.2))
                             .foregroundStyle(theme.textTertiary.opacity(0.5))
                         Text("MCP Marketplace")
                             .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -1157,7 +1157,7 @@ struct BrowserView: View {
     private func emptyState(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: icon)
-                .font(.system(size: 40, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle1 * 1.2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
             Text(title)
                 .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
@@ -1188,7 +1188,7 @@ struct BrowserView: View {
     ) -> some View {
         VStack(spacing: theme.spacingMD) {
             Image(systemName: icon)
-                .font(.system(size: 36))
+                .font(.system(size: theme.fontTitle1))
                 .foregroundStyle(theme.accent.opacity(0.6))
                 .padding(.bottom, theme.spacingXS)
 
@@ -1437,7 +1437,7 @@ struct PluginRowView: View, Equatable {
                 } label: {
                     Image(systemName: plugin.isEnabled ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(plugin.isEnabled ? theme.success : theme.textTertiary)
-                        .font(.system(size: 22))
+                        .font(.system(size: theme.fontTitle3))
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }

@@ -154,12 +154,14 @@ actor KeychainService {
     // TOCTOU risk between delete-then-add in saveSync is theoretical only —
     // the Keychain enforces uniqueness at the OS level via securityd XPC.
 
+    private static let defaultServiceName = "com.ils.app"
+
     /// Synchronous Keychain read — safe to call from non-async code (e.g. actor init).
     /// Uses the default `com.ils.app` service name.
     nonisolated static func loadSync(key: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.ils.app",
+            kSecAttrService as String: defaultServiceName,
             kSecAttrAccount as String: key,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
@@ -181,14 +183,14 @@ actor KeychainService {
         // Delete existing item first
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.ils.app",
+            kSecAttrService as String: defaultServiceName,
             kSecAttrAccount as String: key
         ]
         SecItemDelete(deleteQuery as CFDictionary)
 
         let addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.ils.app",
+            kSecAttrService as String: defaultServiceName,
             kSecAttrAccount as String: key,
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
@@ -200,7 +202,7 @@ actor KeychainService {
     nonisolated static func deleteSync(key: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.ils.app",
+            kSecAttrService as String: defaultServiceName,
             kSecAttrAccount as String: key
         ]
         SecItemDelete(query as CFDictionary)

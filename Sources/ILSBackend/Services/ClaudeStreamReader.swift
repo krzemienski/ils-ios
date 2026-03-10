@@ -4,6 +4,26 @@ import Foundation
 import ILSShared
 import Logging
 
+/// Thread-safe boolean flag for cross-queue timeout signaling.
+/// Uses `os_unfair_lock` via `OSAllocatedUnfairLock` to synchronize reads/writes
+/// across DispatchQueue.global() (timeout work items) and readQueue (stdout reader).
+final class AtomicFlag: @unchecked Sendable {
+    private var _value = false
+    private let lock = NSLock()
+
+    var value: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return _value
+    }
+
+    func set() {
+        lock.lock()
+        _value = true
+        lock.unlock()
+    }
+}
+
 /// Reads and decodes NDJSON stdout from Claude CLI/SDK processes into StreamMessages.
 ///
 /// Provides shared stdout reading logic used by both the Agent SDK and CLI execution
@@ -44,7 +64,7 @@ enum ClaudeStreamReader {
         errorPipe: Pipe,
         process: Process,
         sessionId: String,
-        didTimeout: inout Bool,
+        didTimeout: AtomicFlag,
         timeoutWork: DispatchWorkItem,
         totalTimeoutWork: DispatchWorkItem,
         continuation: AsyncThrowingStream<StreamMessage, Error>.Continuation,
@@ -96,7 +116,7 @@ enum ClaudeStreamReader {
 
         let exitCode = process.terminationStatus
         if exitCode != 0 {
-            if didTimeout {
+            if didTimeout.value {
                 logger.debug("Process killed by timeout (exit \(exitCode))")
                 continuation.yield(.error(StreamError(
                     code: "TIMEOUT",

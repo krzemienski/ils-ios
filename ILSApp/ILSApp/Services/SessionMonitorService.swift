@@ -45,7 +45,7 @@ class SessionMonitorService {
         sessionNames[session.id] = session.displayName
         self.apiClient = apiClient
         // Persist base URL so a fresh BGTask process can reconstruct the client.
-        UserDefaults.standard.set(apiClient.baseURL, forKey: Self.serverURLKey)
+        KeychainService.saveSync(key: Self.serverURLKey, value: apiClient.baseURL)
         persistToDisk()
         AppLogger.shared.info(
             "SessionMonitor: now watching \(monitoredSessionIDs.count) session(s)",
@@ -158,7 +158,7 @@ class SessionMonitorService {
         // This handles the case where the app was terminated by iOS and later relaunched
         // by BGTaskScheduler — apiClient is nil in the new process.
         if apiClient == nil,
-           let urlString = UserDefaults.standard.string(forKey: Self.serverURLKey) {
+           let urlString = KeychainService.loadSync(key: Self.serverURLKey) {
             self.apiClient = APIClient(baseURL: urlString)
         }
 

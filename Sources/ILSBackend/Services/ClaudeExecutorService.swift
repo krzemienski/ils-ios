@@ -183,10 +183,10 @@ actor ClaudeExecutorService {
             }
 
             // --- Timeout mechanism ---
-            var didTimeout = false
+            let didTimeout = AtomicFlag()
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.set()
                 Self.logger.debug("TIMEOUT: No SDK data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -195,7 +195,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.set()
                     Self.logger.debug("TOTAL TIMEOUT: SDK process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -209,7 +209,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,
@@ -285,10 +285,10 @@ actor ClaudeExecutorService {
                 return
             }
 
-            var didTimeout = false
+            let didTimeout = AtomicFlag()
 
             let timeoutWork = DispatchWorkItem {
-                didTimeout = true
+                didTimeout.set()
                 Self.logger.debug("TIMEOUT: No CLI data within 30s")
                 process.terminate()
                 outputPipe.fileHandleForReading.closeFile()
@@ -297,7 +297,7 @@ actor ClaudeExecutorService {
 
             let totalTimeoutWork = DispatchWorkItem {
                 if process.isRunning {
-                    didTimeout = true
+                    didTimeout.set()
                     Self.logger.debug("TOTAL TIMEOUT: CLI process >5min")
                     process.terminate()
                     outputPipe.fileHandleForReading.closeFile()
@@ -311,7 +311,7 @@ actor ClaudeExecutorService {
                     errorPipe: errorPipe,
                     process: process,
                     sessionId: sessionId,
-                    didTimeout: &didTimeout,
+                    didTimeout: didTimeout,
                     timeoutWork: timeoutWork,
                     totalTimeoutWork: totalTimeoutWork,
                     continuation: continuation,

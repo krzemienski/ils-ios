@@ -131,6 +131,7 @@ struct UserMessageCard: View, Equatable {
             }
         }
         .accessibilityLabel("You said: \(message.text)")
+        .accessibilityHint("Long press for options")
     }
 
     // MARK: - Attachment helpers
