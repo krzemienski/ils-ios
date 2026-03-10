@@ -53,10 +53,12 @@ struct BrowserView: View {
                 .padding(.horizontal, theme.spacingMD)
                 .padding(.vertical, theme.spacingSM)
 
-            // Search bar
-            searchBar
-                .padding(.horizontal, theme.spacingMD)
-                .padding(.bottom, theme.spacingSM)
+            // Search bar (hidden on Discover — it has its own GitHub search)
+            if segment != .discover {
+                searchBar
+                    .padding(.horizontal, theme.spacingMD)
+                    .padding(.bottom, theme.spacingSM)
+            }
 
             // Content
             ScrollView {
@@ -190,9 +192,11 @@ struct BrowserView: View {
                             .frame(width: 8, height: 8)
                         Text(seg.rawValue)
                             .font(.system(size: theme.fontCaption, weight: segment == seg ? .semibold : .regular, design: theme.fontDesign))
-                        Text("(\(countFor(seg)))")
-                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                            .foregroundStyle(theme.textTertiary)
+                        if seg != .discover || countFor(seg) > 0 {
+                            Text("(\(countFor(seg)))")
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.textTertiary)
+                        }
                     }
                     .foregroundStyle(segment == seg ? theme.textPrimary : theme.textSecondary)
                     .frame(maxWidth: .infinity)
@@ -779,20 +783,16 @@ struct BrowserView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, theme.spacingMD)
         } else {
-            // Empty state -- show browsing hint
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: "globe.americas")
-                    .font(.system(size: 40))
-                    .foregroundStyle(theme.textTertiary.opacity(0.5))
-                Text("Search GitHub for Claude Code skills")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("Find and install community skills with search")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary.opacity(0.7))
+            // Empty state -- show suggested searches
+            discoverEmptyState(
+                icon: "sparkles",
+                title: "Discover Skills",
+                subtitle: "Search GitHub for Claude Code skills",
+                suggestions: ["code review", "testing", "documentation", "refactoring", "git"]
+            ) { query in
+                skillsVM.gitHubSearchText = query
+                skillsVM.updateGitHubSearchText(query)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingXL)
         }
     }
 
@@ -834,19 +834,15 @@ struct BrowserView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, theme.spacingMD)
         } else {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: "globe.americas")
-                    .font(.system(size: 40))
-                    .foregroundStyle(theme.textTertiary.opacity(0.5))
-                Text("Search GitHub for Claude Code plugins")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("Find and install community plugins with search")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary.opacity(0.7))
+            discoverEmptyState(
+                icon: "puzzlepiece.extension",
+                title: "Discover Plugins",
+                subtitle: "Search GitHub for Claude Code plugins",
+                suggestions: ["linter", "formatter", "deploy", "database", "auth"]
+            ) { query in
+                pluginsVM.gitHubSearchText = query
+                pluginsVM.updateGitHubSearchText(query)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingXL)
         }
     }
 
@@ -955,19 +951,15 @@ struct BrowserView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, theme.spacingMD)
         } else {
-            VStack(spacing: theme.spacingSM) {
-                Image(systemName: "globe.americas")
-                    .font(.system(size: 40))
-                    .foregroundStyle(theme.textTertiary.opacity(0.5))
-                Text("Search GitHub for MCP servers")
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                Text("Find and install community MCP servers with search")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary.opacity(0.7))
+            discoverEmptyState(
+                icon: "server.rack",
+                title: "Discover MCP Servers",
+                subtitle: "Search GitHub for MCP servers",
+                suggestions: ["filesystem", "database", "api", "slack", "github"]
+            ) { query in
+                mcpVM.gitHubSearchText = query
+                mcpVM.updateGitHubSearchText(query)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingXL)
         }
     }
 
@@ -1185,6 +1177,53 @@ struct BrowserView: View {
     }
 
     // MARK: - Helpers
+
+    @ViewBuilder
+    private func discoverEmptyState(
+        icon: String,
+        title: String,
+        subtitle: String,
+        suggestions: [String],
+        onTap: @escaping (String) -> Void
+    ) -> some View {
+        VStack(spacing: theme.spacingMD) {
+            Image(systemName: icon)
+                .font(.system(size: 36))
+                .foregroundStyle(theme.accent.opacity(0.6))
+                .padding(.bottom, theme.spacingXS)
+
+            Text(title)
+                .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                .foregroundStyle(theme.textPrimary)
+
+            Text(subtitle)
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+
+            // Suggested search chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: theme.spacingSM) {
+                    ForEach(suggestions, id: \.self) { suggestion in
+                        Button {
+                            onTap(suggestion)
+                        } label: {
+                            Text(suggestion)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .foregroundStyle(theme.accent)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(theme.accent.opacity(0.1))
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, theme.spacingMD)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, theme.spacingXL)
+    }
 
     private func entityColor(for seg: BrowserSegment) -> Color {
         switch seg {
