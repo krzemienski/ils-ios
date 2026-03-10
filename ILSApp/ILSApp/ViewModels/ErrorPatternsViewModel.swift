@@ -168,7 +168,7 @@ class ErrorPatternsViewModel {
             sessionId: sessionId
         )
         do {
-            let _: APIResponse<AcknowledgedResponse> = try await client.post("/error-patterns/apply-fix", body: request)
+            let _: APIResponse<ErrorPattern> = try await client.post("/error-patterns/\(pattern.id.uuidString.lowercased())/apply-fix", body: request)
         } catch {
             self.error = error
             AppLogger.shared.error(

@@ -170,25 +170,27 @@ actor ErrorPatternStore {
 
     // MARK: - Queries
 
-    /// Retrieve the top-N unresolved patterns for a project, ordered by occurrence count.
+    /// Retrieve the top-N patterns for a project, ordered by occurrence count.
+    /// When `projectName` is empty, returns patterns across all projects.
     /// - Parameters:
-    ///   - projectName: The project to filter by.
+    ///   - projectName: The project to filter by. Pass an empty string to include all projects.
     ///   - limit: Maximum number of results to return.
     /// - Returns: Sorted array of matching `StoredPattern` records.
     fileprivate func topPatterns(forProject projectName: String, limit: Int) -> [StoredPattern] {
-        Array(
-            patterns.values
-                .filter { $0.projectName == projectName }
+        let base = projectName.isEmpty ? Array(patterns.values) : patterns.values.filter { $0.projectName == projectName }
+        return Array(
+            base
                 .sorted { $0.occurrenceCount > $1.occurrenceCount }
                 .prefix(limit)
         )
     }
 
     /// Retrieve all patterns for a project (including resolved ones).
-    /// - Parameter projectName: The project to filter by.
+    /// When `projectName` is empty, returns patterns across all projects.
+    /// - Parameter projectName: The project to filter by. Pass an empty string for all projects.
     /// - Returns: Array of all matching `StoredPattern` records.
     fileprivate func allPatterns(forProject projectName: String) -> [StoredPattern] {
-        patterns.values.filter { $0.projectName == projectName }
+        projectName.isEmpty ? Array(patterns.values) : patterns.values.filter { $0.projectName == projectName }
     }
 
     /// Look up a pattern by its UUID.

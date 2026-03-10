@@ -30,19 +30,18 @@ struct ErrorPatternsController: RouteCollection {
     /// GET /error-patterns?projectName=&limit=
     ///
     /// Returns the top recurring error patterns for the given project, ordered by
-    /// occurrence count descending.
+    /// occurrence count descending. When `projectName` is omitted or empty, returns
+    /// patterns across all projects.
     ///
     /// Query parameters:
-    /// - `projectName`: The project to query (required)
+    /// - `projectName`: The project to query (optional; omit to get all projects)
     /// - `limit`: Maximum number of patterns to return (1–50, default 10)
     ///
     /// - Parameter req: Vapor Request
     /// - Returns: APIResponse with ErrorPatternListResponse
     @Sendable
     func list(req: Request) async throws -> APIResponse<ErrorPatternListResponse> {
-        guard let projectName = req.query[String.self, at: "projectName"], !projectName.isEmpty else {
-            throw Abort(.badRequest, reason: "projectName query parameter is required")
-        }
+        let projectName = req.query[String.self, at: "projectName"] ?? ""
         let limit = min(max(req.query[Int.self, at: "limit"] ?? 10, 1), 50)
 
         let service = ErrorPatternService()
@@ -95,21 +94,22 @@ struct ErrorPatternsController: RouteCollection {
         let service = ErrorPatternService()
 
         // Build a minimal session so detectPatterns can record the occurrence
+        let sessionId = body.sessionId ?? UUID()
         let session = ChatSession(
-            id: body.sessionId,
+            id: sessionId,
             projectName: body.projectName
         )
 
         let message = Message(
-            sessionId: body.sessionId,
+            sessionId: sessionId,
             role: .assistant,
-            content: body.errorText
+            content: body.errorMessage
         )
 
         await service.detectPatterns(from: [message], session: session, store: errorPatternStore)
 
         // Return the pattern that was just upserted — look up by normalized signature
-        let normalizedSig = service.normalizeSignature(body.errorText)
+        let normalizedSig = service.normalizeSignature(body.errorMessage)
         let topPatterns = await service.topPatterns(
             forProject: body.projectName,
             limit: 100,
@@ -168,8 +168,8 @@ struct ErrorPatternsController: RouteCollection {
 
     /// POST /error-patterns/:id/apply-fix
     ///
-    /// Records that a suggested fix was applied to a session. The fix outcome is
-    /// initially recorded as an application attempt; use `/resolve` to record success.
+    /// Records that a suggested fix was applied to a session. Dispatches the fix
+    /// to the session; use `/resolve` to record the outcome (success or failure).
     ///
     /// Path parameters:
     /// - `id`: UUID of the error pattern
@@ -177,7 +177,7 @@ struct ErrorPatternsController: RouteCollection {
     /// Request body: `ApplyFixRequest`
     ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with the current ErrorPattern (with updated fix counts)
+    /// - Returns: APIResponse with the current ErrorPattern
     @Sendable
     func applyFix(req: Request) async throws -> APIResponse<ErrorPattern> {
         guard let patternId = req.parameters.get("id", as: UUID.self) else {
@@ -192,13 +192,8 @@ struct ErrorPatternsController: RouteCollection {
 
         let service = ErrorPatternService()
 
-        // Record an application attempt; outcome is confirmed via /resolve
-        await service.recordFixOutcome(
-            patternId: patternId,
-            fixId: body.fixId,
-            success: false,
-            store: errorPatternStore
-        )
+        // Outcome (success/failure) is recorded when the user calls /resolve.
+        // Do not pre-record a failure here.
 
         guard let pattern = await service.pattern(byId: patternId, store: errorPatternStore) else {
             throw Abort(.notFound, reason: "Error pattern not found")
@@ -206,16 +201,4 @@ struct ErrorPatternsController: RouteCollection {
 
         return APIResponse(success: true, data: pattern)
     }
-}
-
-// MARK: - Request Types
-
-/// Request body for recording a new error occurrence from a session.
-struct RecordErrorRequest: Content {
-    /// Name of the project where the error occurred.
-    let projectName: String
-    /// Raw error text (message, stack trace, or build output) to classify and record.
-    let errorText: String
-    /// UUID of the session in which the error occurred.
-    let sessionId: UUID
 }

@@ -433,3 +433,4 @@ extension ErrorPattern: Content {}
 extension ErrorPatternListResponse: Content {}
 extension ApplyFixRequest: Content {}
 extension MarkResolvedRequest: Content {}
+extension RecordErrorRequest: Content {}
