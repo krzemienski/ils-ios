@@ -34,6 +34,10 @@
 		062146CB422A72CF6170ED7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B7AA21B4A73C7E651752C /* StatCard.swift */; };
 		065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6736A1D406EEE97A39A92D25 /* TeamTaskListView.swift */; };
 		06A4F286C8FDB8AF2889783B /* SkillUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */; };
+		BB3333333333333333333333 /* BestOfCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1111111111111111111111 /* BestOfCollectionView.swift */; };
+		BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1111111111111111111111 /* BestOfCollectionView.swift */; };
+		BB5555555555555555555555 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
+		BB6666666666666666666666 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
 		06AC7AF758977C86BA9CE168 /* SessionCheckpointsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448A55AEFBD34AD89EA6C69C /* SessionCheckpointsViewModel.swift */; };
 		06B6449360F3E99EBCF8D389 /* SettingsAboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */; };
 		072B3898C2136EBC57F128B8 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862B584915489231984E2FC9 /* PlaybackView.swift */; };
@@ -1124,6 +1128,8 @@
 		634B53732914E58E3AAD3092 /* SessionWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWidget.swift; sourceTree = "<group>"; };
 		635870E31142AD3C94B01A4D /* RecentSessionsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSessionsWidget.swift; sourceTree = "<group>"; };
 		63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillUsageView.swift; sourceTree = "<group>"; };
+		BB1111111111111111111111 /* BestOfCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestOfCollectionView.swift; sourceTree = "<group>"; };
+		BB2222222222222222222222 /* QualityTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityTrendView.swift; sourceTree = "<group>"; };
 		64417034D7BE8F3619B3BC06 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		6467EED7EF5D1DC029D1DD90 /* FileBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserViewModel.swift; sourceTree = "<group>"; };
 		64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
@@ -2350,7 +2356,9 @@
 			children = (
 				E1BB6F19485FCADE48E487AD /* ActivityTimelineView.swift */,
 				54029482C937B8B3439FA46C /* AnalyticsView.swift */,
+				BB1111111111111111111111 /* BestOfCollectionView.swift */,
 				4F0049EC9CA50AF245D41572 /* FileTypeBreakdownView.swift */,
+				BB2222222222222222222222 /* QualityTrendView.swift */,
 				450F8C2FED413E76C3A84102 /* SessionMetricsView.swift */,
 				63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */,
 			);
@@ -2866,6 +2874,7 @@
 				74BA5081078FE49059C74318 /* FeatureTourView.swift in Sources */,
 				3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */,
 				BD794553406B0E1E893D5D10 /* FileBrowserViewModel.swift in Sources */,
+				BB3333333333333333333333 /* BestOfCollectionView.swift in Sources */,
 				B8EF23D8BD5471CC0C489CC4 /* FileTypeBreakdownView.swift in Sources */,
 				E76EADFF826D42334DAD8CA8 /* FirstSessionWizardView.swift in Sources */,
 				3016192D4A0440C44A46A458 /* FuzzyMatcher.swift in Sources */,
@@ -2991,6 +3000,7 @@
 				A0F31276553A5D9099641F8F /* QRScannerView.swift in Sources */,
 				A95BE43B506E999D700AE8F1 /* QueryExplanationView.swift in Sources */,
 				6878174BBA5AB5BB65A157A3 /* QueryLearningService.swift in Sources */,
+				BB5555555555555555555555 /* QualityTrendView.swift in Sources */,
 				0C9253AE203CF71C88E5C728 /* QueueTaskRow.swift in Sources */,
 				3CE34A9C8114A2D3FDC797AD /* QueuedMessageBadge.swift in Sources */,
 				27FA8BC88E40B9DC8A519AC0 /* QuickActionsWidget.swift in Sources */,
@@ -3281,6 +3291,7 @@
 				8EA2C38C0611C440B5ADDA17 /* FeatureTourView.swift in Sources */,
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
+				BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */,
 				F8D26D2827281902B4A21F59 /* FileTypeBreakdownView.swift in Sources */,
 				36BE0FCD94772659E31074A0 /* FirstSessionWizardView.swift in Sources */,
 				1C96CC761FDDA31A22D7728F /* FuzzyMatcher.swift in Sources */,
@@ -3413,6 +3424,7 @@
 				CBECCB545A583BA5A03EE3DC /* QRScannerView.swift in Sources */,
 				0EF4A8D7979E422EDF397269 /* QueryExplanationView.swift in Sources */,
 				4C16C8CFEF41AB176097B2D5 /* QueryLearningService.swift in Sources */,
+				BB6666666666666666666666 /* QualityTrendView.swift in Sources */,
 				3C1C2B7BB259C2570B440525 /* QueueTaskRow.swift in Sources */,
 				0CDA69045020D57CEA33A6CF /* QueuedMessageBadge.swift in Sources */,
 				A08C714C60346A4D9B8CE576 /* QuickActionsWidget.swift in Sources */,

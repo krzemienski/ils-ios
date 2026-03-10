@@ -29,6 +29,8 @@ struct AnalyticsView: View {
 
     /// Observable view model that manages all analytics data loading and state.
     @State private var viewModel = AnalyticsViewModel()
+    /// Observable view model that manages feedback quality data loading and state.
+    @State private var feedbackViewModel = FeedbackViewModel()
     /// Cached JSON string from the last export fetch; non-nil enables the ``ShareLink``.
     @State private var exportJSON: String?
     /// Whether an export fetch is currently in flight; shows a spinner in the toolbar.
@@ -59,6 +61,8 @@ struct AnalyticsView: View {
                     ActivityTimelineView(data: viewModel.activityTimeline)
                     SessionMetricsView(metrics: viewModel.sessionMetrics)
                     SkillUsageView(analytics: viewModel.skillAnalytics)
+                    QualityTrendView(data: feedbackViewModel.qualityTrend)
+                    BestOfCollectionView(bestOfItems: feedbackViewModel.bestOfItems)
                     FileTypeBreakdownView()
                 }
             }
@@ -81,15 +85,21 @@ struct AnalyticsView: View {
         }
         .onAppear {
             viewModel.configure(client: appState.apiClient)
+            feedbackViewModel.configure(client: appState.apiClient)
             Task {
                 await viewModel.loadAll()
+                await feedbackViewModel.loadQualityTrend()
+                await feedbackViewModel.loadBestOf()
             }
         }
-        .onChange(of: viewModel.selectedPeriod) { _, _ in
+        .onChange(of: viewModel.selectedPeriod) { _, newPeriod in
             // Reload all data when the user switches the time period
             exportJSON = nil  // Clear stale export when period changes
+            let feedbackPeriod: FeedbackPeriod = newPeriod == .month ? .month : .week
             Task {
                 await viewModel.loadAll()
+                await feedbackViewModel.loadQualityTrend(period: feedbackPeriod)
+                await feedbackViewModel.loadBestOf()
             }
         }
     }

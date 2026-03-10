@@ -258,7 +258,7 @@ private struct BestOfDetailSheet: View {
                         }
                         .padding(theme.spacingSM)
                         .background(theme.bgSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusMedium))
+                        .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     }
                 }
                 .padding(theme.spacingMD)
