@@ -77,6 +77,60 @@ public struct AuditActionListResponse: Codable, Sendable {
     }
 }
 
+// MARK: - Log Audit Action Request
+
+/// Request body for creating a new audit action entry.
+public struct LogAuditActionRequest: Codable, Sendable {
+    /// Identifier of the session that generated this action.
+    public let sessionId: String
+    /// Human-readable session name, if available.
+    public let sessionName: String?
+    /// Category of action performed.
+    public let actionType: AuditActionType
+    /// Human-readable description of the action.
+    public let description: String
+    /// File path affected by this action, if applicable.
+    public let filePath: String?
+    /// Command executed, if applicable.
+    public let command: String?
+    /// Name of the tool invoked, if applicable.
+    public let toolName: String?
+    /// File content before the action (for file operations).
+    public let beforeContent: String?
+    /// File content after the action (for file operations).
+    public let afterContent: String?
+    /// Additional structured metadata as a JSON string.
+    public let metadata: String?
+    /// Whether this action can be individually rolled back.
+    public let isRollbackable: Bool
+
+    public init(
+        sessionId: String,
+        sessionName: String? = nil,
+        actionType: AuditActionType,
+        description: String,
+        filePath: String? = nil,
+        command: String? = nil,
+        toolName: String? = nil,
+        beforeContent: String? = nil,
+        afterContent: String? = nil,
+        metadata: String? = nil,
+        isRollbackable: Bool
+    ) {
+        self.sessionId = sessionId
+        self.sessionName = sessionName
+        self.actionType = actionType
+        self.description = description
+        self.filePath = filePath
+        self.command = command
+        self.toolName = toolName
+        self.beforeContent = beforeContent
+        self.afterContent = afterContent
+        self.metadata = metadata
+        self.isRollbackable = isRollbackable
+    }
+}
+
 // MARK: - Rollback Request
 
 /// Request body for rolling back one or more audit actions.
