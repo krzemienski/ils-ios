@@ -84,6 +84,8 @@ struct ChatMessageList: View {
     #if os(iOS)
     /// The message currently being bookmarked — non-nil triggers `BookmarkMessageSheet`.
     @State private var messageToBookmark: ChatMessage?
+    /// Message IDs for which the key moment suggestion banner has been dismissed.
+    @State private var dismissedKeyMomentIds: Set<UUID> = []
     #endif
 
     /// Shared bookmark manager for state queries and mutation.
@@ -209,6 +211,8 @@ struct ChatMessageList: View {
                     }
                     .padding(.horizontal, messageSpacing)
                     .padding(.top, isSameSender ? sameSenderGap : senderGap)
+
+                    keyMomentBanner(for: message)
                 } else {
                     AssistantCard(
                         message: message,
@@ -226,6 +230,8 @@ struct ChatMessageList: View {
                     }
                     .padding(.horizontal, messageSpacing)
                     .padding(.top, isSameSender ? sameSenderGap : senderGap)
+
+                    keyMomentBanner(for: message)
                 }
             }
 
@@ -300,6 +306,90 @@ struct ChatMessageList: View {
                 Label("Share", systemImage: "square.and.arrow.up")
             }
         }
+    }
+
+    /// Inline key moment suggestion chip shown below a message when the heuristic
+    /// detector flags it as a potential key moment.
+    ///
+    /// The banner is suppressed when:
+    /// - The message has already been bookmarked.
+    /// - The user has dismissed it for this message in the current session.
+    /// - The platform is not iOS.
+    ///
+    /// Tapping the star quick-saves the bookmark without opening the sheet.
+    /// Tapping × dismisses the banner for the current session.
+    @ViewBuilder
+    private func keyMomentBanner(for message: ChatMessage) -> some View {
+        #if os(iOS)
+        let suggestion = KeyMomentsDetector.analyze(message)
+        let isAlreadyBookmarked = bookmarksManager.isBookmarked(messageId: message.id.uuidString)
+        let isDismissed = dismissedKeyMomentIds.contains(message.id)
+
+        if let suggestion, !isAlreadyBookmarked, !isDismissed {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: theme.fontCaption, weight: .semibold))
+                    .foregroundStyle(theme.accent)
+
+                Text("Bookmark this key moment?")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textSecondary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                Button {
+                    Task {
+                        await bookmarksManager.addBookmark(
+                            messageId: message.id.uuidString,
+                            sessionId: sessionId,
+                            sessionName: sessionName,
+                            messageContent: message.text,
+                            messageRole: message.isUser ? "user" : "assistant",
+                            note: suggestion.reason
+                        )
+                    }
+                } label: {
+                    Image(systemName: "bookmark.fill")
+                        .font(.system(size: theme.fontCaption, weight: .semibold))
+                        .foregroundStyle(theme.accent)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Save key moment bookmark")
+                .accessibilityHint(suggestion.reason)
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        _ = dismissedKeyMomentIds.insert(message.id)
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(theme.textTertiary)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss key moment suggestion")
+            }
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.vertical, theme.spacingXS)
+            .background(theme.accent.opacity(0.08) as Color)
+            .overlay(alignment: .leading) {
+                Rectangle()
+                    .frame(width: 2)
+                    .foregroundStyle(theme.accent.opacity(0.5) as Color)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
+            .padding(.horizontal, messageSpacing)
+            .padding(.top, 4)
+            .transition(.opacity.combined(with: .move(edge: .top)))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Key moment suggestion: \(suggestion.reason)")
+        }
+        #endif
     }
 
     /// `true` while Claude is streaming but no tokens have been received yet,
