@@ -62,7 +62,13 @@ struct MessageBookmarksView: View {
                     (bookmark.messageContent?.lowercased().contains(query) == true)
                     || (bookmark.note?.lowercased().contains(query) == true)
                     || (bookmark.sessionName?.lowercased().contains(query) == true)
-                    || bookmark.tags.contains { $0.lowercased().contains(query) }
+                    || {
+                        let tagsManager = BookmarkTagsManager.shared
+                        return bookmark.tags.contains { tagId in
+                            let name = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? tagId
+                            return name.lowercased().contains(query)
+                        }
+                    }()
             }
 
             let matchesTag: Bool
@@ -461,7 +467,13 @@ private struct BookmarkExportSheet: View {
             }
 
             if !bookmark.tags.isEmpty {
-                md += "**Tags:** \(bookmark.tags.joined(separator: ", "))\n\n"
+                let tagsManager = BookmarkTagsManager.shared
+                let tagNames = bookmark.tags.compactMap { tagId in
+                    tagsManager.allTags.first { $0.id.uuidString == tagId }?.name
+                }
+                if !tagNames.isEmpty {
+                    md += "**Tags:** \(tagNames.joined(separator: ", "))\n\n"
+                }
             }
 
             if let note = bookmark.note, !note.isEmpty {

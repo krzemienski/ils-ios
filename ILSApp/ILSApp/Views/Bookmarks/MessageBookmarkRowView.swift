@@ -157,7 +157,13 @@ struct MessageBookmarkRowView: View {
             parts.append(String(content.prefix(100)))
         }
         if !bookmark.tags.isEmpty {
-            parts.append("Tags: \(bookmark.tags.joined(separator: ", "))")
+            let tagsManager = BookmarkTagsManager.shared
+            let tagNames = bookmark.tags.compactMap { tagId in
+                tagsManager.allTags.first { $0.id.uuidString == tagId }?.name
+            }
+            if !tagNames.isEmpty {
+                parts.append("Tags: \(tagNames.joined(separator: ", "))")
+            }
         }
         parts.append(relativeDate)
         return parts.joined(separator: ". ")
