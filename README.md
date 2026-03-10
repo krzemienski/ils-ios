@@ -1,6 +1,6 @@
-# ILS - Intelligent Local Server
+# ILS (Intelligent Local Server)
 
-> A native iOS & macOS client for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with a Swift backend
+> A native Swift client for Claude Code with iOS, macOS, and backend components.
 
 [![Build](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml/badge.svg)](https://github.com/krzemienski/ils-ios/actions/workflows/build.yml)
 [![Swift](https://img.shields.io/badge/Swift-5.10+-orange.svg)](https://swift.org)
@@ -9,7 +9,9 @@
 [![Vapor](https://img.shields.io/badge/Vapor-4.0-purple.svg)](https://vapor.codes)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-ILS provides a full-featured mobile and desktop interface for interacting with Claude Code — managing sessions, browsing projects, monitoring systems, and coordinating multi-agent teams from your iPhone, iPad, or Mac.
+A complete native interface for Claude Code with real-time chat, session management, system monitoring, and multi-agent team coordination across iOS, macOS, and server backends.
+
+**Status:** v1.1.1 Stable | **Total Code:** 617 Swift files, 152K LOC
 
 ## Features
 
