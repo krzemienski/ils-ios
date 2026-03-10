@@ -57,12 +57,12 @@ struct ErrorPatternDetailView: View {
                     isPresented: $showFixConfirmation,
                     presenting: selectedFix
                 ) { fix in
-                    Button("Apply Fix") {
+                    Button("Record Fix") {
                         Task { await applyFix(fix) }
                     }
                     Button("Cancel", role: .cancel) {}
                 } message: { fix in
-                    Text("This will send the fix prompt to your active Claude session:\n\n\"\(fix.description)\"")
+                    Text("Record this fix application. Then paste the fix prompt into your Claude session to apply it:\n\n\"\(fix.description)\"")
                 }
                 .alert(
                     "Mark as Resolved",
@@ -320,6 +320,21 @@ struct ErrorPatternDetailView: View {
                 .foregroundStyle(theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            // Copyable fix prompt for pasting into Claude
+            if !fix.fixPrompt.isEmpty {
+                GroupBox {
+                    Text(fix.fixPrompt)
+                        .font(.system(size: theme.fontCaption, design: .monospaced))
+                        .foregroundStyle(theme.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                } label: {
+                    Label("Fix Prompt (copy to Claude)", systemImage: "doc.on.clipboard")
+                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+            }
+
             // Apply button
             if !isApplyingFix {
                 Button {
@@ -339,7 +354,7 @@ struct ErrorPatternDetailView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Apply suggested fix: \(fix.description)")
-                .accessibilityHint("Sends the fix prompt to your active Claude session")
+                .accessibilityHint("Records this fix and shows the prompt to paste into your Claude session")
             } else {
                 HStack {
                     Spacer()
