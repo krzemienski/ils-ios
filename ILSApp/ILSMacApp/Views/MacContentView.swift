@@ -498,7 +498,26 @@ struct MacContentView: View {
         case .search:
             Text("Search")
         case .bookmarks:
-            MessageBookmarksView()
+            MessageBookmarksView { bookmark in
+                Task {
+                    let sessionId = bookmark.sessionId
+                    if let session = sessionsViewModel.session(byID: sessionId) {
+                        activeScreen = .chat(session)
+                        selectedSection = .home
+                    } else {
+                        do {
+                            let response: APIResponse<ChatSession> = try await appState.apiClient.get("/sessions/\(sessionId.uuidString.lowercased())")
+                            if let session = response.data {
+                                activeScreen = .chat(session)
+                                selectedSection = .home
+                            }
+                        } catch {
+                            activeScreen = .chat(ChatSession(id: sessionId, name: "Session"))
+                            selectedSection = .home
+                        }
+                    }
+                }
+            }
         }
     }
 

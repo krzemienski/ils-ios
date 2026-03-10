@@ -651,7 +651,9 @@ struct SidebarRootView: View {
     }
 
     private var bookmarksScreen: some View {
-        MessageBookmarksView()
+        MessageBookmarksView { bookmark in
+            navigateToSessionById(bookmark.sessionId)
+        }
     }
 
     // MARK: - Chat Navigation

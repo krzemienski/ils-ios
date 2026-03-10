@@ -28,24 +28,26 @@ struct MessageBookmarksView: View {
 
     @State private var manager = MessageBookmarksManager.shared
     @State private var searchText = ""
-    @State private var selectedTag: String? = nil
+    @State private var selectedTagId: String? = nil
     @State private var groupBySession = true
     @State private var showExportSheet = false
 
     // MARK: - Computed
 
-    /// All distinct tags across all bookmarks, sorted alphabetically.
-    private var allTags: [String] {
+    /// All distinct tags across all bookmarks, resolved to display names, sorted alphabetically.
+    private var allTagDisplayItems: [(id: String, name: String)] {
+        let tagsManager = BookmarkTagsManager.shared
         var seen = Set<String>()
-        var result: [String] = []
+        var result: [(id: String, name: String)] = []
         for bookmark in manager.bookmarks {
-            for tag in bookmark.tags {
-                if seen.insert(tag).inserted {
-                    result.append(tag)
+            for tagId in bookmark.tags {
+                if seen.insert(tagId).inserted {
+                    let name = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? tagId
+                    result.append((id: tagId, name: name))
                 }
             }
         }
-        return result.sorted()
+        return result.sorted { $0.name < $1.name }
     }
 
     /// Bookmarks after applying search text and selected tag filter.
@@ -64,8 +66,8 @@ struct MessageBookmarksView: View {
             }
 
             let matchesTag: Bool
-            if let tag = selectedTag {
-                matchesTag = bookmark.tags.contains(tag)
+            if let tagId = selectedTagId {
+                matchesTag = bookmark.tags.contains(tagId)
             } else {
                 matchesTag = true
             }
@@ -123,7 +125,7 @@ struct MessageBookmarksView: View {
             VStack(spacing: 0) {
                 searchBar
 
-                if !allTags.isEmpty {
+                if !allTagDisplayItems.isEmpty {
                     tagFilterStrip
                         .padding(.bottom, theme.spacingSM)
                 }
@@ -209,13 +211,13 @@ struct MessageBookmarksView: View {
     private var tagFilterStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: theme.spacingXS) {
-                tagChip(label: "All", isSelected: selectedTag == nil) {
-                    selectedTag = nil
+                tagChip(label: "All", isSelected: selectedTagId == nil) {
+                    selectedTagId = nil
                 }
 
-                ForEach(allTags, id: \.self) { tag in
-                    tagChip(label: tag, isSelected: selectedTag == tag) {
-                        selectedTag = selectedTag == tag ? nil : tag
+                ForEach(allTagDisplayItems, id: \.id) { item in
+                    tagChip(label: item.name, isSelected: selectedTagId == item.id) {
+                        selectedTagId = selectedTagId == item.id ? nil : item.id
                     }
                 }
             }

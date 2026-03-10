@@ -97,9 +97,11 @@ struct MessageBookmarkRowView: View {
     }
 
     private var tagChips: some View {
-        HStack(spacing: theme.spacingXS) {
-            ForEach(bookmark.tags.prefix(4), id: \.self) { tag in
-                Text(tag)
+        let tagsManager = BookmarkTagsManager.shared
+        return HStack(spacing: theme.spacingXS) {
+            ForEach(bookmark.tags.prefix(4), id: \.self) { tagId in
+                let displayName = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? String(tagId.prefix(8))
+                Text(displayName)
                     .font(.system(size: theme.fontCaption - 1, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .padding(.horizontal, 6)
