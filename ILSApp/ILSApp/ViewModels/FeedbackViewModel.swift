@@ -84,6 +84,49 @@ class FeedbackViewModel {
         isSubmitting = false
     }
 
+    /// Convenience overload that accepts raw string IDs instead of model objects.
+    func submitFeedback(
+        rating: FeedbackRating,
+        comment: String?,
+        messageId: String,
+        sessionId: String,
+        projectId: String?,
+        model: String?
+    ) async {
+        guard let client else { return }
+
+        isSubmitting = true
+        error = nil
+
+        let ratingValue = rating == .thumbsUp ? 1 : -1
+        let request = SubmitFeedbackRequest(
+            rating: ratingValue,
+            comment: comment,
+            messageId: messageId,
+            sessionId: sessionId,
+            projectId: projectId ?? "",
+            model: model ?? ""
+        )
+
+        do {
+            let response: APIResponse<FeedbackResponse> = try await client.post(
+                "/feedback",
+                body: request
+            )
+            if response.data != nil {
+                submittedRatings[messageId] = rating.rawValue
+            }
+        } catch {
+            self.error = error
+            AppLogger.shared.error(
+                "Failed to submit feedback: \(error.localizedDescription)",
+                category: "feedback"
+            )
+        }
+
+        isSubmitting = false
+    }
+
     // MARK: - Load Quality Trend
 
     /// Load the quality trend for the given period.
