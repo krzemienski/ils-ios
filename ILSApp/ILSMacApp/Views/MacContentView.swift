@@ -497,6 +497,8 @@ struct MacContentView: View {
             Text("Terminal")
         case .search:
             Text("Search")
+        case .bookmarks:
+            MessageBookmarksView()
         }
     }
 
@@ -875,6 +877,7 @@ struct MacContentView: View {
         case .documentation: selectedSection = .home
         case .terminal: selectedSection = .home
         case .search: selectedSection = .home
+        case .bookmarks: selectedSection = .home
         }
         activeScreen = intent
         appState.navigationIntent = nil

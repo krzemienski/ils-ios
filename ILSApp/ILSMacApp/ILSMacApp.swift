@@ -60,10 +60,17 @@ struct ILSMacApp: App {
                     do {
                         try await notificationManager.requestAuthorization()
                     } catch {
-                        print("Failed to request notification permissions: \(error)")
+                        AppLogger.shared.warning(
+                            "Failed to request notification permissions: \(error)",
+                            category: "notifications"
+                        )
                     }
                     // Start backend health monitoring if already installed
                     await backendManager.startMonitoringIfInstalled()
+                    // Sync message bookmarks from CloudKit on app launch
+                    Task.detached(priority: .background) {
+                        await MessageBookmarksManager.shared.syncFromCloud()
+                    }
                 }
         }
         .defaultSize(width: 1200, height: 800)

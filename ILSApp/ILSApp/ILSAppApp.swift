@@ -99,6 +99,10 @@ struct ILSAppApp: App {
                             showLaunchScreen = false
                         }
                         ICloudSyncManager.shared.syncPreferencesToCloud()
+                        // Sync message bookmarks from CloudKit on app launch
+                        Task.detached(priority: .background) {
+                            await MessageBookmarksManager.shared.syncFromCloud()
+                        }
                         // Check for Claude Code CLI updates in background
                         Task.detached(priority: .background) {
                             await appState.checkForUpdates()
@@ -220,6 +224,10 @@ struct ILSAppApp: App {
             appState.handleScenePhase(newPhase)
             if newPhase == .active {
                 ICloudSyncManager.shared.syncPreferencesToCloud()
+                // Sync message bookmarks from CloudKit when returning to foreground
+                Task.detached(priority: .background) {
+                    await MessageBookmarksManager.shared.syncFromCloud()
+                }
                 // Check for Claude Code CLI updates when returning to foreground
                 // The checkForUpdates method respects configured interval (daily/weekly)
                 Task.detached(priority: .background) {
