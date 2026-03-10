@@ -114,6 +114,30 @@ public struct ErrorPatternListResponse: Codable, Sendable {
 
 // MARK: - Request Types
 
+/// Request to record an error occurrence for pattern detection.
+public struct RecordErrorRequest: Codable, Sendable {
+    /// The project name the error occurred in.
+    public let projectName: String
+    /// Category of error (e.g., "compilation", "test_failure", "lint", "runtime").
+    public let errorType: String
+    /// The raw error message or stack trace excerpt.
+    public let errorMessage: String
+    /// Optional session ID where this error occurred.
+    public let sessionId: UUID?
+
+    public init(
+        projectName: String,
+        errorType: String,
+        errorMessage: String,
+        sessionId: UUID? = nil
+    ) {
+        self.projectName = projectName
+        self.errorType = errorType
+        self.errorMessage = errorMessage
+        self.sessionId = sessionId
+    }
+}
+
 /// Request to apply a suggested fix to a session.
 public struct ApplyFixRequest: Codable, Sendable {
     /// The error pattern ID the fix belongs to.
