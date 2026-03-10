@@ -22,6 +22,7 @@ struct FeedbackDetailSheet: View {
     let sessionId: String
     let projectId: String?
     let model: String?
+    let messageContent: String?
     @Bindable var feedbackViewModel: FeedbackViewModel
     @Binding var isPresented: Bool
 
@@ -146,7 +147,8 @@ struct FeedbackDetailSheet: View {
                 messageId: messageId,
                 sessionId: sessionId,
                 projectId: projectId,
-                model: model
+                model: model,
+                messageContent: messageContent
             )
         }
     }

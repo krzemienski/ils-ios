@@ -33,7 +33,6 @@ struct MessageView: View {
     var feedbackViewModel: FeedbackViewModel?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
-    @State private var showFeedbackSheet = false
 
     // Date formatters centralized in DateFormatters.swift
     var body: some View {
@@ -114,22 +113,11 @@ struct MessageView: View {
                         sessionId: sessionId ?? "",
                         projectId: projectId,
                         model: nil,
+                        messageContent: message.text,
                         feedbackViewModel: vm
                     )
                     Spacer()
                 }
-            }
-        }
-        .sheet(isPresented: $showFeedbackSheet) {
-            if let vm = feedbackViewModel {
-                FeedbackDetailSheet(
-                    messageId: message.id.uuidString,
-                    sessionId: sessionId ?? "",
-                    projectId: projectId,
-                    model: nil,
-                    feedbackViewModel: vm,
-                    isPresented: $showFeedbackSheet
-                )
             }
         }
     }

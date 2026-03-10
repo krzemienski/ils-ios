@@ -62,7 +62,8 @@ class FeedbackViewModel {
             messageId: message.id.uuidString,
             sessionId: session.id.uuidString,
             projectId: project?.id.uuidString ?? "",
-            model: model
+            model: model,
+            messageContent: message.text.isEmpty ? nil : message.text
         )
 
         do {
@@ -91,7 +92,8 @@ class FeedbackViewModel {
         messageId: String,
         sessionId: String,
         projectId: String?,
-        model: String?
+        model: String?,
+        messageContent: String? = nil
     ) async {
         guard let client else { return }
 
@@ -105,7 +107,8 @@ class FeedbackViewModel {
             messageId: messageId,
             sessionId: sessionId,
             projectId: projectId ?? "",
-            model: model ?? ""
+            model: model ?? "",
+            messageContent: messageContent
         )
 
         do {
@@ -134,7 +137,7 @@ class FeedbackViewModel {
         guard let client else { return }
         do {
             let response: APIResponse<QualityTrendResponse> = try await client.get(
-                "/feedback/trend?period=\(period.rawValue)"
+                "/feedback/quality?period=\(period.rawValue)"
             )
             if let data = response.data {
                 qualityTrend = data
@@ -155,7 +158,7 @@ class FeedbackViewModel {
         guard let client else { return }
         do {
             let response: APIResponse<[BestOfItem]> = try await client.get(
-                "/feedback/best-of?limit=\(limit)"
+                "/feedback/best?limit=\(limit)"
             )
             if let data = response.data {
                 bestOfItems = data

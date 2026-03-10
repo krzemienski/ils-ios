@@ -27,6 +27,9 @@ final class ResponseFeedbackModel: Model, Content, @unchecked Sendable {
     @OptionalField(key: "model")
     var model: String?
 
+    @OptionalField(key: "message_content")
+    var messageContent: String?
+
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
@@ -39,7 +42,8 @@ final class ResponseFeedbackModel: Model, Content, @unchecked Sendable {
         projectId: UUID? = nil,
         rating: FeedbackRating,
         comment: String? = nil,
-        model: String? = nil
+        model: String? = nil,
+        messageContent: String? = nil
     ) {
         self.id = id
         self.messageId = messageId
@@ -48,6 +52,7 @@ final class ResponseFeedbackModel: Model, Content, @unchecked Sendable {
         self.rating = rating.rawValue
         self.comment = comment
         self.model = model
+        self.messageContent = messageContent
     }
 
     /// Convert to shared ResponseFeedback type

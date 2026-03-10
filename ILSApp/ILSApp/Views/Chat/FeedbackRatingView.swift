@@ -6,8 +6,8 @@ import ILSShared
 /// Displays two SF Symbol buttons — `hand.thumbsup` and `hand.thumbsdown` — which fill
 /// when the user has already submitted a rating for the given message. Tapping thumbs-up
 /// immediately submits positive feedback via `FeedbackViewModel`. Tapping thumbs-down
-/// reveals a sheet where the user can optionally add a comment before submitting negative
-/// feedback.
+/// presents `FeedbackDetailSheet` where the user can pick reason chips ("Wrong code",
+/// "Hallucination", etc.) before submitting negative feedback.
 ///
 /// ## Topics
 /// ### Input Properties
@@ -15,16 +15,17 @@ import ILSShared
 /// - ``sessionId`` - Identifier of the session containing the message
 /// - ``projectId`` - Optional identifier of the project associated with the session
 /// - ``model`` - Optional name of the AI model that generated the response
+/// - ``messageContent`` - Full text of the AI response, stored with feedback for Best-Of
 /// - ``feedbackViewModel`` - Shared view-model that persists and submits ratings
 struct FeedbackRatingView: View {
     let messageId: String
     let sessionId: String
     let projectId: String?
     let model: String?
+    let messageContent: String?
     @Bindable var feedbackViewModel: FeedbackViewModel
 
     @State private var showFeedbackSheet = false
-    @State private var commentText = ""
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // MARK: - Derived State
@@ -45,7 +46,15 @@ struct FeedbackRatingView: View {
             thumbsDownButton
         }
         .sheet(isPresented: $showFeedbackSheet) {
-            negativeFeedbackSheet
+            FeedbackDetailSheet(
+                messageId: messageId,
+                sessionId: sessionId,
+                projectId: projectId,
+                model: model,
+                messageContent: messageContent,
+                feedbackViewModel: feedbackViewModel,
+                isPresented: $showFeedbackSheet
+            )
         }
     }
 
@@ -60,7 +69,8 @@ struct FeedbackRatingView: View {
                     messageId: messageId,
                     sessionId: sessionId,
                     projectId: projectId,
-                    model: model
+                    model: model,
+                    messageContent: messageContent
                 )
             }
         } label: {
@@ -84,68 +94,5 @@ struct FeedbackRatingView: View {
         .buttonStyle(.plain)
         .disabled(feedbackViewModel.isSubmitting || hasRated)
         .accessibilityLabel("Rate response negatively")
-    }
-
-    /// Sheet presented when the user taps thumbs-down, allowing an optional comment.
-    private var negativeFeedbackSheet: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: theme.spacingMD) {
-                Text("What went wrong?")
-                    .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
-                    .foregroundColor(theme.textPrimary)
-
-                TextEditor(text: $commentText)
-                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundColor(theme.textPrimary)
-                    .frame(minHeight: 100)
-                    .padding(theme.spacingSM)
-                    .background(theme.bgSecondary)
-                    .cornerRadius(theme.cornerRadius)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: theme.cornerRadius)
-                            .strokeBorder(theme.textTertiary.opacity(0.3), lineWidth: 1)
-                    )
-
-                Spacer()
-            }
-            .padding(theme.spacingLG)
-            .background(theme.bgPrimary)
-            .navigationTitle("Feedback")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showFeedbackSheet = false
-                        commentText = ""
-                    }
-                    .foregroundColor(theme.textSecondary)
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Submit") {
-                        let comment = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
-                        let trimmed = comment.isEmpty ? nil : comment
-                        showFeedbackSheet = false
-                        commentText = ""
-                        Task {
-                            await feedbackViewModel.submitFeedback(
-                                rating: .thumbsDown,
-                                comment: trimmed,
-                                messageId: messageId,
-                                sessionId: sessionId,
-                                projectId: projectId,
-                                model: model
-                            )
-                        }
-                    }
-                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .foregroundColor(theme.accent)
-                    .disabled(feedbackViewModel.isSubmitting)
-                }
-            }
-        }
-        .presentationDetents([.medium])
     }
 }

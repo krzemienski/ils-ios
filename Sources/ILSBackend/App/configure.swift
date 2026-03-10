@@ -130,6 +130,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateProcessHistory())
     // v6.3 — AI response quality feedback
     app.migrations.add(CreateResponseFeedback())
+    app.migrations.add(AddMessageContentToFeedback())
 
     // Run migrations
     try await app.autoMigrate()

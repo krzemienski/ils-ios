@@ -38,7 +38,8 @@ struct FeedbackController: RouteCollection {
             projectId: projectId,
             rating: rating,
             comment: body.comment,
-            model: body.model.isEmpty ? nil : body.model
+            model: body.model.isEmpty ? nil : body.model,
+            messageContent: body.messageContent
         )
         try await model.save(on: req.db)
 
@@ -128,7 +129,7 @@ struct FeedbackController: RouteCollection {
 
         let items = records.map { record -> BestOfItem in
             BestOfItem(
-                messageContent: "",
+                messageContent: record.messageContent ?? "",
                 sessionId: record.sessionId.uuidString,
                 rating: 1,
                 comment: record.comment,
@@ -204,7 +205,7 @@ struct FeedbackController: RouteCollection {
             .prefix(20)
             .map { record -> BestOfItem in
                 BestOfItem(
-                    messageContent: "",
+                    messageContent: record.messageContent ?? "",
                     sessionId: record.sessionId.uuidString,
                     rating: 1,
                     comment: record.comment,

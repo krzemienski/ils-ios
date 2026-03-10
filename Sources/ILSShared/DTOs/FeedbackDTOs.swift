@@ -16,6 +16,9 @@ public struct SubmitFeedbackRequest: Codable, Sendable {
     public let projectId: String
     /// Model name that generated the response (e.g., "claude-opus-4-5").
     public let model: String
+    /// The full text content of the AI message being rated. Stored so the
+    /// Best-Of collection can surface response previews without a messages join.
+    public let messageContent: String?
 
     public init(
         rating: Int,
@@ -23,7 +26,8 @@ public struct SubmitFeedbackRequest: Codable, Sendable {
         messageId: String,
         sessionId: String,
         projectId: String,
-        model: String
+        model: String,
+        messageContent: String? = nil
     ) {
         self.rating = rating
         self.comment = comment
@@ -31,6 +35,7 @@ public struct SubmitFeedbackRequest: Codable, Sendable {
         self.sessionId = sessionId
         self.projectId = projectId
         self.model = model
+        self.messageContent = messageContent
     }
 }
 
