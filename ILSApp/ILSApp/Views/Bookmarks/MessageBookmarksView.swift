@@ -30,6 +30,7 @@ struct MessageBookmarksView: View {
     @State private var searchText = ""
     @State private var selectedTag: String? = nil
     @State private var groupBySession = true
+    @State private var showExportSheet = false
 
     // MARK: - Computed
 
@@ -150,6 +151,19 @@ struct MessageBookmarksView: View {
                     .accessibilityLabel(groupBySession ? "Group by date" : "Group by session")
                     .accessibilityHint(groupBySession ? "Switch to grouping bookmarks by date" : "Switch to grouping bookmarks by session")
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showExportSheet = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .disabled(manager.bookmarks.isEmpty)
+                    .accessibilityLabel("Export Bookmarks")
+                    .accessibilityHint("Export all bookmarks as Markdown or JSON")
+                }
+            }
+            .sheet(isPresented: $showExportSheet) {
+                BookmarkExportSheet(bookmarks: manager.bookmarks)
             }
         }
     }
@@ -315,5 +329,204 @@ struct MessageBookmarksView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(theme.bgPrimary)
+    }
+}
+
+// MARK: - BookmarkExportSheet
+
+/// Format-picker sheet for exporting bookmarks.
+///
+/// Presents a segmented `Picker` with Markdown and JSON options and an Export
+/// button that builds the export content and presents the system share sheet.
+private struct BookmarkExportSheet: View {
+    let bookmarks: [MessageBookmark]
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme: ThemeSnapshot
+
+    @State private var selectedFormat: BookmarkExportFormat = .markdown
+    @State private var showShareSheet = false
+    @State private var shareItems: [Any] = []
+
+    // MARK: - Body
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Format") {
+                    Picker("Format", selection: $selectedFormat) {
+                        ForEach(BookmarkExportFormat.allCases) { format in
+                            Text(format.displayName).tag(format)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section {
+                    formatDescriptionRow
+                }
+
+                Section {
+                    HStack {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundStyle(theme.accent)
+                        Text("\(bookmarks.count) bookmark\(bookmarks.count == 1 ? "" : "s") will be exported")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(theme.bgPrimary)
+            .navigationTitle("Export Bookmarks")
+            #if os(iOS)
+            .inlineNavigationBarTitle()
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        triggerExport()
+                    } label: {
+                        Text("Export")
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
+            .sheet(isPresented: $showShareSheet) {
+                ShareSheet(items: shareItems)
+            }
+        }
+    }
+
+    // MARK: - Subviews
+
+    @ViewBuilder
+    private var formatDescriptionRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: selectedFormat.iconName)
+                .font(.system(size: 20))
+                .foregroundStyle(theme.accent)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(selectedFormat.displayName)
+                    .font(.body)
+                    .foregroundStyle(theme.textPrimary)
+
+                Text(selectedFormat.exportDescription)
+                    .font(.caption)
+                    .foregroundStyle(theme.textSecondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Export Logic
+
+    private func triggerExport() {
+        switch selectedFormat {
+        case .markdown:
+            let content = exportMarkdown(bookmarks: bookmarks)
+            let sheet = ShareSheet(text: content, fileName: "bookmarks.md")
+            shareItems = sheet.activityItems
+            showShareSheet = true
+        case .json:
+            if let data = exportJSON(bookmarks: bookmarks) {
+                let fileURL = writeToShareExports(data: data, fileName: "bookmarks.json")
+                if let url = fileURL {
+                    shareItems = [url]
+                    showShareSheet = true
+                }
+            }
+        }
+    }
+
+    /// Builds a Markdown document from all bookmarks, grouped by session.
+    private func exportMarkdown(bookmarks: [MessageBookmark]) -> String {
+        var md = "# Bookmarks\n\n"
+        md += "_Exported \(Date().formatted(date: .long, time: .shortened))_\n\n---\n\n"
+
+        for (index, bookmark) in bookmarks.enumerated() {
+            let sessionName = bookmark.sessionName ?? "Session \(bookmark.sessionId.uuidString.prefix(8))"
+            md += "## Bookmark \(index + 1)\n\n"
+            md += "**Session:** \(sessionName)\n\n"
+
+            if let content = bookmark.messageContent, !content.isEmpty {
+                md += "**Message:**\n\n> \(content.replacingOccurrences(of: "\n", with: "\n> "))\n\n"
+            }
+
+            if !bookmark.tags.isEmpty {
+                md += "**Tags:** \(bookmark.tags.joined(separator: ", "))\n\n"
+            }
+
+            if let note = bookmark.note, !note.isEmpty {
+                md += "**Note:** \(note)\n\n"
+            }
+
+            md += "---\n\n"
+        }
+
+        return md
+    }
+
+    /// Builds a JSON array from all bookmarks using `JSONEncoder`.
+    private func exportJSON(bookmarks: [MessageBookmark]) -> Data? {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try? encoder.encode(bookmarks)
+    }
+
+    /// Writes `data` to `Caches/ShareExports/<fileName>` and returns the URL.
+    private func writeToShareExports(data: Data, fileName: String) -> URL? {
+        guard let cachesBase = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let exportDir = cachesBase.appendingPathComponent("ShareExports", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
+            let fileURL = exportDir.appendingPathComponent(fileName)
+            try data.write(to: fileURL)
+            return fileURL
+        } catch {
+            AppLogger.shared.error(
+                "BookmarkExportSheet file write failed: \(error.localizedDescription)",
+                category: "export"
+            )
+            return nil
+        }
+    }
+}
+
+// MARK: - BookmarkExportFormat
+
+private enum BookmarkExportFormat: String, CaseIterable, Identifiable {
+    case markdown
+    case json
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .markdown: return "Markdown"
+        case .json:     return "JSON"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .markdown: return "text.alignleft"
+        case .json:     return "curlybraces"
+        }
+    }
+
+    var exportDescription: String {
+        switch self {
+        case .markdown: return "Human-readable document with each bookmark as a formatted section."
+        case .json:     return "Structured data with all bookmark fields, suitable for import or processing."
+        }
     }
 }
