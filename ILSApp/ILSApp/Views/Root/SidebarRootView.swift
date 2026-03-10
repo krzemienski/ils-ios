@@ -33,6 +33,7 @@ enum ActiveScreen: Hashable {
     case search
     case usage
     case workflows
+    case bookmarks
 
     /// Backward-compatible alias: `.fleet` maps to `.hostProfiles`.
     static var fleet: ActiveScreen { .hostProfiles }
@@ -62,6 +63,7 @@ enum ActiveScreen: Hashable {
         case .search: return "search"
         case .usage: return "usage"
         case .workflows: return "workflows"
+        case .bookmarks: return "bookmarks"
         }
     }
 
@@ -88,6 +90,7 @@ enum ActiveScreen: Hashable {
         case "search": return .search
         case "usage": return .usage
         case "workflows": return .workflows
+        case "bookmarks": return .bookmarks
         default: return nil  // "chat" requires session — handled separately
         }
     }
@@ -438,6 +441,8 @@ struct SidebarRootView: View {
                     usageScreen
                 case .workflows:
                     WorkflowsListView()
+                case .bookmarks:
+                    bookmarksScreen
                 }
             }
             .id(activeScreen.storageKey)
@@ -643,6 +648,10 @@ struct SidebarRootView: View {
 
     private var usageScreen: some View {
         UsageDashboardView()
+    }
+
+    private var bookmarksScreen: some View {
+        MessageBookmarksView()
     }
 
     // MARK: - Chat Navigation

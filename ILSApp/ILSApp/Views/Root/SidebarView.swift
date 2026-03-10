@@ -402,6 +402,7 @@ struct SidebarView: View {
                     sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
                     sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
                     sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
+                    sidebarNavItem(icon: "bookmark.fill", label: "Bookmarks", screen: .bookmarks)
                     sidebarNavItem(
                         icon: "checkmark.shield.fill",
                         label: "Permissions",
