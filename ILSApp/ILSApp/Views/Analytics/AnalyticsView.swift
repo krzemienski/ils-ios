@@ -64,6 +64,9 @@ struct AnalyticsView: View {
                     QualityTrendView(data: feedbackViewModel.qualityTrend)
                     BestOfCollectionView(bestOfItems: feedbackViewModel.bestOfItems)
                     FileTypeBreakdownView()
+
+                    // Error pattern detection and auto-fix suggestions
+                    errorPatternsNavigationLink
                 }
             }
             .padding(.horizontal, theme.spacingMD)
@@ -327,6 +330,40 @@ struct AnalyticsView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Loading analytics data")
+    }
+
+    // MARK: - Error Patterns Navigation
+
+    /// Navigation link to the ``ErrorPatternsView`` showing AI-detected error patterns and auto-fix suggestions.
+    ///
+    /// Rendered as a tappable card row below the other analytics sections.
+    private var errorPatternsNavigationLink: some View {
+        NavigationLink(destination: ErrorPatternsView()) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.warning)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Error Patterns")
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Text("AI-detected patterns and auto-fix suggestions")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
+        }
+        .accessibilityLabel("Error Patterns")
+        .accessibilityHint("View AI-detected error patterns and auto-fix suggestions")
     }
 
     // MARK: - Export Button

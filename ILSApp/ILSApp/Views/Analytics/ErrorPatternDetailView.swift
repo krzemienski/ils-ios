@@ -517,7 +517,7 @@ struct ErrorPatternDetailView: View {
         suggestedFixes: [fix1, fix2]
     )
     let viewModel = ErrorPatternsViewModel()
-    return ErrorPatternDetailView(pattern: pattern, viewModel: viewModel)
+    ErrorPatternDetailView(pattern: pattern, viewModel: viewModel)
         .environment(AppState())
         .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }

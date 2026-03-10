@@ -495,7 +495,7 @@ private struct ErrorPatternRow: View {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(confidenceColor(for: fix.confidence).gradient)
                             .frame(
-                                width: geo.size.width * fix.confidence.clamped(to: 0...1),
+                                width: geo.size.width * min(max(fix.confidence, 0), 1),
                                 height: 4
                             )
                     }
