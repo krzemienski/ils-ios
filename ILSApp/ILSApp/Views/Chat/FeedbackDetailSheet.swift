@@ -47,7 +47,9 @@ struct FeedbackDetailSheet: View {
             }
             .background(theme.bgPrimary)
             .navigationTitle("What went wrong?")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -111,7 +111,9 @@ struct FeedbackRatingView: View {
             .padding(theme.spacingLG)
             .background(theme.bgPrimary)
             .navigationTitle("Feedback")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

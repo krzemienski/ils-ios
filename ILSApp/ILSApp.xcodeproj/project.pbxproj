@@ -38,6 +38,9 @@
 		BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1111111111111111111111 /* BestOfCollectionView.swift */; };
 		BB5555555555555555555555 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
 		BB6666666666666666666666 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
+		CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* FeedbackViewModel.swift */; };
+		CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* FeedbackRatingView.swift */; };
+		CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* FeedbackDetailSheet.swift */; };
 		06AC7AF758977C86BA9CE168 /* SessionCheckpointsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448A55AEFBD34AD89EA6C69C /* SessionCheckpointsViewModel.swift */; };
 		06B6449360F3E99EBCF8D389 /* SettingsAboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */; };
 		072B3898C2136EBC57F128B8 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862B584915489231984E2FC9 /* PlaybackView.swift */; };
@@ -3289,6 +3292,9 @@
 				E1D98FB794A1C58450A03369 /* FeatureGate.swift in Sources */,
 				6BFA87146F9663D99F2E85A9 /* FeatureGateView.swift in Sources */,
 				8EA2C38C0611C440B5ADDA17 /* FeatureTourView.swift in Sources */,
+				CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */,
+				CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */,
+				CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */,
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
 				BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */,

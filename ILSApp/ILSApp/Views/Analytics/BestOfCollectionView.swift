@@ -264,7 +264,9 @@ private struct BestOfDetailSheet: View {
                 .padding(theme.spacingMD)
             }
             .navigationTitle("Best Of Response")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
