@@ -131,6 +131,8 @@ func configure(_ app: Application) async throws {
     // v6.3 — Interactive permission policy engine
     app.migrations.add(CreatePermissionPolicies())
     app.migrations.add(CreatePermissionPolicySettings())
+    // v6.4 — Permission policy tracking (matched_policy_id on permissions)
+    app.migrations.add(AddPolicyIdToPermissions())
 
     // Run migrations
     try await app.autoMigrate()
