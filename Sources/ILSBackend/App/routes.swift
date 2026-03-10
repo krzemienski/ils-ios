@@ -35,6 +35,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: AgentQueueController(queueService: AgentQueueService(db: app.db, executor: ClaudeExecutorService())))
     try api.register(collection: PermissionsController(executor: executor))
     try api.register(collection: AutomationRulesController())
+    try api.register(collection: PermissionPoliciesController())
     let workflowExecutionEngine = WorkflowExecutionEngine()
     let workflowScheduler = WorkflowScheduler(executionEngine: workflowExecutionEngine)
     try api.register(collection: WorkflowsController(fileService: WorkflowFileService(), executionEngine: workflowExecutionEngine, scheduler: workflowScheduler))

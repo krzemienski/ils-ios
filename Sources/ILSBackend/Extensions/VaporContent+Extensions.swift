@@ -372,3 +372,12 @@ extension ProfilePermissions: Content {}
 extension CreateConfigProfileRequest: Content {}
 extension UpdateConfigProfileRequest: Content {}
 extension ConfigProfileListResponse: Content {}
+
+// MARK: - Permission Policy Types
+extension PermissionPolicy: Content {}
+extension PermissionPolicyAction: Content {}
+extension PermissionPolicyResponse: Content {}
+extension ListPermissionPoliciesResponse: Content {}
+extension CreatePermissionPolicyRequest: Content {}
+extension UpdatePermissionPolicyRequest: Content {}
+extension ReorderPermissionPoliciesRequest: Content {}
