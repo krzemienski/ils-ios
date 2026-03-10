@@ -5,12 +5,13 @@ import ILSShared
 
 /// Auto-approve rules management view.
 ///
-/// Shows global and project-scoped rules in sections with CRUD operations.
+/// Shows rules grouped into Allow and Deny sections with color-coded action badges.
+/// A Settings section surfaces the Default Deny toggle fetched from the backend.
 /// Tapping a rule opens ``AutoApproveRuleEditorSheet`` for editing. Rules can
 /// be toggled, edited, or deleted via context menu.
 ///
-/// Also supports an inline add-rule sheet for quick rule creation with
-/// tool-name pattern, match type, and maximum risk level pickers.
+/// Each rule row shows a match count badge drawn from the permission history,
+/// making it easy to see which rules are actively being evaluated.
 ///
 /// On first launch (empty rules list), seeds two common read-only defaults:
 /// - **Read** (contains match, low risk)
@@ -28,7 +29,16 @@ struct AutoApproveRulesView: View {
     @State private var newMatchType: AutoApproveMatchType = .contains
     @State private var newMaxRiskLevel: PermissionRiskLevel = .low
 
+    // MARK: - Policy Settings State
+
+    @State private var defaultDeny: Bool = false
+    @State private var isLoadingSettings: Bool = false
+
+    private let policyAPIService = PermissionPolicyAPIService()
+
     private var service: PermissionService { appState.permissionService }
+
+    // MARK: - Body
 
     var body: some View {
         Group {
@@ -56,10 +66,14 @@ struct AutoApproveRulesView: View {
             }
         }
         .refreshable {
-            await viewModel.loadRules()
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { await viewModel.loadRules() }
+                group.addTask { await loadSettings() }
+            }
         }
         .task {
             await viewModel.loadRules()
+            await loadSettings()
         }
         .sheet(isPresented: $showCreateSheet) {
             AutoApproveRuleEditorSheet(
@@ -105,26 +119,83 @@ struct AutoApproveRulesView: View {
         ScrollView {
             LazyVStack(spacing: theme.spacingMD) {
                 warningSection
+                settingsSection
                 summaryHeader
 
-                if !viewModel.globalRules.isEmpty {
+                let allowRules = viewModel.rules.filter { $0.action == .allow }
+                let denyRules = viewModel.rules.filter { $0.action == .deny }
+
+                if !allowRules.isEmpty {
                     rulesSection(
-                        title: "Global Rules",
-                        icon: "globe",
-                        rules: viewModel.globalRules
+                        title: "Allow Rules",
+                        icon: "checkmark.shield.fill",
+                        iconColor: theme.success,
+                        rules: allowRules
                     )
                 }
 
-                if !viewModel.projectRules.isEmpty {
+                if !denyRules.isEmpty {
                     rulesSection(
-                        title: "Project Rules",
-                        icon: "folder",
-                        rules: viewModel.projectRules
+                        title: "Deny Rules",
+                        icon: "xmark.shield.fill",
+                        iconColor: theme.error,
+                        rules: denyRules
                     )
                 }
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingLG)
+        }
+    }
+
+    // MARK: - Settings Section
+
+    private var settingsSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            HStack(spacing: theme.spacingSM) {
+                Image(systemName: "slider.horizontal.3")
+                    .foregroundStyle(theme.accent)
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .accessibilityHidden(true)
+
+                Text("Settings")
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+            }
+            .padding(.top, theme.spacingSM)
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Default Deny")
+                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                        .foregroundStyle(theme.textPrimary)
+                    Text("Auto-deny unmatched requests")
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                        .foregroundStyle(theme.textTertiary)
+                }
+
+                Spacer()
+
+                if isLoadingSettings {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .scaleEffect(0.8)
+                } else {
+                    Toggle("", isOn: Binding(
+                        get: { defaultDeny },
+                        set: { newValue in
+                            defaultDeny = newValue
+                            Task { await saveDefaultDeny(newValue) }
+                        }
+                    ))
+                    .tint(theme.error)
+                    .labelsHidden()
+                    .accessibilityLabel("Default deny mode")
+                    .accessibilityHint("When enabled, unmatched permission requests are automatically denied")
+                }
+            }
+            .padding(theme.spacingMD)
+            .modifier(GlassCard())
         }
     }
 
@@ -150,23 +221,10 @@ struct AutoApproveRulesView: View {
     private var summaryHeader: some View {
         HStack(spacing: theme.spacingMD) {
             VStack(spacing: 2) {
-                Text("\(viewModel.rules.count)")
-                    .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
-                    .foregroundStyle(theme.accent)
-                Text("Total Rules")
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, theme.spacingSM)
-            .background(theme.accent.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-
-            VStack(spacing: 2) {
-                Text("\(viewModel.rules.filter(\.isEnabled).count)")
+                Text("\(viewModel.rules.filter { $0.action == .allow }.count)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                     .foregroundStyle(theme.success)
-                Text("Active")
+                Text("Allow")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
@@ -174,16 +232,47 @@ struct AutoApproveRulesView: View {
             .padding(.vertical, theme.spacingSM)
             .background(theme.success.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            VStack(spacing: 2) {
+                Text("\(viewModel.rules.filter { $0.action == .deny }.count)")
+                    .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.error)
+                Text("Deny")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.error.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+
+            VStack(spacing: 2) {
+                Text("\(viewModel.rules.filter(\.isEnabled).count)")
+                    .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
+                    .foregroundStyle(theme.accent)
+                Text("Active")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(theme.textTertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, theme.spacingSM)
+            .background(theme.accent.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
     }
 
     // MARK: - Rules Section
 
-    private func rulesSection(title: String, icon: String, rules: [AutoApproveRule]) -> some View {
+    private func rulesSection(
+        title: String,
+        icon: String,
+        iconColor: Color,
+        rules: [AutoApproveRule]
+    ) -> some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: icon)
-                    .foregroundStyle(theme.accent)
+                    .foregroundStyle(iconColor)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .accessibilityHidden(true)
 
@@ -212,7 +301,9 @@ struct AutoApproveRulesView: View {
     // MARK: - Rule Row
 
     private func ruleRow(rule: AutoApproveRule) -> some View {
-        Button {
+        let matchCount = service.permissionHistory.filter { $0.matchedPolicyId == rule.id }.count
+
+        return Button {
             editingRule = rule
         } label: {
             VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -230,6 +321,18 @@ struct AutoApproveRulesView: View {
 
                     Spacer()
 
+                    // Match count badge
+                    if matchCount > 0 {
+                        Text("\(matchCount)")
+                            .font(.system(size: theme.fontCaption, weight: .bold, design: theme.fontDesign))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(rule.action == .allow ? theme.success : theme.error)
+                            .clipShape(Capsule())
+                            .accessibilityLabel("\(matchCount) matches")
+                    }
+
                     Image(systemName: "chevron.right")
                         .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.textTertiary)
@@ -237,6 +340,9 @@ struct AutoApproveRulesView: View {
 
                 // Badges row
                 HStack(spacing: theme.spacingSM) {
+                    // Allow / Deny action badge
+                    actionBadge(for: rule.action)
+
                     if let toolName = rule.toolName {
                         Text(toolName)
                             .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
@@ -247,7 +353,7 @@ struct AutoApproveRulesView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
 
-                    if rule.isDestructive {
+                    if rule.isDestructive && rule.action == .allow {
                         HStack(spacing: 2) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .accessibilityHidden(true)
@@ -313,8 +419,26 @@ struct AutoApproveRulesView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel(for: rule))
+        .accessibilityLabel(accessibilityLabel(for: rule, matchCount: matchCount))
         .accessibilityHint("Tap to edit, long press for options")
+    }
+
+    // MARK: - Action Badge
+
+    @ViewBuilder
+    private func actionBadge(for action: PermissionPolicyAction) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: action == .allow ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.system(size: 10))
+                .accessibilityHidden(true)
+            Text(action == .allow ? "Allow" : "Deny")
+        }
+        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+        .foregroundStyle(action == .allow ? theme.success : theme.error)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background((action == .allow ? theme.success : theme.error).opacity(0.15))
+        .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
     // MARK: - Helpers
@@ -328,9 +452,14 @@ struct AutoApproveRulesView: View {
         return parts.joined(separator: " · ")
     }
 
-    private func accessibilityLabel(for rule: AutoApproveRule) -> String {
+    private func accessibilityLabel(for rule: AutoApproveRule, matchCount: Int) -> String {
         let status = rule.isEnabled ? "enabled" : "disabled"
-        return "\(ruleSummary(rule)), \(status)"
+        let action = rule.action == .allow ? "allow" : "deny"
+        var label = "\(ruleSummary(rule)), \(action), \(status)"
+        if matchCount > 0 {
+            label += ", \(matchCount) matches"
+        }
+        return label
     }
 
     // MARK: - Empty State
@@ -347,7 +476,7 @@ struct AutoApproveRulesView: View {
                     .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textPrimary)
 
-                Text("Create rules to automatically approve common safe operations — like file reads in your project directory or routine git commands.")
+                Text("Create rules to automatically allow or deny Claude Code tool operations.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -405,9 +534,9 @@ struct AutoApproveRulesView: View {
     }
 
     private static let exampleRules: [(title: String, detail: String)] = [
-        ("Read anything in /src", "Tool: Read · Path: /src/**"),
-        ("Git status", "Tool: Bash · Command prefix: git status"),
-        ("Run tests", "Tool: Bash · Command prefix: swift test"),
+        ("Allow reads in /src", "Tool: Read · Path: /src/** · Action: Allow"),
+        ("Deny writes to .env", "Tool: Write · Path: **/.env · Action: Deny"),
+        ("Allow git status", "Tool: Bash · Command: git status · Action: Allow"),
     ]
 
     // MARK: - Loading State
@@ -507,6 +636,40 @@ struct AutoApproveRulesView: View {
             .foregroundStyle(theme.textTertiary)
             .textCase(.uppercase)
             .kerning(1)
+    }
+
+    // MARK: - Backend Settings
+
+    private func loadSettings() async {
+        isLoadingSettings = true
+        defer { isLoadingSettings = false }
+        do {
+            let settings = try await policyAPIService.fetchSettings(apiClient: appState.apiClient)
+            defaultDeny = settings.defaultDeny
+        } catch {
+            // Settings load failure is non-fatal; keep existing value
+            AppLogger.shared.info(
+                "Could not load policy settings: \(error.localizedDescription)",
+                category: "permissions"
+            )
+        }
+    }
+
+    private func saveDefaultDeny(_ value: Bool) async {
+        isLoadingSettings = true
+        defer { isLoadingSettings = false }
+        do {
+            let request = UpdatePermissionPolicySettingsRequest(defaultDeny: value)
+            let updated = try await policyAPIService.updateSettings(request, apiClient: appState.apiClient)
+            defaultDeny = updated.defaultDeny
+        } catch {
+            // Revert optimistic update on failure
+            defaultDeny = !value
+            AppLogger.shared.error(
+                "Failed to save policy settings: \(error.localizedDescription)",
+                category: "permissions"
+            )
+        }
     }
 
     // MARK: - Actions
