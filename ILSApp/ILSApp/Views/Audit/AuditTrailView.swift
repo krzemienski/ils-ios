@@ -267,7 +267,7 @@ struct AuditTrailView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 32))
                 .foregroundStyle(theme.textTertiary)
-            Text("No results for "\(viewModel.searchText)"")
+            Text("No results for \"\(viewModel.searchText)\"")
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
