@@ -11,12 +11,18 @@ import ILSShared
 /// When the user scrolls up during streaming a floating "jump to bottom" button appears.
 /// Tapping it resets scroll state and jumps back to the latest content.
 ///
+/// Non-system messages support a long-press context menu with Bookmark, Copy, and Share
+/// actions. Bookmarked messages display a bookmark indicator in their top-trailing corner.
+/// Tapping Bookmark opens ``BookmarkMessageSheet`` for adding a note and tags.
+///
 /// ## Topics
 /// ### Input Properties
 /// - ``messages`` - Ordered array of conversation messages to display
 /// - ``isStreaming`` - Whether Claude is currently streaming a response
 /// - ``isLoadingHistory`` - Whether prior message history is being fetched
 /// - ``currentStreamingMessage`` - Partially-received assistant message, if any
+/// - ``sessionId`` - UUID of the current session, required for bookmark creation
+/// - ``sessionName`` - Display name of the session, shown in the bookmark sheet
 /// - ``sessionProjectId`` - Project context passed to permission UI components
 ///
 /// ### Bindings
@@ -58,6 +64,10 @@ struct ChatMessageList: View {
     let onLoadMore: () -> Void
     /// The encoded project path for the current session, used by permission UI.
     let sessionProjectId: String?
+    /// UUID of the current session, used when creating bookmarks.
+    let sessionId: UUID
+    /// Display name of the current session, shown in the bookmark sheet.
+    let sessionName: String?
 
     /// Dynamic horizontal padding for messages, scales with the user's text size preference.
     @ScaledMetric(relativeTo: .body) private var messageSpacing: CGFloat = 16
@@ -70,6 +80,14 @@ struct ChatMessageList: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// On regular (iPad) size class, caps message content at a readable max width.
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    #if os(iOS)
+    /// The message currently being bookmarked — non-nil triggers `BookmarkMessageSheet`.
+    @State private var messageToBookmark: ChatMessage?
+    #endif
+
+    /// Shared bookmark manager for state queries and mutation.
+    private let bookmarksManager = MessageBookmarksManager.shared
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -126,6 +144,18 @@ struct ChatMessageList: View {
                 }
             }
         }
+        #if os(iOS)
+        .sheet(item: $messageToBookmark) { message in
+            BookmarkMessageSheet(
+                messageId: message.id.uuidString,
+                sessionId: sessionId,
+                sessionName: sessionName,
+                messageContent: message.text,
+                messageRole: message.isUser ? "user" : "assistant"
+            )
+            .environment(\.theme, theme)
+        }
+        #endif
     }
 
     private var messagesContent: some View {
@@ -171,6 +201,12 @@ struct ChatMessageList: View {
                         onDelete: onDeleteMessage
                     )
                     .equatable()
+                    .overlay(alignment: .topTrailing) {
+                        bookmarkIndicator(for: message)
+                    }
+                    .contextMenu {
+                        bookmarkMenuItems(for: message)
+                    }
                     .padding(.horizontal, messageSpacing)
                     .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 } else {
@@ -182,6 +218,12 @@ struct ChatMessageList: View {
                         onDelete: onDeleteMessage
                     )
                     .equatable()
+                    .overlay(alignment: .topTrailing) {
+                        bookmarkIndicator(for: message)
+                    }
+                    .contextMenu {
+                        bookmarkMenuItems(for: message)
+                    }
                     .padding(.horizontal, messageSpacing)
                     .padding(.top, isSameSender ? sameSenderGap : senderGap)
                 }
@@ -203,6 +245,61 @@ struct ChatMessageList: View {
                 .id("bottom")
         }
         .padding(.vertical, messageSpacing)
+    }
+
+    /// Small bookmark icon shown in the top-trailing corner of a bookmarked message bubble.
+    @ViewBuilder
+    private func bookmarkIndicator(for message: ChatMessage) -> some View {
+        if bookmarksManager.isBookmarked(messageId: message.id.uuidString) {
+            Image(systemName: "bookmark.fill")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.accent)
+                .padding(6)
+                .accessibilityLabel("Bookmarked")
+                .accessibilityHint("This message is saved to your bookmarks")
+        }
+    }
+
+    /// Context menu items for a non-system message: Bookmark/Remove Bookmark, Copy, Share.
+    @ViewBuilder
+    private func bookmarkMenuItems(for message: ChatMessage) -> some View {
+        let messageIdString = message.id.uuidString
+        let isAlreadyBookmarked = bookmarksManager.isBookmarked(messageId: messageIdString)
+
+        if isAlreadyBookmarked {
+            Button(role: .destructive) {
+                Task { await bookmarksManager.removeBookmark(messageId: messageIdString) }
+            } label: {
+                Label("Remove Bookmark", systemImage: "bookmark.slash")
+            }
+        } else {
+            Button {
+                #if os(iOS)
+                messageToBookmark = message
+                #endif
+            } label: {
+                Label("Bookmark", systemImage: "bookmark")
+            }
+        }
+
+        Divider()
+
+        Button {
+            #if os(iOS)
+            UIPasteboard.general.string = message.text
+            #else
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(message.text, forType: .string)
+            #endif
+        } label: {
+            Label("Copy", systemImage: "doc.on.doc")
+        }
+
+        if !message.text.isEmpty {
+            ShareLink(item: message.text) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+        }
     }
 
     /// `true` while Claude is streaming but no tokens have been received yet,

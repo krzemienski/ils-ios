@@ -383,7 +383,9 @@ struct MacChatView: View {
             onLoadMore: {
                 Task { await viewModel.loadOlderMessages() }
             },
-            sessionProjectId: session.projectId?.uuidString
+            sessionProjectId: session.projectId?.uuidString,
+            sessionId: session.id,
+            sessionName: session.name
         )
         .simultaneousGesture(
             DragGesture().onChanged { _ in
