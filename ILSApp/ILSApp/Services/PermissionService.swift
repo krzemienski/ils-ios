@@ -190,21 +190,32 @@ final class PermissionService {
     // MARK: - Auto-Approve Rules
 
     /// Checks all enabled auto-approve rules against `record`.
-    /// If a rule matches, the request is automatically approved.
+    ///
+    /// Evaluation order:
+    /// 1. If the backend already resolved this request (server-side auto-resolve, status ≠ pending),
+    ///    client-side rule evaluation is skipped entirely.
+    /// 2. Client-side rules are evaluated in priority order (lower number = higher priority).
+    ///    The first matching rule determines the outcome — `allow` or `deny`.
     ///
     /// - Parameters:
     ///   - record: The incoming permission request to evaluate.
-    ///   - apiClient: Used to submit the auto-approve decision.
+    ///   - apiClient: Used to submit the auto-approve or auto-deny decision.
     func checkAutoApprove(record: PermissionRecord, apiClient: APIClient) async {
+        // If the backend already resolved this request (server-side auto-resolve), skip client evaluation.
         guard record.status == .pending else { return }
 
-        for rule in autoApproveRules where rule.isEnabled {
+        // Evaluate rules in priority order (lower number = higher priority).
+        let sortedRules = autoApproveRules.filter(\.isEnabled).sorted { $0.priority < $1.priority }
+
+        for rule in sortedRules {
             let toolInput = (record.toolInput.value as? String) ?? ""
             if rule.matches(toolName: record.toolName, toolInput: toolInput) {
+                let decision = rule.action == .deny ? "deny" : "allow"
+                let actionLabel = rule.action == .deny ? "Auto-denied" : "Auto-approved"
                 try? await submitDecision(
                     requestId: record.requestId,
-                    decision: "allow",
-                    reason: "Auto-approved by rule: \(rule.toolName ?? "*")",
+                    decision: decision,
+                    reason: "\(actionLabel) by rule: \(rule.toolName ?? "*")",
                     apiClient: apiClient
                 )
                 return

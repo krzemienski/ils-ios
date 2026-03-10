@@ -502,6 +502,11 @@ struct PermissionHistoryDetailSheet: View {
                     Divider().background(theme.bgTertiary)
                     metaRow("Scope", value: "Session-wide")
                 }
+
+                if let policyId = record.matchedPolicyId {
+                    Divider().background(theme.bgTertiary)
+                    metaRow("Matched Policy", value: policyId.uuidString)
+                }
             }
             .padding(theme.spacingSM)
             .modifier(GlassCard())
