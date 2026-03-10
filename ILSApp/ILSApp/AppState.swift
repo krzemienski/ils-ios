@@ -18,6 +18,9 @@ class AppState {
     /// Server name pre-populated from `ils://mcp/install?server=<name>` deep links.
     /// Consumed and cleared by BrowserView when opening the install wizard.
     var pendingMCPInstallName: String? = nil
+    /// Bookmark ID from `ils://bookmark/<uuid>` deep links.
+    /// Consumed and cleared by MessageBookmarksView to scroll to and highlight the bookmark.
+    var pendingBookmarkId: UUID? = nil
     var lastSessionId: UUID?
     var lastSyncDate: Date?
 
@@ -384,6 +387,14 @@ class AppState {
             navigationIntent = .agentQueue
         case "workflows":
             navigationIntent = .workflows
+        case "bookmark":
+            // ils://bookmark/<uuid> — navigate to MessageBookmarksView and highlight the bookmark
+            if let bookmarkId = resourceId {
+                pendingBookmarkId = bookmarkId
+                navigationIntent = .bookmarks
+            } else {
+                navigationIntent = .bookmarks
+            }
         default:
             break
         }

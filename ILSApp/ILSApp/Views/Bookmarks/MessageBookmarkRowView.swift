@@ -75,6 +75,13 @@ struct MessageBookmarkRowView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint("Opens this message in its session")
+        .contextMenu {
+            if let shareURL = URL(string: "ils://bookmark/\(bookmark.id.uuidString.lowercased())") {
+                ShareLink(item: shareURL) {
+                    Label("Share Bookmark", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
     }
 
     // MARK: - Sub-views
