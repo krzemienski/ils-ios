@@ -426,3 +426,10 @@ extension AuditActionListResponse: Content {}
 extension RollbackResponse: Content {}
 extension RollbackResultItem: Content {}
 extension LogAuditActionRequest: Content {}
+
+// MARK: - Error Pattern Types
+extension ErrorFix: Content {}
+extension ErrorPattern: Content {}
+extension ErrorPatternListResponse: Content {}
+extension ApplyFixRequest: Content {}
+extension MarkResolvedRequest: Content {}

@@ -32,6 +32,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: ActivityFeedController())
     try api.register(collection: RecordingController())
     try api.register(collection: AnalyticsController(fileSystem: fileSystem))
+    try api.register(collection: ErrorPatternsController())
     try api.register(collection: FeedbackController())
     try api.register(collection: AuditController())
     let workflowExecutionEngine = WorkflowExecutionEngine()
