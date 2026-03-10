@@ -60,7 +60,19 @@ actor PolicyEvaluationService {
             }
         }
 
-        // No policy matched — caller should prompt the user.
+        // No policy matched — check default-deny setting for this scope.
+        let settingsQuery = PermissionPolicySettingsModel.query(on: db)
+        if let projId = projectId {
+            settingsQuery.filter(\.$projectId == projId)
+        } else {
+            settingsQuery.filter(\.$projectId == nil)
+        }
+        if let settings = try? await settingsQuery.first(), settings.defaultDeny {
+            Self.logger.info("Default-deny triggered for unmatched request: \(request.toolName)")
+            return (.deny, matchedPolicy: nil)
+        }
+
+        // Default-deny is off (or no settings row) — caller should prompt the user.
         return (.allow, matchedPolicy: nil)
     }
 

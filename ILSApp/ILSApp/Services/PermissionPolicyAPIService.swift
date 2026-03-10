@@ -107,7 +107,7 @@ struct PermissionPolicyAPIService {
         _ request: ReorderPermissionPoliciesRequest,
         apiClient: APIClient
     ) async throws {
-        let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
+        let _: APIResponse<ListPermissionPoliciesResponse> = try await apiClient.post(
             "/permission-policies/reorder",
             body: request
         )

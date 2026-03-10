@@ -93,21 +93,25 @@ actor PermissionStore {
             if let (action, matchedPolicy) = try? await PolicyEvaluationService.shared.evaluate(
                 request: record,
                 db: database
-            ), let policy = matchedPolicy {
-                let autoStatus: PermissionStatus = action == .allow ? .autoApproved : .denied
-                if let resolved = resolve(
-                    requestId: requestId,
-                    status: autoStatus,
-                    reason: nil,
-                    matchedPolicyId: policy.id
-                ) {
-                    // Persist the auto-resolved record to the database for audit trail.
-                    let model = PermissionModel.from(resolved)
-                    try? await model.save(on: database)
-                    Self.logger.info(
-                        "Permission auto-resolved by policy '\(policy.name)': \(requestId) status=\(autoStatus.rawValue)"
-                    )
-                    return resolved
+            ) {
+                // Auto-resolve when: a named policy matched, OR default-deny triggered (deny + no policy).
+                if matchedPolicy != nil || action == .deny {
+                    let autoStatus: PermissionStatus = action == .allow ? .autoApproved : .denied
+                    let reason: String? = matchedPolicy == nil ? "Default deny mode active" : nil
+                    if let resolved = resolve(
+                        requestId: requestId,
+                        status: autoStatus,
+                        reason: reason,
+                        matchedPolicyId: matchedPolicy?.id
+                    ) {
+                        // Persist the auto-resolved record to the database for audit trail.
+                        let model = PermissionModel.from(resolved)
+                        try? await model.save(on: database)
+                        Self.logger.info(
+                            "Permission auto-resolved: \(requestId) status=\(autoStatus.rawValue) policy=\(matchedPolicy?.name ?? "default-deny")"
+                        )
+                        return resolved
+                    }
                 }
             }
         }
