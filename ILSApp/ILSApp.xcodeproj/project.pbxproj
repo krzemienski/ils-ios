@@ -722,6 +722,9 @@
 		CED5F4971A9A51C8099F6DBA /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA40A7EA5F64411CCBDE070 /* Color+Hex.swift */; };
 		CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65F9892954F605C2737A7D /* TeamsViewModel.swift */; };
 		CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */; };
+		AA4444444444444444444444 /* FeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* FeedbackViewModel.swift */; };
+		AA5555555555555555555555 /* FeedbackRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* FeedbackRatingView.swift */; };
+		AA6666666666666666666666 /* FeedbackDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* FeedbackDetailSheet.swift */; };
 		CFA933B178ACE659C88C7FF3 /* EditTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD7181D7C81A6B183DC067B /* EditTemplateView.swift */; };
 		CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */; };
 		D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
@@ -992,6 +995,9 @@
 		1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConfigSection.swift; sourceTree = "<group>"; };
 		1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* FeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackViewModel.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* FeedbackRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackRatingView.swift; sourceTree = "<group>"; };
+		AA3333333333333333333333 /* FeedbackDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackDetailSheet.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		1D5B26088CC66E3B8BA9091B /* BackendLifecycleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendLifecycleManager.swift; sourceTree = "<group>"; };
 		1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
@@ -2213,6 +2219,7 @@
 				9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */,
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
+				AA1111111111111111111111 /* FeedbackViewModel.swift */,
 				8AE3E60652AFE81FAB1A7E84 /* CheckpointViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				0D9C2128D00ABE45432812A0 /* CrossSessionSearchViewModel.swift */,
@@ -2423,6 +2430,8 @@
 				170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */,
 				38F9042913547966CFD44581 /* MessageSearchResultRow.swift */,
 				1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */,
+				AA2222222222222222222222 /* FeedbackRatingView.swift */,
+				AA3333333333333333333333 /* FeedbackDetailSheet.swift */,
 				4A8504158EF2C6631DC10A0D /* PastePreviewSheet.swift */,
 				5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */,
 				DE2FFEC3ADBABF4B3E732A97 /* PostCompactionRecoverySheet.swift */,
@@ -2928,6 +2937,9 @@
 				8725CDCA540E3B4B264349A8 /* MessageQueueService.swift in Sources */,
 				E60C222F2D2BF4497246352C /* MessageSearchResultRow.swift in Sources */,
 				CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */,
+				AA4444444444444444444444 /* FeedbackViewModel.swift in Sources */,
+				AA5555555555555555555555 /* FeedbackRatingView.swift in Sources */,
+				AA6666666666666666666666 /* FeedbackDetailSheet.swift in Sources */,
 				4F5736F79DB3678F90F5A525 /* MetricChart.swift in Sources */,
 				2CCFD53061E151D34D7E15AA /* MetricsWebSocketClient.swift in Sources */,
 				0225E7F25803E1514F00780E /* MidnightTheme.swift in Sources */,
