@@ -176,6 +176,8 @@
 		2DDCEB16873F01EE3EBA2527 /* SessionFileBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0176FC919FBFBE7BAE3311F3 /* SessionFileBrowserView.swift */; };
 		2DE2E7CD15D3686175AEEA34 /* Scenario04_ErrorHandlingAndRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B8FAB1246E8DB2AF699A5B5 /* Scenario04_ErrorHandlingAndRecovery.swift */; };
 		2DE6E9CBE80C8EDF925AD09C /* PermissionHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E6F4EFE3755EAD359BD014 /* PermissionHistoryService.swift */; };
+		3A1B2C3D4E5F6A7B8C9D0E1F /* PermissionPolicyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C9D0E1F2A3B4C5D6E7F80 /* PermissionPolicyAPIService.swift */; };
+		3B2C3D4E5F6A7B8C9D0E1F2A /* PermissionPolicyAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8C9D0E1F2A3B4C5D6E7F80 /* PermissionPolicyAPIService.swift */; };
 		2E4B00C82CEE0960432DD1C8 /* DocumentationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0D216E7AF7A82FF42EB50E /* DocumentationService.swift */; };
 		2F35F33131F061E873FBC02F /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06A8A5DC276AB8E77D502627 /* SSEClient.swift */; };
 		2FFDC540A0777856CAC0826F /* BackendConnectionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */; };
@@ -1059,6 +1061,7 @@
 		40BB4C233B48361C8E553661 /* ScrollPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollPerformanceTests.swift; sourceTree = "<group>"; };
 		413985672B4899C4B71D7369 /* TemplatesLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatesLibraryView.swift; sourceTree = "<group>"; };
 		41E6F4EFE3755EAD359BD014 /* PermissionHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryService.swift; sourceTree = "<group>"; };
+		7B8C9D0E1F2A3B4C5D6E7F80 /* PermissionPolicyAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionPolicyAPIService.swift; sourceTree = "<group>"; };
 		44775F4256B3CDEB17B723DF /* GlobalSearchResultRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchResultRow.swift; sourceTree = "<group>"; };
 		447788C9EF6EA3298A38810C /* ChatRenderPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatRenderPerformanceTests.swift; sourceTree = "<group>"; };
 		448A55AEFBD34AD89EA6C69C /* SessionCheckpointsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCheckpointsViewModel.swift; sourceTree = "<group>"; };
@@ -2150,6 +2153,7 @@
 				DE7BF057334A2ED3CA0A47E6 /* OfflineCacheSettings.swift */,
 				0D259013682B0E76D248995F /* PerformanceMonitor.swift */,
 				41E6F4EFE3755EAD359BD014 /* PermissionHistoryService.swift */,
+				7B8C9D0E1F2A3B4C5D6E7F80 /* PermissionPolicyAPIService.swift */,
 				D2E56E3F4864EF30CCF3F946 /* PermissionService.swift */,
 				2EE82C913049A620A077F141 /* PollingManager.swift */,
 				70CF3068B9F5D762E732DE8C /* QueryLearningService.swift */,
@@ -2956,6 +2960,7 @@
 				691D978E9A1AAD1D04B3A5FC /* PerformanceMonitor.swift in Sources */,
 				B323C8773A0236066FF4F24E /* PermissionHistory.swift in Sources */,
 				9D0BAF90D411CCBCF15CF4B7 /* PermissionHistoryService.swift in Sources */,
+				3A1B2C3D4E5F6A7B8C9D0E1F /* PermissionPolicyAPIService.swift in Sources */,
 				C6ACFAADAC51D8C60DD211B7 /* PermissionHistoryView.swift in Sources */,
 				3DF0866C03D46353A59F195B /* PermissionHistoryViewModel.swift in Sources */,
 				69E595BF3597C4C50C0F5A4D /* PermissionInboxView.swift in Sources */,
@@ -3378,6 +3383,7 @@
 				3745234529CDF48C45490BBF /* PerformanceMonitor.swift in Sources */,
 				704B4021FA857B51B7349253 /* PermissionHistory.swift in Sources */,
 				2DE6E9CBE80C8EDF925AD09C /* PermissionHistoryService.swift in Sources */,
+				3B2C3D4E5F6A7B8C9D0E1F2A /* PermissionPolicyAPIService.swift in Sources */,
 				C9C297C4A2DFA4C20E894E89 /* PermissionHistoryView.swift in Sources */,
 				609F0C932C4655F7F62DFCAF /* PermissionHistoryViewModel.swift in Sources */,
 				BDA45EB5FF2F7650BA2AC69B /* PermissionInboxView.swift in Sources */,
