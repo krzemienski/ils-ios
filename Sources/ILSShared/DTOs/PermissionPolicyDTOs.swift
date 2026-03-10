@@ -218,3 +218,56 @@ public struct ReorderPermissionPoliciesRequest: Codable, Sendable {
         self.orderedIds = orderedIds
     }
 }
+
+// MARK: - Permission Policy Settings Response
+
+/// Full representation of a permission policy settings record.
+public struct PermissionPolicySettingsResponse: Codable, Sendable, Identifiable {
+    /// Unique identifier for this settings record.
+    public let id: UUID
+    /// Project UUID this settings record is scoped to, or nil for global scope.
+    public let projectId: UUID?
+    /// When true, unmatched permission requests are auto-denied.
+    public let defaultDeny: Bool
+    /// When the settings record was created (UTC).
+    public let createdAt: Date
+    /// When the settings record was last updated (UTC).
+    public let updatedAt: Date
+
+    public init(
+        id: UUID,
+        projectId: UUID?,
+        defaultDeny: Bool,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.id = id
+        self.projectId = projectId
+        self.defaultDeny = defaultDeny
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    /// Convenience initializer from the shared ``PermissionPolicySettings`` model.
+    public init(from settings: PermissionPolicySettings) {
+        self.id = settings.id
+        self.projectId = settings.projectId
+        self.defaultDeny = settings.defaultDeny
+        self.createdAt = settings.createdAt
+        self.updatedAt = settings.updatedAt
+    }
+}
+
+// MARK: - Update Permission Policy Settings Request
+
+/// Request payload for updating the permission policy settings.
+///
+/// All fields are optional; only non-nil values are applied.
+public struct UpdatePermissionPolicySettingsRequest: Codable, Sendable {
+    /// Enable or disable default-deny mode, or nil to leave unchanged.
+    public let defaultDeny: Bool?
+
+    public init(defaultDeny: Bool? = nil) {
+        self.defaultDeny = defaultDeny
+    }
+}

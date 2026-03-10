@@ -130,6 +130,7 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateProcessHistory())
     // v6.3 — Interactive permission policy engine
     app.migrations.add(CreatePermissionPolicies())
+    app.migrations.add(CreatePermissionPolicySettings())
 
     // Run migrations
     try await app.autoMigrate()

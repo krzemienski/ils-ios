@@ -9,6 +9,8 @@ import ILSShared
 /// - `POST /permission-policies`: Create a new permission policy
 /// - `GET /permission-policies/evaluate`: Test-evaluate a hypothetical permission request
 /// - `POST /permission-policies/reorder`: Reorder policies by updating their priorities
+/// - `GET /permission-policies/settings`: Get permission policy settings (default-deny mode)
+/// - `PUT /permission-policies/settings`: Update permission policy settings
 /// - `GET /permission-policies/:id`: Get a specific permission policy
 /// - `PUT /permission-policies/:id`: Update a permission policy
 /// - `DELETE /permission-policies/:id`: Delete a permission policy
@@ -20,6 +22,8 @@ struct PermissionPoliciesController: RouteCollection {
         policies.post(use: create)
         policies.get("evaluate", use: evaluate)
         policies.post("reorder", use: reorder)
+        policies.get("settings", use: getSettings)
+        policies.put("settings", use: updateSettings)
         policies.get(":id", use: get)
         policies.put(":id", use: update)
         policies.delete(":id", use: deletePolicy)
@@ -318,7 +322,83 @@ struct PermissionPoliciesController: RouteCollection {
         return APIResponse(success: true, data: result)
     }
 
+    // MARK: - Settings
+
+    /// Get permission policy settings for a given scope.
+    ///
+    /// Query parameters:
+    /// - `projectId`: Optional project UUID; omit for global settings.
+    ///
+    /// If no settings record exists for the requested scope a default record
+    /// (defaultDeny = false) is returned without persisting it.
+    @Sendable
+    func getSettings(req: Request) async throws -> APIResponse<PermissionPolicySettingsResponse> {
+        let projectId = req.query[UUID.self, at: "projectId"]
+
+        let model = try await findOrDefaultSettings(projectId: projectId, db: req.db)
+        let response = PermissionPolicySettingsResponse(from: model.toShared())
+        return APIResponse(success: true, data: response)
+    }
+
+    /// Update permission policy settings for a given scope.
+    ///
+    /// Query parameters:
+    /// - `projectId`: Optional project UUID; omit for global settings.
+    ///
+    /// Body: ``UpdatePermissionPolicySettingsRequest``
+    ///
+    /// If no settings record exists for the scope one is created (upsert).
+    @Sendable
+    func updateSettings(req: Request) async throws -> APIResponse<PermissionPolicySettingsResponse> {
+        let projectId = req.query[UUID.self, at: "projectId"]
+        let input = try req.content.decode(UpdatePermissionPolicySettingsRequest.self)
+
+        // Fetch existing or build a new model for this scope
+        var query = PermissionPolicySettingsModel.query(on: req.db)
+        if let projectId = projectId {
+            query = query.filter(\.$projectId == projectId)
+        } else {
+            query = query.filter(\.$projectId == nil)
+        }
+
+        let existing = try await query.first()
+        let model: PermissionPolicySettingsModel
+
+        if let existing = existing {
+            model = existing
+        } else {
+            model = PermissionPolicySettingsModel(projectId: projectId)
+        }
+
+        if let defaultDeny = input.defaultDeny {
+            model.defaultDeny = defaultDeny
+        }
+
+        try await model.save(on: req.db)
+
+        let response = PermissionPolicySettingsResponse(from: model.toShared())
+        return APIResponse(success: true, data: response)
+    }
+
     // MARK: - Private Helpers
+
+    /// Fetch the settings model for the given scope, returning an unsaved default when absent.
+    private func findOrDefaultSettings(projectId: UUID?, db: Database) async throws -> PermissionPolicySettingsModel {
+        var query = PermissionPolicySettingsModel.query(on: db)
+        if let projectId = projectId {
+            query = query.filter(\.$projectId == projectId)
+        } else {
+            query = query.filter(\.$projectId == nil)
+        }
+
+        if let existing = try await query.first() {
+            return existing
+        }
+
+        // Return a transient default — caller decides whether to persist it.
+        return PermissionPolicySettingsModel(projectId: projectId, defaultDeny: false)
+    }
+
 
     /// Simple glob pattern matcher supporting `*` (any chars within path segment) and `**` (any chars including `/`).
     private func matchesGlob(pattern: String, path: String) -> Bool {

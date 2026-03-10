@@ -381,3 +381,6 @@ extension ListPermissionPoliciesResponse: Content {}
 extension CreatePermissionPolicyRequest: Content {}
 extension UpdatePermissionPolicyRequest: Content {}
 extension ReorderPermissionPoliciesRequest: Content {}
+extension PermissionPolicySettings: Content {}
+extension PermissionPolicySettingsResponse: Content {}
+extension UpdatePermissionPolicySettingsRequest: Content {}
