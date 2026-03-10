@@ -128,6 +128,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateConfigProfiles())
     // v6.2 — Process monitoring
     app.migrations.add(CreateProcessHistory())
+    // v6.3 — Interactive permission policy engine
+    app.migrations.add(CreatePermissionPolicies())
 
     // Run migrations
     try await app.autoMigrate()
