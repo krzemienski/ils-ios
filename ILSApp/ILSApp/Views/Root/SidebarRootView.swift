@@ -220,7 +220,13 @@ struct SidebarRootView: View {
             }
         }
         .onChange(of: activeScreen) { _, newScreen in
-            activeScreenKey = newScreen.storageKey
+            // SUIP-005: Debounce @SceneStorage writes to avoid disk I/O on every navigation frame.
+            // Only persist after a 0.5s pause in navigation changes.
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(500))
+                guard activeScreen == newScreen else { return } // navigation changed again, skip
+                activeScreenKey = newScreen.storageKey
+            }
             // Persist the chat session ID for state restoration
             if case .chat(let session) = newScreen {
                 lastChatSessionId = session.id.uuidString
@@ -244,15 +250,17 @@ struct SidebarRootView: View {
             // This allows custom themes to appear in ThemePickerView alongside built-ins
             await themeManager.loadAndRegisterCustomThemes(client: appState.apiClient)
 
-            // Restore chat session if app was backgrounded while viewing chat
+            // SUIN-003: Restore chat session if app was backgrounded while viewing chat.
+            // Validate the persisted session ID still exists to avoid navigating to deleted sessions.
             if activeScreenKey == "chat", !lastChatSessionId.isEmpty,
                let uuid = UUID(uuidString: lastChatSessionId) {
                 if let session = sessionsVM.session(byID: uuid) {
                     activeScreen = .chat(session)
                 } else {
-                    // Fallback: create minimal session for restoration
-                    let session = ChatSession(id: uuid, name: "Session")
-                    activeScreen = .chat(session)
+                    // Session no longer exists (deleted or purged) — fall back to home
+                    activeScreen = .home
+                    activeScreenKey = "home"
+                    lastChatSessionId = ""
                 }
             }
         }
@@ -301,6 +309,7 @@ struct SidebarRootView: View {
     }
 
     // MARK: - iPad Layout (Persistent Sidebar)
+    // TODO: SUIL-002 — Test NavigationSplitView adaptation in iPad multitasking (1/3, 1/2, 2/3 widths)
 
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {

@@ -22,6 +22,7 @@ import ILSShared
 /// - `ToolCallView` - Expandable card for each tool invocation in the message
 /// - `ToolResultView` - Expandable card for each tool result in the message
 /// - `ThinkingView` - Expandable card for the extended thinking block, if present
+// TODO: SUIL-003 — Audit GeometryReader usage for infinite layout loop risk in LazyVStack
 struct MessageView: View {
     let message: ChatMessage
     @Environment(\.theme) private var theme: ThemeSnapshot

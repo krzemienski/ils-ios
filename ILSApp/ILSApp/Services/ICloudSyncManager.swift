@@ -53,7 +53,12 @@ final class ICloudSyncManager {
     /// Direct (localKey → iCloudKey) pairs for scalar preferences synced via
     /// NSUbiquitousKeyValueStore. Each push reads from UserDefaults and writes
     /// to the paired iCloud key; each pull does the reverse.
-    static var syncableKeys: [(local: String, iCloud: String)] = [
+    ///
+    /// ICLD-003: Pull uses a "cloud-wins" merge strategy — the iCloud value always
+    /// overwrites the local UserDefaults value. This is intentional for multi-device
+    /// consistency: the most recently pushed value from any device becomes the
+    /// canonical setting across all devices.
+    static let syncableKeys: [(local: String, iCloud: String)] = [
         (local: AppConstants.serverURLKey,    iCloud: AppConstants.iCloudServerURLKey),
         (local: AppConstants.defaultModelKey, iCloud: AppConstants.iCloudDefaultModelKey),
         (local: "activeHostName",             iCloud: AppConstants.iCloudActiveHostNameKey),
@@ -209,6 +214,10 @@ final class ICloudSyncManager {
         for pair in Self.syncableKeys {
             if let value = UserDefaults.standard.object(forKey: pair.local) {
                 store.set(value, forKey: pair.iCloud)
+            } else {
+                // STOR-006: Remove stale iCloud key when local preference is nil,
+                // so cleared settings propagate across devices.
+                store.removeObject(forKey: pair.iCloud)
             }
         }
 
@@ -279,6 +288,10 @@ final class ICloudSyncManager {
 
     // MARK: - Private
 
+    /// ICLD-005: Called from init on @MainActor. `store.synchronize()` is a
+    /// lightweight local-only hint to the system (does not perform network I/O),
+    /// so running it on @MainActor is acceptable. The actual iCloud upload/download
+    /// happens asynchronously in the background by the system daemon.
     private func performInitialSync() {
         syncStatus = .syncing
         let success = store.synchronize()
@@ -302,6 +315,11 @@ final class ICloudSyncManager {
 
     private func handleExternalChange(_ notification: Notification) {
         guard isSyncEnabled else { return }
+        // ICLD-008: Guard against re-entrant sync. If we're already processing a
+        // sync (e.g. applyCloudPreferences triggers a KV write that fires another
+        // notification), skip to prevent a potential sync loop.
+        guard syncStatus != .syncing else { return }
+        syncStatus = .syncing
 
         let reasonCode = notification.userInfo?[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int ?? -1
         let changedKeys = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
@@ -314,8 +332,11 @@ final class ICloudSyncManager {
             reason = "initial"
         case NSUbiquitousKeyValueStoreQuotaViolationChange:
             reason = "quota_violation"
+            // ICLD-004: Log clearly and disable sync so the user/dev knows why sync stopped.
+            // The iCloud KV store has a 1 MB total limit and 1024 key limit.
+            syncStatus = .error
             AppLogger.shared.error(
-                "iCloud KV quota exceeded — reduce stored data size",
+                "iCloud KV quota exceeded — sync disabled. Reduce stored data size to re-enable.",
                 category: "icloud"
             )
         case NSUbiquitousKeyValueStoreAccountChange:
@@ -383,19 +404,25 @@ extension ICloudSyncManager {
     /// `.changedKeys` save policy to minimise bandwidth. Then fetches all remote
     /// records and creates any that are absent from the backend via `apiClient`.
     /// No-ops silently when sync is disabled.
+    ///
+    /// ICLD-001: CloudKit network I/O is performed on a detached task to avoid
+    /// blocking @MainActor. Results are dispatched back for state updates.
     func syncCustomThemes(themes: [CustomTheme], apiClient: APIClient) async {
         guard isSyncEnabled else { return }
 
-        // Push local themes to CloudKit
+        // Push local themes to CloudKit off the main actor
         let records = themes.compactMap { makeThemeRecord(from: $0) }
+        let db = themeDatabase
         if !records.isEmpty {
             do {
-                let (saveResults, _) = try await themeDatabase.modifyRecords(
-                    saving: records,
-                    deleting: [],
-                    savePolicy: .changedKeys,
-                    atomically: false
-                )
+                let (saveResults, _) = try await Task.detached {
+                    try await db.modifyRecords(
+                        saving: records,
+                        deleting: [],
+                        savePolicy: .changedKeys,
+                        atomically: false
+                    )
+                }.value
                 let successCount = saveResults.values.filter { result in
                     if case .success = result { return true }
                     return false
@@ -448,6 +475,8 @@ extension ICloudSyncManager {
     /// Fetches all custom themes stored in the CloudKit private database.
     ///
     /// Returns an empty array on failure so callers need no guard logic.
+    ///
+    /// ICLD-001: CloudKit query runs on a detached task to avoid blocking @MainActor.
     func fetchRemoteThemes() async -> [CustomTheme] {
         guard isSyncEnabled else { return [] }
 
@@ -455,13 +484,16 @@ extension ICloudSyncManager {
             recordType: ThemeCloudKitConfig.recordType,
             predicate: NSPredicate(value: true)
         )
+        let db = themeDatabase
 
         do {
-            let (matchResults, _) = try await themeDatabase.records(
-                matching: query,
-                desiredKeys: nil,
-                resultsLimit: CKQueryOperation.maximumResults
-            )
+            let (matchResults, _) = try await Task.detached {
+                try await db.records(
+                    matching: query,
+                    desiredKeys: nil,
+                    resultsLimit: CKQueryOperation.maximumResults
+                )
+            }.value
 
             var themes: [CustomTheme] = []
             for (_, result) in matchResults {
@@ -495,7 +527,14 @@ extension ICloudSyncManager {
     // MARK: - CloudKit Record Helpers
 
     private func makeThemeRecord(from theme: CustomTheme) -> CKRecord? {
-        guard let data = try? Self.themeEncoder.encode(theme) else { return nil }
+        // COD-006: Log encode failures instead of silently dropping theme records.
+        let data: Data
+        do {
+            data = try Self.themeEncoder.encode(theme)
+        } catch {
+            AppLogger.shared.error("Failed to encode theme '\(theme.name)' for CloudKit: \(error)", category: "icloud")
+            return nil
+        }
         let recordID = CKRecord.ID(recordName: theme.id.uuidString)
         let record = CKRecord(recordType: ThemeCloudKitConfig.recordType, recordID: recordID)
         record[ThemeRecordField.themeId] = theme.id.uuidString as CKRecordValue
@@ -506,7 +545,13 @@ extension ICloudSyncManager {
 
     private func parseThemeRecord(_ record: CKRecord) -> CustomTheme? {
         guard let data = record[ThemeRecordField.themeData] as? Data else { return nil }
-        return try? Self.themeDecoder.decode(CustomTheme.self, from: data)
+        // COD-006: Log decode failures instead of silently dropping theme records.
+        do {
+            return try Self.themeDecoder.decode(CustomTheme.self, from: data)
+        } catch {
+            AppLogger.shared.error("Failed to decode theme from CloudKit record: \(error)", category: "icloud")
+            return nil
+        }
     }
 }
 

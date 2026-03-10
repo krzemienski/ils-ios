@@ -1110,6 +1110,7 @@ struct NewSessionView: View {
     // SA-MED-3: Button-triggered Tasks are correct — these are user-initiated actions,
     // not lifecycle-bound work. `.task` modifier is for view lifecycle; `Task {}` is
     // appropriate for fire-and-forget user actions like create/fork/submit.
+    // TODO: UXF-004 — Disable "Create Session" button when offline to prevent duplicate sessions
     private func createSession() {
         Task {
             if let session = await sessionViewModel.createSession(

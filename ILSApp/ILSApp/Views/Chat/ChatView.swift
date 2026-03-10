@@ -25,6 +25,8 @@ import ILSShared
 /// - ``sendMessage()`` - Send the current input text to Claude
 /// - ``retryLastMessage()`` - Resend the most recent user message
 /// - ``exportSession()`` - Export the conversation as Markdown
+// TODO: SUIA-004 — Split into ChatMessageList, ChatToolbar, ChatSheets subviews
+// TODO: SUIN-006 + UXF-001 — Consolidate sheets into single SheetDestination enum to prevent conflicts
 struct ChatView: View {
     /// The chat session this view is presenting.
     let session: ChatSession

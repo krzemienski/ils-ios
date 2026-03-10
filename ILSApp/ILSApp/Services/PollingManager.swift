@@ -21,6 +21,10 @@ class PollingManager {
     /// overhead on every health poll cycle (~60s). (Also: CONC-05 verified 2026-02-24.)
     unowned let connectionManager: ConnectionManager
 
+    /// ENRG-002: Idle detection — reduces polling frequency when the app is in foreground
+    /// but the user hasn't interacted for >5 minutes. Cuts unnecessary health checks in half.
+    private(set) var isIdle: Bool = false
+
     private var retryTask: Task<Void, Never>?
     private var healthPollTask: Task<Void, Never>?
     // NET-MED-2: Observer for network restoration to resume polling.
@@ -145,9 +149,11 @@ class PollingManager {
     func startHealthPolling() {
         guard healthPollTask == nil else { return }
         // BATT-01: Double health poll interval in Low Power Mode.
-        let healthInterval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+        // ENRG-002: Double again when user is idle (>5 min no interaction).
+        let baseInterval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
             ? 120_000_000_000  // 120s in LPM
             : 60_000_000_000   // 60s normal
+        let healthInterval: UInt64 = isIdle ? baseInterval * 2 : baseInterval
         healthPollTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: healthInterval)
@@ -174,12 +180,27 @@ class PollingManager {
     func handleScenePhase(_ phase: AppPhase) {
         switch phase {
         case .active:
+            isIdle = false
             checkConnection()
         case .background:
             stopHealthPolling()
             stopRetryPolling()
         case .inactive:
             break
+        }
+    }
+
+    // MARK: - Idle Detection (ENRG-002)
+
+    /// Mark the app as idle or active. When idle, health polling interval doubles
+    /// to reduce unnecessary network requests while the user isn't interacting.
+    func setIdle(_ idle: Bool) {
+        guard idle != isIdle else { return }
+        isIdle = idle
+        // Restart health polling with the adjusted interval if currently polling
+        if healthPollTask != nil {
+            stopHealthPolling()
+            startHealthPolling()
         }
     }
 }

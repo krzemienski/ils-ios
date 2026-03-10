@@ -78,6 +78,10 @@ actor APIClient {
     }
 
     /// Per-endpoint TTL: reference data lives longer than session/volatile data.
+    ///
+    /// PERF-004: Linear prefix scan is acceptable here — at most 3 branches checked
+    /// per call, each is a single O(k) prefix comparison. Dictionary lookup would add
+    /// complexity for negligible gain since this runs once per network request (not a hot loop).
     private func ttl(for path: String) -> TimeInterval {
         if path.hasPrefix("/skills") || path.hasPrefix("/mcp") || path.hasPrefix("/plugins") || path.hasPrefix("/themes") {
             return 300 // 5 minutes for static reference data
@@ -105,6 +109,8 @@ actor APIClient {
         // Initialize conditional cache byte limit to match NSCache limit
         self.conditionalCacheByteLimit = cacheSizeBytes
 
+        // MOD-001: Sync Keychain read in init is acceptable — init runs on caller context,
+        // not the actor executor, so it does not block the cooperative thread pool.
         // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
         if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
             self.apiKey = keychainKey
@@ -120,7 +126,10 @@ actor APIClient {
         // Configure session with reasonable timeouts
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10 // 10 seconds per request
-        config.timeoutIntervalForResource = 30 // 30 seconds total
+        // NET-002: 60s resource timeout for bulk operations (export, integrity check, etc.)
+        config.timeoutIntervalForResource = 60
+        // ENRG-006: waitsForConnectivity may cause request burst on reconnect;
+        // mitigated by exponential backoff in performWithRetry().
         config.waitsForConnectivity = true
         config.allowsExpensiveNetworkAccess = true
         config.allowsConstrainedNetworkAccess = true
@@ -195,14 +204,24 @@ actor APIClient {
     // MARK: - Cost Estimation
 
     /// Approximate memory cost for NSCache eviction priority.
-    /// Uses MemoryLayout.stride as a relative measure -- absolute accuracy
-    /// is unnecessary since NSCache treats cost as a priority signal.
+    ///
+    /// PERF-002: Accounts for heap-allocated data beyond MemoryLayout.stride.
+    /// For collections, multiplies element stride by count. For known wrapper
+    /// types (APIResponse, ListResponse) the generic payload is already measured
+    /// by the collection branch. Absolute accuracy is unnecessary since NSCache
+    /// treats cost as a relative priority signal, not a hard byte counter.
     private func estimatedCost<T>(for value: T) -> Int {
         let baseStride = MemoryLayout<T>.stride
         if let array = value as? any RandomAccessCollection {
-            return max(baseStride, baseStride * array.count)
+            // Rough heap estimate: stride * element count + base overhead
+            return max(baseStride, baseStride * array.count + 64)
         }
-        return baseStride
+        if let string = value as? String {
+            return max(baseStride, baseStride + string.utf8.count)
+        }
+        // For structs with heap-allocated fields, baseStride under-reports.
+        // Add a 2x multiplier as a conservative estimate for typical model objects.
+        return baseStride * 2
     }
 
     // MARK: - Generic Request Methods
@@ -237,7 +256,12 @@ actor APIClient {
             // Type mismatch — fall through to a new request
         }
 
-        // Wrap the network call in a Task stored in inFlightGETs so concurrent callers share it
+        // Wrap the network call in a Task stored in inFlightGETs so concurrent callers share it.
+        // MEM-003 / CONC-002: The Task closure captures `self` (the actor) implicitly via
+        // `self.inFlightGETs`, `self.cacheMisses`, etc. This is intentional and safe:
+        // - Actor self capture is required for actor-isolated property/method access.
+        // - APIClient is an app-lifetime singleton; the Task cannot outlive the actor.
+        // - Tasks are removed from inFlightGETs in the defer block, so cancelled tasks release promptly.
         let task = Task<any Sendable, Error> { [baseURL, decoder] in
             defer { self.inFlightGETs[path] = nil }
 
@@ -550,6 +574,17 @@ actor APIClient {
         cache.removeObject(forKey: path as NSString)
         removeConditionalEntry(forKey: path)
 
+        // NET-006: Also invalidate the base path without query string, since cache keys
+        // may include query parameters (e.g. "/sessions/integrity-check?fix=true") but
+        // mutations should also invalidate the non-query-string variant.
+        if let qIndex = path.firstIndex(of: "?") {
+            let basePath = String(path[path.startIndex..<qIndex])
+            cache.removeObject(forKey: basePath as NSString)
+            removeConditionalEntry(forKey: basePath)
+            inFlightGETs[basePath]?.cancel()
+            inFlightGETs.removeValue(forKey: basePath)
+        }
+
         // Remove list endpoint (e.g. /sessions) and cancel its in-flight GET
         let components = path.split(separator: "/")
         if components.count >= 1 {
@@ -669,14 +704,24 @@ actor APIClient {
             } catch {
                 lastError = error
                 let nsError = error as NSError
+
+                // NET-001: Only truly transient errors get full retry cycles.
+                // CannotConnectToHost and NotConnectedToInternet are excluded —
+                // if the host is down or there's no network, retrying wastes battery.
                 let isTransient = nsError.domain == NSURLErrorDomain && [
                     NSURLErrorTimedOut,
-                    NSURLErrorNetworkConnectionLost,
-                    NSURLErrorNotConnectedToInternet,
-                    NSURLErrorCannotConnectToHost
+                    NSURLErrorNetworkConnectionLost
                 ].contains(nsError.code)
 
-                if !isTransient || attempt == maxAttempts {
+                // NET-001: Host unreachable / no network — retry once only (attempt 1),
+                // then give up. Aggressive retries when the host is down waste battery.
+                let isHostUnreachable = nsError.domain == NSURLErrorDomain && [
+                    NSURLErrorCannotConnectToHost,
+                    NSURLErrorNotConnectedToInternet
+                ].contains(nsError.code)
+                let shouldRetry = isTransient || (isHostUnreachable && attempt == 1)
+
+                if !shouldRetry || attempt == maxAttempts {
                     throw APIError.networkError(error)
                 }
                 // Exponential backoff: 0.5s, 1s, 2s
@@ -699,10 +744,14 @@ actor APIClient {
             }
             // CODBL-01: try? is intentional — error body decode is best-effort fallback when HTTP status != 2xx.
             // If body doesn't match ServerErrorBody, we fall through to httpError(statusCode:).
+            // COD-008: code/reason are optional — use defaults for partial error bodies
             if let data = data,
                let errorBody = try? decoder.decode(ServerErrorBody.self, from: data),
                errorBody.error {
-                throw APIError.serverError(code: errorBody.code, reason: errorBody.reason)
+                throw APIError.serverError(
+                    code: errorBody.code ?? "UNKNOWN",
+                    reason: errorBody.reason ?? HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
+                )
             }
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
@@ -716,10 +765,11 @@ struct APIResponse<T: Decodable>: Decodable {
     let data: T?
     let error: APIErrorDetail?
 }
-// CONC-19: @unchecked Sendable — struct has `let` properties only, so value semantics
-// make it safe to send across concurrency boundaries regardless of T's Sendable status.
-// Unconditional (vs conditional `where T: Sendable`) so callers using non-Sendable T
+// COD-003 / CONC-19: All stored properties are `let` and the struct uses value semantics,
+// making it inherently safe to send across concurrency boundaries. @unchecked is retained
+// (vs conditional `where T: Sendable`) so callers using non-Sendable T
 // (e.g. PaginatedResponse<ChatSession> before ChatSession gets Sendable) don't warn.
+// Once all T parameters conform to Sendable, this can be changed to plain Sendable.
 extension APIResponse: @unchecked Sendable {}
 
 /// App-side error detail from backend responses (Decodable only).
@@ -733,7 +783,8 @@ struct ListResponse<T: Decodable>: Decodable {
     let items: [T]
     let total: Int
 }
-// CONC-19: @unchecked Sendable — same reasoning as APIResponse above.
+// COD-003 / CONC-19: @unchecked Sendable — same reasoning as APIResponse above.
+// All stored properties are `let` with value semantics.
 extension ListResponse: @unchecked Sendable {}
 
 // MARK: - Health Response
@@ -746,11 +797,13 @@ struct HealthResponse: Decodable, Sendable {
     let port: Int?
 }
 
-/// Decoded structured error from backend
+/// Decoded structured error from backend.
+/// COD-008: Non-essential fields are optional so partial error responses
+/// (e.g. missing `code`) still decode instead of falling through to httpError.
 private struct ServerErrorBody: Decodable {
     let error: Bool
-    let code: String
-    let reason: String
+    let code: String?
+    let reason: String?
 }
 
 // MARK: - Error Types

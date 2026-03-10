@@ -63,6 +63,12 @@ final class NetworkMonitor {
                         "Network lost",
                         category: "network"
                     )
+                    // NET-008: Notify observers when connectivity drops so they can
+                    // pause polling, show offline banners, etc.
+                    NotificationCenter.default.post(
+                        name: .networkDidBecomeUnavailable,
+                        object: nil
+                    )
                 }
             }
         }
@@ -87,6 +93,8 @@ final class NetworkMonitor {
 
 extension Notification.Name {
     static let networkDidBecomeAvailable = Notification.Name("networkDidBecomeAvailable")
+    /// NET-008: Posted when device connectivity drops (complement to networkDidBecomeAvailable).
+    static let networkDidBecomeUnavailable = Notification.Name("networkDidBecomeUnavailable")
     /// Posted by `BackendManager.setActive(id:)` when the active backend changes.
     /// `userInfo["url"]` contains the new backend's URL string.
     static let backendDidActivate = Notification.Name("backendDidActivate")

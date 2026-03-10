@@ -22,6 +22,7 @@ import ILSShared
 ///
 /// ### Callbacks
 /// - ``onDecision`` - Called with `"allow"` or `"deny"` before the sheet is dismissed
+// TODO: SUIA-001 — Move API calls to a PermissionRequestViewModel for testability
 struct PermissionRequestModal: View {
     /// The permission request describing which tool Claude wants to invoke and its input payload.
     let request: PermissionRequest

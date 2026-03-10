@@ -6,6 +6,8 @@ import LocalAuthentication
 actor KeychainService {
     static let shared = KeychainService()
 
+    /// STOR-007: Service name uses the app's bundle identifier (`com.ils.app`) to avoid
+    /// Keychain namespace collisions with other apps on the device.
     private let serviceName: String
 
     init(serviceName: String = "com.ils.app") {
@@ -133,6 +135,10 @@ actor KeychainService {
     }
 
     // MARK: - Synchronous Convenience (for use in non-async init contexts)
+
+    // SEC-003: Static sync methods below call SecItem* APIs which are OS-atomic;
+    // TOCTOU risk between delete-then-add in saveSync is theoretical only —
+    // the Keychain enforces uniqueness at the OS level.
 
     /// Synchronous Keychain read — safe to call from non-async code (e.g. actor init).
     /// Uses the default `com.ils.app` service name.

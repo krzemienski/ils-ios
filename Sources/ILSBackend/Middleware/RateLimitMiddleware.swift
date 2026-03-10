@@ -95,8 +95,12 @@ struct RateLimitMiddleware: AsyncMiddleware {
             return try await next.respond(to: request)
         }
 
-        let clientIP = request.remoteAddress?.description ?? "unknown"
-        let isChatSend = request.method == .POST && request.url.path.contains("/chat")
+        // SEC-001: Prefer X-Forwarded-For when behind a reverse proxy
+        let clientIP = request.headers.first(name: "X-Forwarded-For")?.split(separator: ",").first.map(String.init)
+            ?? request.remoteAddress?.ipAddress
+            ?? "unknown"
+        // SEC-009: Use prefix match instead of fragile substring contains
+        let isChatSend = request.method == .POST && request.url.path.hasPrefix("/api/v1/chat")
         let limit = isChatSend ? chatLimit : generalLimit
         let rateLimitKey = isChatSend ? "\(clientIP):chat" : clientIP
 

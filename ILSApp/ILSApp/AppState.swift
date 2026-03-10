@@ -254,6 +254,7 @@ class AppState {
         }
     }
 
+    // TODO: SUIN-001 — Queue deep link navigation with DispatchQueue.main.asyncAfter to avoid animation conflicts
     func handleURL(_ url: URL) {
         guard url.scheme == "ils" else { return }
 

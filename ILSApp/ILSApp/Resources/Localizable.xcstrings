@@ -1,125 +1,1045 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "home" : {
-      "extractionState" : "manual",
+    "" : {
+
+    },
+    "·" : {
+
+    },
+    "· %@" : {
+
+    },
+    "\"%@\" will be permanently deleted and cannot be recovered." : {
+
+    },
+    "(%lld)" : {
+
+    },
+    "*" : {
+
+    },
+    "/%@" : {
+
+    },
+    "#%@" : {
+
+    },
+    "%@" : {
+
+    },
+    "%@ — %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicio"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Startseite"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30db\u30fc\u30e0"
+            "state" : "new",
+            "value" : "%1$@ — %2$@"
           }
         }
       }
     },
-    "settings" : {
-      "extractionState" : "manual",
+    "%@ · %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u8a2d\u5b9a"
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
           }
         }
       }
     },
-    "browse" : {
-      "extractionState" : "manual",
+    "%@ / %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Browse"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Explorar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Durchsuchen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30d6\u30e9\u30a6\u30ba"
+            "state" : "new",
+            "value" : "%1$@ / %2$@"
           }
         }
       }
     },
-    "system_monitor" : {
-      "extractionState" : "manual",
+    "%@ / %@ tokens" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "System Monitor"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monitor del sistema"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Systemmonitor"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30b7\u30b9\u30c6\u30e0\u30e2\u30cb\u30bf\u30fc"
+            "state" : "new",
+            "value" : "%1$@ / %2$@ tokens"
           }
         }
       }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ %lld percent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld percent"
+          }
+        }
+      }
+    },
+    "%@ %lld%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$lld%3$@"
+          }
+        }
+      }
+    },
+    "%@ alert cooldown period" : {
+
+    },
+    "%@ alert threshold: %lld percent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ alert threshold: %2$lld percent"
+          }
+        }
+      }
+    },
+    "%@ alerts snoozed until %@. Activate to clear snooze." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ alerts snoozed until %2$@. Activate to clear snooze."
+          }
+        }
+      }
+    },
+    "%@ backend on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ backend on %2$@"
+          }
+        }
+      }
+    },
+    "%@ category filter" : {
+
+    },
+    "%@ category filter%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ category filter%2$@"
+          }
+        }
+      }
+    },
+    "%@ density%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ density%2$@"
+          }
+        }
+      }
+    },
+    "%@ detected" : {
+
+    },
+    "%@ entity" : {
+
+    },
+    "%@ hook, %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ hook, %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "%@ hook, %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ hook, %2$@%3$@"
+          }
+        }
+      }
+    },
+    "%@ layout" : {
+
+    },
+    "%@ Logs" : {
+
+    },
+    "%@ message in %@: %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ message in %2$@: %3$@, %4$@"
+          }
+        }
+      }
+    },
+    "%@ role filter%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ role filter%2$@"
+          }
+        }
+      }
+    },
+    "%@ rule" : {
+
+    },
+    "%@ scope" : {
+
+    },
+    "%@ scope filter" : {
+
+    },
+    "%@ Settings" : {
+
+    },
+    "%@ theme by %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ theme by %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "%@ theme%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ theme%2$@"
+          }
+        }
+      }
+    },
+    "%@ usage %lld percent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ usage %2$lld percent"
+          }
+        }
+      }
+    },
+    "%@ vs %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ vs %2$@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@, %lld events" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$lld events"
+          }
+        }
+      }
+    },
+    "%@, %@, %lld messages" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$lld messages"
+          }
+        }
+      }
+    },
+    "%@, %@, active" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, active"
+          }
+        }
+      }
+    },
+    "%@, %@, last checked %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, last checked %3$@"
+          }
+        }
+      }
+    },
+    "%@, %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld"
+          }
+        }
+      }
+    },
+    "%@, %lld items" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld items"
+          }
+        }
+      }
+    },
+    "%@, %lld messages" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld messages"
+          }
+        }
+      }
+    },
+    "%@, %lld uses" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld uses"
+          }
+        }
+      }
+    },
+    "%@, built-in, read-only" : {
+
+    },
+    "%@, custom template, tap to edit" : {
+
+    },
+    "%@, from %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, from %2$@"
+          }
+        }
+      }
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%@: %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@: %@ tokens" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ tokens"
+          }
+        }
+      }
+    },
+    "%@: %@ tokens, %@ of total" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ tokens, %3$@ of total"
+          }
+        }
+      }
+    },
+    "%@: %@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@. %3$@"
+          }
+        }
+      }
+    },
+    "%@: %@%% of sessions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@%% of sessions"
+          }
+        }
+      }
+    },
+    "%@. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "%@. %@. Created %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@. Created %3$@"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%@%@%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@%3$@, %4$@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+
+    },
+    "%lld / %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "%lld / %lld events" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld / %2$lld events"
+          }
+        }
+      }
+    },
+    "%lld %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld %2$@"
+          }
+        }
+      }
+    },
+    "%lld active" : {
+
+    },
+    "%lld active %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld active %2$@"
+          }
+        }
+      }
+    },
+    "%lld backend%@ online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld backend%2$@ online"
+          }
+        }
+      }
+    },
+    "%lld backends" : {
+
+    },
+    "%lld backends configured" : {
+
+    },
+    "%lld backends unavailable" : {
+
+    },
+    "%lld call%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld call%2$@"
+          }
+        }
+      }
+    },
+    "%lld changes" : {
+
+    },
+    "%lld characters" : {
+
+    },
+    "%lld condition%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld condition%2$@"
+          }
+        }
+      }
+    },
+    "%lld custom" : {
+
+    },
+    "%lld dep%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld dep%2$@"
+          }
+        }
+      }
+    },
+    "%lld deps" : {
+
+    },
+    "%lld events" : {
+
+    },
+    "%lld favorited %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld favorited %2$@"
+          }
+        }
+      }
+    },
+    "%lld file%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld file%2$@"
+          }
+        }
+      }
+    },
+    "%lld key" : {
+
+    },
+    "%lld key moment%@ highlighted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld key moment%2$@ highlighted"
+          }
+        }
+      }
+    },
+    "%lld lines" : {
+
+    },
+    "%lld MB" : {
+
+    },
+    "%lld members" : {
+
+    },
+    "%lld message%@ queued — will send when online" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld message%2$@ queued — will send when online"
+          }
+        }
+      }
+    },
+    "%lld message%@ queued. Will send when back online." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld message%2$@ queued. Will send when back online."
+          }
+        }
+      }
+    },
+    "%lld messages" : {
+
+    },
+    "%lld messages remaining" : {
+
+    },
+    "%lld ms" : {
+
+    },
+    "%lld msg%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld msg%2$@"
+          }
+        }
+      }
+    },
+    "%lld msgs" : {
+
+    },
+    "%lld nodes" : {
+
+    },
+    "%lld notes" : {
+
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "%lld of %lld tasks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld tasks"
+          }
+        }
+      }
+    },
+    "%lld percent" : {
+
+    },
+    "%lld percent complete" : {
+
+    },
+    "%lld percent consumed" : {
+
+    },
+    "%lld Permissions Pending" : {
+
+    },
+    "%lld remaining" : {
+
+    },
+    "%lld result%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld result%2$@"
+          }
+        }
+      }
+    },
+    "%lld selected" : {
+
+    },
+    "%lld session%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld session%2$@"
+          }
+        }
+      }
+    },
+    "%lld session%@ analysed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld session%2$@ analysed"
+          }
+        }
+      }
+    },
+    "%lld sessions" : {
+
+    },
+    "%lld sessions active" : {
+
+    },
+    "%lld total" : {
+
+    },
+    "%lld widget%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld widget%2$@"
+          }
+        }
+      }
+    },
+    "%lld-day free trial" : {
+
+    },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "%lld/%lld active" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld active"
+          }
+        }
+      }
+    },
+    "%lld%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld%2$@"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+
+    },
+    "%lld%% confident" : {
+
+    },
+    "%lld%% utilized" : {
+
+    },
+    "%lldms" : {
+
+    },
+    "%lldpt" : {
+
+    },
+    "%lldt" : {
+
+    },
+    "•" : {
+
+    },
+    "+ %lld more similar events" : {
+
+    },
+    "+%lld more" : {
+
+    },
+    ">_" : {
+
+    },
+    "|" : {
+
+    },
+    "~%lld tokens • %@s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "~%1$lld tokens • %2$@s"
+          }
+        }
+      }
+    },
+    "~$%@/1M in · $%@/1M out" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "~$%1$@/1M in · $%2$@/1M out"
+          }
+        }
+      }
+    },
+    "⋮" : {
+
+    },
+    "$%.4f" : {
+
+    },
+    "0 0 * * *" : {
+
+    },
+    "1" : {
+
+    },
+    "1 backend unavailable" : {
+
+    },
+    "3x3 Color Grid" : {
+
+    },
+    "7-day alert trend chart" : {
+
+    },
+    "99+" : {
+
+    },
+    "A 3x3 grid of colors interpolated across the background. Requires iOS 18+." : {
+
+    },
+    "A label helps you identify this checkpoint later. Leave blank to use the default name." : {
+
+    },
+    "About Rate Limits" : {
+
+    },
+    "Accent" : {
+
+    },
+    "Activate" : {
+
+    },
+    "Active" : {
+
+    },
+    "Active host" : {
+
+    },
+    "Active search filters" : {
+
+    },
+    "Active Sessions" : {
+
+    },
+    "Activity" : {
+
+    },
+    "Activity Timeline" : {
+
+    },
+    "Activity timeline bar chart" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add %@ widget, %@ size" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Add %1$@ widget, %2$@ size"
+          }
+        }
+      }
+    },
+    "Add a backend connection to monitor its health status here." : {
+
+    },
+    "Add argument" : {
+
+    },
+    "Add attachment" : {
+
+    },
+    "Add Attachment" : {
+
+    },
+    "Add Backend" : {
+
+    },
+    "Add bookmark" : {
+
+    },
+    "Add Condition" : {
+
+    },
+    "Add conditions to refine when this rule triggers" : {
+
+    },
+    "Add environment variable" : {
+
+    },
+    "Add First Note" : {
+
+    },
+    "Add First Task" : {
+
+    },
+    "Add MCP Server" : {
+
+    },
+    "Add new memory note" : {
+
+    },
+    "Add new task" : {
+
+    },
+    "Add Rule" : {
+
+    },
+    "Add Step" : {
+
+    },
+    "Add Task" : {
+
+    },
+    "Add template" : {
+
+    },
+    "Add to Favorites" : {
+
+    },
+    "Add to favourites" : {
+
+    },
+    "Add to Queue" : {
+
+    },
+    "Add to Workflow" : {
+
+    },
+    "Add Variable" : {
+
+    },
+    "Add Widget" : {
+
+    },
+    "Add Workflow Step" : {
+
+    },
+    "Add your first memory note" : {
+
+    },
+    "Advanced" : {
+
+    },
+    "Advanced options" : {
+
+    },
+    "After creating your tunnel, add a CNAME record in your Cloudflare DNS dashboard:" : {
+
+    },
+    "Agent" : {
+
+    },
+    "Agent handlers have tool access and can make changes." : {
+
+    },
+    "Agent identifier text field" : {
+
+    },
+    "Agent Performance Comparison" : {
+
+    },
+    "Agent Queue" : {
+
+    },
+    "Agent SDK" : {
+
+    },
+    "Agent Teams" : {
+
+    },
+    "Agent Type" : {
+
     },
     "agent_teams" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agententeams"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -132,527 +1052,174 @@
             "value" : "Equipos de agentes"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agententeams"
-          }
-        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u30c1\u30fc\u30e0"
+            "value" : "エージェントチーム"
           }
         }
       }
     },
-    "fleet" : {
-      "extractionState" : "manual",
+    "ago" : {
+
+    },
+    "AI is responding" : {
+
+    },
+    "AI Model" : {
+
+    },
+    "AI thinking process" : {
+
+    },
+    "AI thinking process, in progress" : {
+
+    },
+    "Alert History" : {
+
+    },
+    "Alert history will appear here when metric thresholds are exceeded." : {
+
+    },
+    "Alert History, %lld alert%@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fleet"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flota"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flotte"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30d5\u30ea\u30fc\u30c8"
+            "state" : "new",
+            "value" : "Alert History, %1$lld alert%2$@"
           }
         }
       }
     },
-    "hostProfiles" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Host Profiles"
-          }
-        }
-      }
+    "Alert settings" : {
+
     },
-    "recent_sessions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent Sessions"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sesiones recientes"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Letzte Sitzungen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u6700\u8fd1\u306e\u30bb\u30c3\u30b7\u30e7\u30f3"
-          }
-        }
-      }
+    "Alert Settings" : {
+
     },
-    "new_session" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Session"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nueva sesion"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Sitzung"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u65b0\u3057\u3044\u30bb\u30c3\u30b7\u30e7\u30f3"
-          }
-        }
-      }
+    "Alert Threshold" : {
+
     },
-    "no_sessions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Sessions"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin sesiones"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Sitzungen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30bb\u30c3\u30b7\u30e7\u30f3\u306a\u3057"
-          }
-        }
-      }
+    "Alert Thresholds" : {
+
     },
-    "sessions_count" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Sessions"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Sesiones"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d Sitzungen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%d\u30bb\u30c3\u30b7\u30e7\u30f3"
-          }
-        }
-      }
+    "Alerts" : {
+
     },
-    "send_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Send"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enviar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Senden"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u9001\u4fe1"
-          }
-        }
-      }
+    "Alerts when network connectivity is lost (connectivity = 0)." : {
+
     },
-    "type_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Type a message..."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escribe un mensaje..."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nachricht eingeben..."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30e1\u30c3\u30bb\u30fc\u30b8\u3092\u5165\u529b..."
-          }
-        }
-      }
+    "Align the QR code from your\nTunnel Settings screen" : {
+
     },
-    "claude_responding" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude is responding..."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude esta respondiendo..."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude antwortet..."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude\u304c\u5fdc\u7b54\u4e2d..."
-          }
-        }
-      }
+    "All %lld backends are healthy" : {
+
     },
-    "welcome_back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welcome back"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bienvenido de nuevo"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Willkommen zuruck"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u304a\u304b\u3048\u308a\u306a\u3055\u3044"
-          }
-        }
-      }
+    "All Sessions" : {
+
     },
-    "quick_actions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick Actions"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acciones rapidas"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schnellaktionen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30af\u30a4\u30c3\u30af\u30a2\u30af\u30b7\u30e7\u30f3"
-          }
-        }
-      }
+    "ALL SESSIONS" : {
+
     },
-    "skills" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skills"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Habilidades"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fahigkeiten"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30b9\u30ad\u30eb"
-          }
-        }
-      }
+    "All Systems Healthy" : {
+
     },
-    "plugins" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plugins"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Complementos"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erweiterungen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30d7\u30e9\u30b0\u30a4\u30f3"
-          }
-        }
-      }
+    "All Widgets Added" : {
+
     },
-    "mcp_servers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP Servers"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servidores MCP"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP-Server"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MCP\u30b5\u30fc\u30d0\u30fc"
-          }
-        }
-      }
+    "Allow" : {
+
     },
-    "backend_connection" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backend Connection"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conexion al backend"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backend-Verbindung"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u63a5\u7d9a"
-          }
-        }
-      }
+    "Allow %@" : {
+
     },
-    "test_connection" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Test Connection"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Probar conexion"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung testen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u63a5\u7d9a\u30c6\u30b9\u30c8"
-          }
-        }
-      }
+    "Allow All" : {
+
     },
-    "connected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conectado"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbunden"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u63a5\u7d9a\u6e08\u307f"
-          }
-        }
-      }
+    "Allow all %lld selected permissions" : {
+
     },
-    "disconnected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnected"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desconectado"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Getrennt"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u672a\u63a5\u7d9a"
-          }
-        }
-      }
+    "Allow all permissions" : {
+
+    },
+    "Allow camera access in Settings to scan QR codes from your Tunnel Settings screen." : {
+
+    },
+    "Allow connections over cellular networks" : {
+
+    },
+    "Allow or deny requests during a Claude Code session to see them here." : {
+
+    },
+    "Allow permission" : {
+
+    },
+    "Allow Selected" : {
+
+    },
+    "Allow selected permissions" : {
+
+    },
+    "Allowed Tools" : {
+
+    },
+    "Allowed tools text field" : {
+
+    },
+    "always fires" : {
+
+    },
+    "Analytics" : {
+
+    },
+    "Analytics Collection Disabled" : {
+
+    },
+    "Analytics data collection is turned off. Enable it in Settings to view activity timelines, session metrics, and skill usage." : {
+
+    },
+    "Analytics data exported from ILS" : {
+
+    },
+    "Analytics data is processed locally on your device and never leaves the app." : {
+
+    },
+    "Analytics time period" : {
+
+    },
+    "Animated" : {
+
+    },
+    "Annual" : {
+
+    },
+    "Any" : {
+
+    },
+    "Any Tool" : {
+
+    },
+    "API Key Configured" : {
+
+    },
+    "API Key status unknown" : {
+
+    },
+    "API key, optional" : {
+
+    },
+    "API keys cannot be edited through the iOS app. Use: claude config set apiKey <your-key>" : {
+
     },
     "api_key" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-Schlussel"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -665,139 +1232,363 @@
             "value" : "Clave API"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "API-Schlussel"
-          }
-        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "API\u30ad\u30fc"
+            "value" : "APIキー"
           }
         }
       }
     },
-    "default_model" : {
+    "App logs will appear here" : {
+
+    },
+    "Append system prompt text editor" : {
+
+    },
+    "Append to System Prompt" : {
+
+    },
+    "Apply" : {
+
+    },
+    "Apply this cooldown to all metrics at once." : {
+
+    },
+    "Apply to All Metrics" : {
+
+    },
+    "Approaching context limit. Consider forking the session." : {
+
+    },
+    "Approaching rate limit (%lld%% threshold)" : {
+
+    },
+    "Approval Rate" : {
+
+    },
+    "Are you sure you want to cancel this workflow execution?" : {
+
+    },
+    "Are you sure you want to delete '%@'? This action cannot be undone." : {
+
+    },
+    "Are you sure you want to delete this message?" : {
+
+    },
+    "Are you sure you want to delete this schedule? The workflow will no longer run automatically." : {
+
+    },
+    "Are you sure you want to uninstall \"%@\"? This action cannot be undone." : {
+
+    },
+    "Args:" : {
+
+    },
+    "argument %lld" : {
+
+    },
+    "ARGUMENTS" : {
+
+    },
+    "Arguments:" : {
+
+    },
+    "Arial" : {
+
+    },
+    "Assistant Bubble" : {
+
+    },
+    "Audio waveform" : {
+
+    },
+    "Author (optional)" : {
+
+    },
+    "Author role filter" : {
+
+    },
+    "Auto" : {
+
+    },
+    "Auto ✨" : {
+
+    },
+    "Auto Detect" : {
+
+    },
+    "Auto detect local server" : {
+
+    },
+    "Auto-approve rules" : {
+
+    },
+    "Auto-Approve Rules" : {
+
+    },
+    "Auto-approved tools run without asking. Only enable for read-only operations like file reading." : {
+
+    },
+    "Auto-checkpoints are created every %lld messages. Run an integrity check to verify session data is consistent." : {
+
+    },
+    "Auto-create Session on Focus" : {
+
+    },
+    "Auto-Fork at 95%" : {
+
+    },
+    "Auto-fork creates a new session branch before context is compacted. Auto-snapshot saves a summary of recent messages. Alert thresholds are configured in Alert Settings." : {
+
+    },
+    "Auto-Fork Settings" : {
+
+    },
+    "Auto-save every" : {
+
+    },
+    "Auto-select model" : {
+
+    },
+    "Auto-Snapshot at 85%" : {
+
+    },
+    "Automatically checks for new Claude Code CLI versions in the background." : {
+
+    },
+    "Automatically fork session before context compaction at 95%" : {
+
+    },
+    "Automatically save context snapshot when usage reaches 85%" : {
+
+    },
+    "Automation Rules" : {
+
+    },
+    "Available Widgets" : {
+
+    },
+    "avg" : {
+
+    },
+    "Back" : {
+
+    },
+    "Back to template selection" : {
+
+    },
+    "Backend" : {
+
+    },
+    "Backend connections" : {
+
+    },
+    "Backend execution picker" : {
+
+    },
+    "Backend name" : {
+
+    },
+    "Backend URL" : {
+
+    },
+    "backend_connection" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backend-Verbindung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Default Model"
+            "value" : "Backend Connection"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modelo predeterminado"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Standardmodell"
+            "value" : "Conexion al backend"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u30c7\u30d5\u30a9\u30eb\u30c8\u30e2\u30c7\u30eb"
+            "value" : "バックエンド接続"
           }
         }
       }
     },
-    "connection_failed" : {
+    "Backends" : {
+
+    },
+    "Background" : {
+
+    },
+    "Background Content" : {
+
+    },
+    "bash" : {
+
+    },
+    "Basic information about your custom theme" : {
+
+    },
+    "Bearer token or API key" : {
+
+    },
+    "Best for:" : {
+
+    },
+    "Beta Flags" : {
+
+    },
+    "Beta flags text field" : {
+
+    },
+    "Binary Path" : {
+
+    },
+    "Body Line Height" : {
+
+    },
+    "Body Size" : {
+
+    },
+    "Body text showing primary, secondary, and tertiary text colors" : {
+
+    },
+    "Body Weight" : {
+
+    },
+    "Bookmark" : {
+
+    },
+    "Bookmark search results to save them for future reference." : {
+
+    },
+    "Bookmarks" : {
+
+    },
+    "Border" : {
+
+    },
+    "Bordered Item" : {
+
+    },
+    "Bottom Center" : {
+
+    },
+    "Bottom Left" : {
+
+    },
+    "Bottom Right" : {
+
+    },
+    "BREAKING" : {
+
+    },
+    "brew install cloudflared" : {
+
+    },
+    "Brief description (optional)" : {
+
+    },
+    "browse" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durchsuchen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection Failed"
+            "value" : "Browse"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conexion fallida"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung fehlgeschlagen"
+            "value" : "Explorar"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+            "value" : "ブラウズ"
           }
         }
       }
     },
-    "retry" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retry"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reintentar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erneut versuchen"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u518d\u8a66\u884c"
-          }
-        }
-      }
+    "Browse" : {
+
     },
-    "offline_cached_data" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline \u2014 showing cached data"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin conexion \u2014 mostrando datos en cache"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline \u2014 zeige zwischengespeicherte Daten"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\u30aa\u30d5\u30e9\u30a4\u30f3 \u2014 \u30ad\u30e3\u30c3\u30b7\u30e5\u30c7\u30fc\u30bf\u3092\u8868\u793a\u4e2d"
-          }
-        }
-      }
+    "Browse all templates" : {
+
+    },
+    "Browse and manage your Model Context Protocol server configurations." : {
+
+    },
+    "Build IFTTT-style rules with trigger → condition → action" : {
+
+    },
+    "Built-in" : {
+
+    },
+    "Built-In" : {
+
+    },
+    "Built-in template, read-only" : {
+
+    },
+    "by %@" : {
+
+    },
+    "By Model" : {
+
+    },
+    "Cache %@" : {
+
+    },
+    "CACHE LIMIT" : {
+
+    },
+    "Cache Size" : {
+
+    },
+    "Cache size: %@" : {
+
+    },
+    "Cache Storage" : {
+
+    },
+    "Cached data is available when your device is offline or the server is unreachable." : {
+
+    },
+    "Cached Entries" : {
+
+    },
+    "Camera" : {
+
+    },
+    "Camera Access Required" : {
+
     },
     "cancel" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbrechen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -810,52 +1601,930 @@
             "value" : "Cancelar"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abbrechen"
-          }
-        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u30ad\u30e3\u30f3\u30bb\u30eb"
+            "value" : "キャンセル"
           }
         }
       }
     },
-    "done" : {
+    "Cancel" : {
+
+    },
+    "Cancel Execution" : {
+
+    },
+    "Cancel QR scan" : {
+
+    },
+    "Cancel recording" : {
+
+    },
+    "Cancel Streaming" : {
+
+    },
+    "Cancels the current response from Claude" : {
+
+    },
+    "Caption Line Height" : {
+
+    },
+    "Caption Size" : {
+
+    },
+    "Capture key decisions, file paths, or variable names you want Claude to remember after compaction." : {
+
+    },
+    "Card Title" : {
+
+    },
+    "Category" : {
+
+    },
+    "Category: %@" : {
+
+    },
+    "Changed Files" : {
+
+    },
+    "Changelog" : {
+
+    },
+    "Chat Options" : {
+
+    },
+    "Chat options menu" : {
+
+    },
+    "Check Backup Integrity" : {
+
+    },
+    "Check cloudflared installation" : {
+
+    },
+    "Check for Updates" : {
+
+    },
+    "Check Interval" : {
+
+    },
+    "Check Now" : {
+
+    },
+    "Checking compatibility..." : {
+
+    },
+    "Checking..." : {
+
+    },
+    "Checkpoint Interval" : {
+
+    },
+    "Checkpoint Label" : {
+
+    },
+    "Checkpoint name" : {
+
+    },
+    "checkpoint%@" : {
+
+    },
+    "Checkpoints" : {
+
+    },
+    "Checkpoints are created automatically every %lld messages. Tap + to save one manually." : {
+
+    },
+    "Checkpoints save your session state automatically. Restore to any checkpoint to undo a bad direction." : {
+
+    },
+    "Choose a color palette preset or customize individual colors" : {
+
+    },
+    "Choose a color to visually identify this backend." : {
+
+    },
+    "Choose a layout for the home dashboard. Presets are read-only; custom layouts can be deleted." : {
+
+    },
+    "Choose a pre-built template to get started quickly" : {
+
+    },
+    "Choose a session template" : {
+
+    },
+    "Choose a theme for ILS. Themes change all colors across the app." : {
+
+    },
+    "Choose from 12 built-in themes or create your own in Settings." : {
+
+    },
+    "Choose from preset MCP server configurations" : {
+
+    },
+    "Choose how much information is shown on screen. Density affects spacing, font sizes, and element sizes throughout the app." : {
+
+    },
+    "Choose Preset" : {
+
+    },
+    "Choose Project" : {
+
+    },
+    "Claude" : {
+
+    },
+    "Claude CLI" : {
+
+    },
+    "Claude Code CLI" : {
+
+    },
+    "Claude Code Documentation" : {
+
+    },
+    "Claude is responding" : {
+
+    },
+    "Claude is typing" : {
+
+    },
+    "Claude model selection" : {
+
+    },
+    "Claude Session ID" : {
+
+    },
+    "Claude wants to use a tool" : {
+
+    },
+    "Claude will ask for approval when it needs to use a tool." : {
+
+    },
+    "claude_responding" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude antwortet..."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Done"
+            "value" : "Claude is responding..."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Listo"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fertig"
+            "value" : "Claude esta respondiendo..."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u5b8c\u4e86"
+            "value" : "Claudeが応答中..."
           }
         }
       }
     },
+    "Clear" : {
+
+    },
+    "Clear %@ date" : {
+
+    },
+    "Clear all" : {
+
+    },
+    "Clear All" : {
+
+    },
+    "Clear all active filters" : {
+
+    },
+    "Clear all alert history" : {
+
+    },
+    "Clear All Entries" : {
+
+    },
+    "Clear all filters" : {
+
+    },
+    "Clear All History" : {
+
+    },
+    "Clear Cache" : {
+
+    },
+    "Clear end date" : {
+
+    },
+    "Clear execution log" : {
+
+    },
+    "Clear Execution Log?" : {
+
+    },
+    "Clear Filters" : {
+
+    },
+    "Clear offline cache" : {
+
+    },
+    "Clear Offline Cache?" : {
+
+    },
+    "Clear Permission History" : {
+
+    },
+    "Clear project name" : {
+
+    },
+    "Clear search" : {
+
+    },
+    "Clear search history" : {
+
+    },
+    "Clear session ID" : {
+
+    },
+    "Clear start date" : {
+
+    },
+    "Clear terminal output" : {
+
+    },
+    "Clearing..." : {
+
+    },
+    "CLI" : {
+
+    },
+    "Click 'Add Step' to start building" : {
+
+    },
+    "Close" : {
+
+    },
+    "Cloudflare API token" : {
+
+    },
+    "Cloudflare Tunnel" : {
+
+    },
+    "Cloudflare tunnel URL" : {
+
+    },
+    "cloudflared CLI" : {
+
+    },
+    "cloudflared not installed" : {
+
+    },
+    "Code" : {
+
+    },
+    "Code block, %@" : {
+
+    },
+    "Code copied to clipboard" : {
+
+    },
+    "Code font example: func helloWorld()" : {
+
+    },
+    "Code Generation by Language" : {
+
+    },
+    "Code Generation by Language: File-type tracking coming soon" : {
+
+    },
+    "Code language: %@" : {
+
+    },
+    "Code only filter active" : {
+
+    },
+    "Code: %@" : {
+
+    },
+    "Collapse All" : {
+
+    },
+    "Collapse code" : {
+
+    },
+    "Collapse suggestions" : {
+
+    },
+    "Collapse troubleshooting tips" : {
+
+    },
+    "Color" : {
+
+    },
+    "Color %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Color %1$@%2$@"
+          }
+        }
+      }
+    },
+    "Color Palette" : {
+
+    },
+    "Color Scheme" : {
+
+    },
+    "Color scheme preference" : {
+
+    },
+    "Color Tokens (17)" : {
+
+    },
+    "Colors" : {
+
+    },
+    "Comma-separated" : {
+
+    },
+    "Command" : {
+
+    },
+    "Command palette" : {
+
+    },
+    "Command Palette" : {
+
+    },
+    "Command prefix (e.g. git status)" : {
+
+    },
+    "Commands" : {
+
+    },
+    "Common Issues" : {
+
+    },
+    "Common Schedules" : {
+
+    },
+    "Compaction History" : {
+
+    },
+    "Compare" : {
+
+    },
+    "Compare Models" : {
+
+    },
+    "Comparing" : {
+
+    },
+    "Complete" : {
+
+    },
+    "Completion" : {
+
+    },
+    "Computed %@" : {
+
+    },
+    "Conditions" : {
+
+    },
+    "Config Path" : {
+
+    },
+    "Configuration" : {
+
+    },
+    "Configuration Errors" : {
+
+    },
+    "Configuration scope" : {
+
+    },
+    "Configure" : {
+
+    },
+    "Configure Layout" : {
+
+    },
+    "Configure Split View" : {
+
+    },
+    "Configure split view layout" : {
+
+    },
+    "Configure split view sessions" : {
+
+    },
+    "Configure system resource alert thresholds" : {
+
+    },
+    "Configure the ILS backend server address" : {
+
+    },
+    "Configure your ILS backend server to unlock all features." : {
+
+    },
+    "Configure your server to get started" : {
+
+    },
+    "Configure your server to manage automation rules" : {
+
+    },
+    "Configured via CLAUDE.md" : {
+
+    },
+    "Connect & Set Up" : {
+
+    },
+    "Connect and set up server" : {
+
+    },
+    "Connect mode" : {
+
+    },
+    "Connect to a backend running on this device or your local network." : {
+
+    },
+    "Connect to Backend" : {
+
+    },
+    "connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbunden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectado"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続済み"
+          }
+        }
+      }
+    },
+    "Connected" : {
+
+    },
+    "Connected successfully" : {
+
+    },
+    "Connected to server" : {
+
+    },
+    "Connected via %@." : {
+
+    },
+    "Connecting to Server" : {
+
+    },
+    "Connection Error" : {
+
+    },
+    "Connection mode" : {
+
+    },
+    "Connection status" : {
+
+    },
+    "Connection status: %@" : {
+
+    },
+    "connection_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection Failed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexion fallida"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続に失敗しました"
+          }
+        }
+      }
+    },
+    "Console Output" : {
+
+    },
+    "Content" : {
+
+    },
+    "Content Hidden" : {
+
+    },
+    "Context alert threshold settings" : {
+
+    },
+    "Context compaction alert: %@ full. %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Context compaction alert: %1$@ full. %2$@."
+          }
+        }
+      }
+    },
+    "Context copied to clipboard" : {
+
+    },
+    "Context critically full. Fork session to avoid truncation." : {
+
+    },
+    "CONTEXT PRESERVATION" : {
+
+    },
+    "Context Snapshot" : {
+
+    },
+    "Context Window" : {
+
+    },
+    "CONTEXT WINDOW" : {
+
+    },
+    "Context window %@ full — earlier messages may be truncated" : {
+
+    },
+    "Context window %lld%% used" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Continue Previous Session" : {
+
+    },
+    "Continue previous session toggle" : {
+
+    },
+    "Continue Running" : {
+
+    },
+    "Continue Session" : {
+
+    },
+    "Continue to launch step" : {
+
+    },
+    "Continue to next step" : {
+
+    },
+    "Continue to project selection" : {
+
+    },
+    "Conversation history may be truncated" : {
+
+    },
+    "Cooldown" : {
+
+    },
+    "Coordinate multiple AI agents working together" : {
+
+    },
+    "Coordinate multiple Claude agents working together on complex tasks." : {
+
+    },
+    "Copied" : {
+
+    },
+    "Copied to clipboard" : {
+
+    },
+    "Copied!" : {
+
+    },
+    "Copies the code to your clipboard" : {
+
+    },
+    "Copies the example to your clipboard" : {
+
+    },
+    "Copies this text segment to clipboard" : {
+
+    },
+    "Copy" : {
+
+    },
+    "Copy code" : {
+
+    },
+    "Copy code example" : {
+
+    },
+    "Copy code to clipboard" : {
+
+    },
+    "Copy command" : {
+
+    },
+    "Copy Command" : {
+
+    },
+    "Copy command for %@" : {
+
+    },
+    "Copy content" : {
+
+    },
+    "Copy context snapshot to clipboard for pasting into a new message" : {
+
+    },
+    "Copy Context to Clipboard" : {
+
+    },
+    "Copy Image" : {
+
+    },
+    "Copy Image %lld" : {
+
+    },
+    "Copy Path" : {
+
+    },
+    "Copy tunnel URL to clipboard" : {
+
+    },
+    "Copy URL" : {
+
+    },
+    "Corner Radius" : {
+
+    },
+    "Corner Radius Tokens (8)" : {
+
+    },
+    "Corner radius values in points" : {
+
+    },
+    "Cost & Usage" : {
+
+    },
+    "Cost: $%.4f" : {
+
+    },
+    "Courier" : {
+
+    },
+    "Courier New" : {
+
+    },
+    "CPU" : {
+
+    },
+    "Create" : {
+
+    },
+    "Create a new Claude Code session in ILS" : {
+
+    },
+    "Create a new session to chat with Claude Code." : {
+
+    },
+    "Create a new task for the team" : {
+
+    },
+    "Create a team to coordinate multiple AI agents working together" : {
+
+    },
+    "Create a workflow to automate repetitive Claude Code operations" : {
+
+    },
+    "Create Automation Rule" : {
+
+    },
+    "Create Hook" : {
+
+    },
+    "Create IFTTT-style rules to automate session actions" : {
+
+    },
+    "Create new automation rule" : {
+
+    },
+    "Create new chat session" : {
+
+    },
+    "Create new hook" : {
+
+    },
+    "Create new rule" : {
+
+    },
+    "Create New Session" : {
+
+    },
+    "Create reusable templates to quickly set up teams for common workflows" : {
+
+    },
+    "Create Rule" : {
+
+    },
+    "Create rules to automatically approve common safe operations — like file reads in your project directory or routine git commands." : {
+
+    },
+    "Create session ${name} with ${model}" : {
+
+    },
+    "Create sessions to see model usage statistics here." : {
+
+    },
+    "Create Task" : {
+
+    },
+    "Create tasks to organize team work" : {
+
+    },
+    "Create Team" : {
+
+    },
+    "Create template" : {
+
+    },
+    "Create Template" : {
+
+    },
+    "Create Template Sheet" : {
+
+    },
+    "Create your first rule to automate session actions" : {
+
+    },
+    "Created" : {
+
+    },
+    "Created new session: %@" : {
+
+    },
+    "Creates a copy of the selected session's conversation as a new starting point." : {
+
+    },
+    "Critical warning: context window is critically full" : {
+
+    },
+    "Cron Expression" : {
+
+    },
+    "Current Schedule" : {
+
+    },
+    "CURRENT USAGE" : {
+
+    },
+    "Custom" : {
+
+    },
+    "Custom Cron Expression" : {
+
+    },
+    "Custom domain" : {
+
+    },
+    "Custom Domain" : {
+
+    },
+    "Custom instructions for Claude (optional)" : {
+
+    },
+    "Custom shortcuts are stored locally and can be exported as JSON for backup or sharing." : {
+
+    },
+    "Custom Themes" : {
+
+    },
+    "Customize Your Theme" : {
+
+    },
+    "Daily" : {
+
+    },
+    "Daily message count bar chart for the selected period" : {
+
+    },
+    "Dashboard" : {
+
+    },
+    "Dashboard Layout" : {
+
+    },
+    "DATA & PRIVACY" : {
+
+    },
+    "Date" : {
+
+    },
+    "Date Range" : {
+
+    },
+    "Date range filter" : {
+
+    },
+    "Day" : {
+
+    },
+    "Debug Mode" : {
+
+    },
+    "Debug mode toggle" : {
+
+    },
+    "Default Claude model" : {
+
+    },
+    "Default Model" : {
+
+    },
+    "Default Shell" : {
+
+    },
+    "Default value (optional)" : {
+
+    },
+    "default_model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardmodell"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default Model"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelo predeterminado"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルトモデル"
+          }
+        }
+      }
+    },
+    "Default: %@" : {
+
+    },
     "delete" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loschen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -868,23 +2537,333 @@
             "value" : "Eliminar"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        }
+      }
+    },
+    "Delete" : {
+
+    },
+    "Delete \"%@\"? This cannot be undone." : {
+
+    },
+    "Delete All Data?" : {
+
+    },
+    "Delete All My Data" : {
+
+    },
+    "Delete Everything" : {
+
+    },
+    "Delete Failed" : {
+
+    },
+    "Delete Message" : {
+
+    },
+    "Delete Recording?" : {
+
+    },
+    "Delete Schedule" : {
+
+    },
+    "Delete Session" : {
+
+    },
+    "Delete Skill" : {
+
+    },
+    "Delete Template" : {
+
+    },
+    "Deny" : {
+
+    },
+    "Deny %@" : {
+
+    },
+    "Deny All" : {
+
+    },
+    "Deny all %lld selected permissions" : {
+
+    },
+    "Deny all permissions" : {
+
+    },
+    "Deny permission" : {
+
+    },
+    "Deny Selected" : {
+
+    },
+    "Deny selected permissions" : {
+
+    },
+    "Describe the task for the Claude Code agent…" : {
+
+    },
+    "Description" : {
+
+    },
+    "Description (optional)" : {
+
+    },
+    "Deselect %@" : {
+
+    },
+    "Deselect All" : {
+
+    },
+    "Deselect all permissions" : {
+
+    },
+    "Design your team workflow" : {
+
+    },
+    "Destructive" : {
+
+    },
+    "Destructive Operation" : {
+
+    },
+    "Details" : {
+
+    },
+    "Detecting local server" : {
+
+    },
+    "Detecting…" : {
+
+    },
+    "Direction" : {
+
+    },
+    "Directory Path (e.g. ~/projects/my-app)" : {
+
+    },
+    "Disable" : {
+
+    },
+    "Disable %@" : {
+
+    },
+    "Disable Server" : {
+
+    },
+    "Disable Session Persistence" : {
+
+    },
+    "Disable session persistence toggle" : {
+
+    },
+    "disabled" : {
+
+    },
+    "Disabled" : {
+
+    },
+    "Disallowed Tools" : {
+
+    },
+    "Disallowed tools text field" : {
+
+    },
+    "Discard Changes" : {
+
+    },
+    "disconnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loschen"
+            "value" : "Getrennt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desconectado"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u524a\u9664"
+            "value" : "未接続"
           }
         }
       }
     },
+    "Disconnected" : {
+
+    },
+    "Disconnected from server, reconnecting" : {
+
+    },
+    "Discover Features" : {
+
+    },
+    "Dismiss" : {
+
+    },
+    "Dismiss %@" : {
+
+    },
+    "Dismiss context compaction alert" : {
+
+    },
+    "Dismiss error" : {
+
+    },
+    "Dismiss full screen code viewer" : {
+
+    },
+    "Dismiss post-compaction recovery sheet" : {
+
+    },
+    "Dismiss related sessions" : {
+
+    },
+    "Dismiss the post-compaction recovery sheet" : {
+
+    },
+    "Display contextual prompt chips above the chat input to help you formulate effective follow-up questions." : {
+
+    },
+    "Displays a bar in chat showing how much of Claude's context window is being used." : {
+
+    },
+    "DNS Configuration" : {
+
+    },
+    "DNS Setup Guide" : {
+
+    },
+    "Documentation" : {
+
+    },
+    "done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了"
+          }
+        }
+      }
+    },
+    "Done" : {
+
+    },
+    "Done configuring chat options" : {
+
+    },
+    "Done configuring split view" : {
+
+    },
+    "Done managing session memory" : {
+
+    },
+    "Done recording" : {
+
+    },
+    "Done viewing context window details" : {
+
+    },
+    "Done with feature tour" : {
+
+    },
+    "Double tap to collapse" : {
+
+    },
+    "Double tap to expand" : {
+
+    },
+    "Double tap to navigate to this session" : {
+
+    },
+    "Double tap to open %@" : {
+
+    },
+    "Drag to reorder %@ widget" : {
+
+    },
+    "Duration" : {
+
+    },
+    "e.g. 5.00" : {
+
+    },
+    "e.g. approve, run, test" : {
+
+    },
+    "e.g. Edit,Write" : {
+
+    },
+    "e.g. filesystem" : {
+
+    },
+    "e.g. Home Mac, Work Server" : {
+
+    },
+    "e.g. npx" : {
+
+    },
+    "e.g. Read,Write,Bash" : {
+
+    },
+    "e.g. Run tests on all projects" : {
+
+    },
+    "e.g. stream-json" : {
+
+    },
+    "e.g., researcher, executor, designer" : {
+
+    },
+    "Earlier messages were truncated to free up context window space. Paste the snapshot below to restore key decisions." : {
+
+    },
     "edit" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -897,81 +2876,897 @@
             "value" : "Editar"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bearbeiten"
-          }
-        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u7de8\u96c6"
+            "value" : "編集"
           }
         }
       }
     },
-    "save" : {
-      "extractionState" : "manual",
+    "Edit" : {
+
+    },
+    "Edit %@" : {
+
+    },
+    "Edit Config" : {
+
+    },
+    "Edit Hook" : {
+
+    },
+    "Edit Project Settings" : {
+
+    },
+    "Edit raw JSON configuration files" : {
+
+    },
+    "Edit Rule" : {
+
+    },
+    "Edit Server" : {
+
+    },
+    "Edit Template" : {
+
+    },
+    "Edit Theme" : {
+
+    },
+    "Edit User Settings" : {
+
+    },
+    "Editor" : {
+
+    },
+    "Eligible tasks run concurrently." : {
+
+    },
+    "Empty directory" : {
+
+    },
+    "Enable" : {
+
+    },
+    "Enable %@" : {
+
+    },
+    "Enable %@ alerts" : {
+
+    },
+    "Enable agent queue" : {
+
+    },
+    "Enable Agent Queue" : {
+
+    },
+    "Enable Alerts" : {
+
+    },
+    "Enable analytics" : {
+
+    },
+    "Enable Analytics Collection" : {
+
+    },
+    "Enable Auto-Checkpoints" : {
+
+    },
+    "Enable extended thinking mode" : {
+
+    },
+    "Enable iCloud Sync" : {
+
+    },
+    "Enable iCloud sync for this device" : {
+
+    },
+    "Enable MeshGradient" : {
+
+    },
+    "Enable Network Loss alerts" : {
+
+    },
+    "Enable offline cache" : {
+
+    },
+    "Enable Offline Cache" : {
+
+    },
+    "Enable quick tunnel" : {
+
+    },
+    "Enable Rule" : {
+
+    },
+    "Enable Schedule" : {
+
+    },
+    "Enable Server" : {
+
+    },
+    "Enabled" : {
+
+    },
+    "End" : {
+
+    },
+    "End date" : {
+
+    },
+    "Enter a name for this checkpoint snapshot." : {
+
+    },
+    "Enter a name for your new custom layout." : {
+
+    },
+    "Enter a new name for this session" : {
+
+    },
+    "Enter a valid URL (trycloudflare.com or https://)" : {
+
+    },
+    "Enter command…" : {
+
+    },
+    "Enter message to send" : {
+
+    },
+    "Enter notification message (optional)" : {
+
+    },
+    "Enter prompt for LLM evaluation..." : {
+
+    },
+    "Enter the full path to your project directory on the server." : {
+
+    },
+    "Enter the full URL of your ILS backend instance." : {
+
+    },
+    "Enter the hostname or IP address of your remote server." : {
+
+    },
+    "ENVIRONMENT VARIABLES" : {
+
+    },
+    "Error" : {
+
+    },
+    "Error: %@" : {
+
+    },
+    "Error: %@. Tap Try Again to retry." : {
+
+    },
+    "Event" : {
+
+    },
+    "Event Type" : {
+
+    },
+    "Event type: %@" : {
+
+    },
+    "Event Types" : {
+
+    },
+    "Events from your active sessions will appear here" : {
+
+    },
+    "Every available widget is already on your dashboard." : {
+
+    },
+    "EXAMPLE" : {
+
+    },
+    "Example Rules" : {
+
+    },
+    "Execution Error" : {
+
+    },
+    "Execution Log" : {
+
+    },
+    "Execution Summary" : {
+
+    },
+    "exit %lld" : {
+
+    },
+    "Expand All" : {
+
+    },
+    "Expand code" : {
+
+    },
+    "Expand code block to full screen" : {
+
+    },
+    "Expand suggestions" : {
+
+    },
+    "Expand troubleshooting tips" : {
+
+    },
+    "Explore MCP Servers" : {
+
+    },
+    "Export" : {
+
+    },
+    "Export analytics data" : {
+
+    },
+    "Export Current Theme" : {
+
+    },
+    "Export Failed" : {
+
+    },
+    "Export Format" : {
+
+    },
+    "Export JSON" : {
+
+    },
+    "Export Options" : {
+
+    },
+    "Export recording" : {
+
+    },
+    "Export Recording" : {
+
+    },
+    "Export Session" : {
+
+    },
+    "Export usage as CSV" : {
+
+    },
+    "Exposes your local backend through a Cloudflare tunnel so you can access it from anywhere." : {
+
+    },
+    "Extended Thinking" : {
+
+    },
+    "Failed to load analytics" : {
+
+    },
+    "Failed to load checkpoints" : {
+
+    },
+    "Failed to load fork tree" : {
+
+    },
+    "Failed to load health data" : {
+
+    },
+    "Failed to load metrics" : {
+
+    },
+    "Failed to load notes" : {
+
+    },
+    "Failed to load performance metrics" : {
+
+    },
+    "Failed to load recording" : {
+
+    },
+    "Failed to load session details" : {
+
+    },
+    "Failed to Load Statistics" : {
+
+    },
+    "Favorite %@" : {
+
+    },
+    "Favorites" : {
+
+    },
+    "Favourites not available for built-in templates" : {
+
+    },
+    "Feature" : {
+
+    },
+    "Feature %lld of %lld" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
+            "state" : "new",
+            "value" : "Feature %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Field (e.g., error_count, cost_usd)" : {
+
+    },
+    "File Browser" : {
+
+    },
+    "File-type tracking coming soon" : {
+
+    },
+    "Files" : {
+
+    },
+    "FILES" : {
+
+    },
+    "Filter active — tap to change filters" : {
+
+    },
+    "Filter Activity" : {
+
+    },
+    "Filter events" : {
+
+    },
+    "Filter Results" : {
+
+    },
+    "Filter search results" : {
+
+    },
+    "Filter to code blocks only" : {
+
+    },
+    "Filter: %@" : {
+
+    },
+    "Filters on: %@" : {
+
+    },
+    "Filters results to messages from sessions in the specified project." : {
+
+    },
+    "Find and install community MCP servers with search" : {
+
+    },
+    "Find and install community plugins with search" : {
+
+    },
+    "Find and install community skills with search" : {
+
+    },
+    "Find any message across all your sessions" : {
+
+    },
+    "Finish wizard" : {
+
+    },
+    "fish" : {
+
+    },
+    "Fix" : {
+
+    },
+    "fleet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
             "state" : "translated",
-            "value" : "Save"
+            "value" : "Flotte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fleet"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Speichern"
+            "value" : "Flota"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u4fdd\u5b58"
+            "value" : "フリート"
           }
         }
       }
     },
-    "search" : {
+    "Focused Session Name" : {
+
+    },
+    "Font families, sizes (in points), weights, and line heights" : {
+
+    },
+    "Footnote Size" : {
+
+    },
+    "Fork Session" : {
+
+    },
+    "Fork session to continue with a fresh context window" : {
+
+    },
+    "Fork Tree" : {
+
+    },
+    "Format" : {
+
+    },
+    "Format: minute hour day month weekday" : {
+
+    },
+    "Free" : {
+
+    },
+    "From" : {
+
+    },
+    "From Template" : {
+
+    },
+    "Generates a JSON export of your analytics" : {
+
+    },
+    "Georgia" : {
+
+    },
+    "Get info for ${session}" : {
+
+    },
+    "Get information about a Claude Code session" : {
+
+    },
+    "Get Session Info" : {
+
+    },
+    "Get Started" : {
+
+    },
+    "Get Started with ILS" : {
+
+    },
+    "Gill Sans" : {
+
+    },
+    "GitHub Repository" : {
+
+    },
+    "Give your rule a descriptive name" : {
+
+    },
+    "Go back" : {
+
+    },
+    "Go to next feature" : {
+
+    },
+    "Go to previous feature" : {
+
+    },
+    "Haiku" : {
+
+    },
+    "Handler" : {
+
+    },
+    "Handler Type" : {
+
+    },
+    "Headline Size" : {
+
+    },
+    "Headline Text" : {
+
+    },
+    "Headline Weight" : {
+
+    },
+    "Health Dashboard" : {
+
+    },
+    "Health Score" : {
+
+    },
+    "Heavy Shadow" : {
+
+    },
+    "Helvetica" : {
+
+    },
+    "Hide %@" : {
+
+    },
+    "Hide line numbers" : {
+
+    },
+    "Hide Preview" : {
+
+    },
+    "High" : {
+
+    },
+    "Highlight" : {
+
+    },
+    "Highlighted text to draw attention" : {
+
+    },
+    "History" : {
+
+    },
+    "Hit Rate" : {
+
+    },
+    "home" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startseite"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search"
+            "value" : "Home"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buscar"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suchen"
+            "value" : "Inicio"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u691c\u7d22"
+            "value" : "ホーム"
           }
         }
       }
+    },
+    "Home" : {
+
+    },
+    "Hook execution entries will appear here once hooks begin firing. Configure hooks and run Claude Code to populate this log." : {
+
+    },
+    "Hook Templates" : {
+
+    },
+    "Hook would fire: %@" : {
+
+    },
+    "Hooks" : {
+
+    },
+    "Hooks let you run custom commands at key points in Claude Code's lifecycle, such as before/after tool use, when a session starts, or when config changes." : {
+
+    },
+    "Host Default" : {
+
+    },
+    "Host Profiles" : {
+
+    },
+    "Hostname / IP" : {
+
+    },
+    "hostProfiles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Host Profiles"
+          }
+        }
+      }
+    },
+    "HTML" : {
+
+    },
+    "HTTP" : {
+
+    },
+    "http://192.168.1.10:9999" : {
+
+    },
+    "https://example.com or http://localhost:9999" : {
+
+    },
+    "https://your-tunnel.trycloudflare.com" : {
+
+    },
+    "iCloud Sync" : {
+
+    },
+    "ICLOUD SYNC" : {
+
+    },
+    "iCloud sync keeps your preferences, notification settings, and server configuration in sync across all your devices. Disabling sync on this device will not affect other devices." : {
+
+    },
+    "iCloud sync status" : {
+
+    },
+    "ID: %@" : {
+
+    },
+    "ILS" : {
+
+    },
+    "ILS Analytics Export" : {
+
+    },
+    "ILS Coding Focus" : {
+
+    },
+    "ILS Lock Screen" : {
+
+    },
+    "ILS Premium" : {
+
+    },
+    "ils.example.com" : {
+
+    },
+    "Import" : {
+
+    },
+    "Import Error" : {
+
+    },
+    "Import Hooks" : {
+
+    },
+    "Import JSON" : {
+
+    },
+    "Import Theme" : {
+
+    },
+    "Importing..." : {
+
+    },
+    "In" : {
+
+    },
+    "Inactive" : {
+
+    },
+    "Inbox" : {
+
+    },
+    "Include Co-Author" : {
+
+    },
+    "Include co-authored-by attribution" : {
+
+    },
+    "Index" : {
+
+    },
+    "Info" : {
+
+    },
+    "INFORMATION" : {
+
+    },
+    "Information Density" : {
+
+    },
+    "Initial Prompt" : {
+
+    },
+    "Initial Prompt (Optional)" : {
+
+    },
+    "INPUT" : {
+
+    },
+    "Input Format" : {
+
+    },
+    "Input format text field" : {
+
+    },
+    "Insert Formatted" : {
+
+    },
+    "Insert formatted %@" : {
+
+    },
+    "Insert Plain Text" : {
+
+    },
+    "Insert plain text without formatting" : {
+
+    },
+    "Insert template into chat input" : {
+
+    },
+    "Insert template: %@" : {
+
+    },
+    "Inserts the transcribed text into the message" : {
+
+    },
+    "Install" : {
+
+    },
+    "Install %@" : {
+
+    },
+    "Install cloudflared" : {
+
+    },
+    "Install Failed" : {
+
+    },
+    "Install MCP Server" : {
+
+    },
+    "Installation" : {
+
+    },
+    "Installed" : {
+
+    },
+    "Installed and ready" : {
+
+    },
+    "Installing..." : {
+
+    },
+    "Instructions for the teammate's initial task" : {
+
+    },
+    "Integrity Check" : {
+
+    },
+    "Intelligent Local Server" : {
+
+    },
+    "INTELLIGENT LOCAL SERVER" : {
+
+    },
+    "Internal" : {
+
+    },
+    "Invalid JSON" : {
+
+    },
+    "JSON" : {
+
+    },
+    "JSON Preview" : {
+
+    },
+    "Jump to bottom" : {
+
+    },
+    "Keep last" : {
+
+    },
+    "Key Topics" : {
+
+    },
+    "KEY_NAME" : {
+
+    },
+    "Key: %@" : {
+
+    },
+    "Keyboard Shortcuts" : {
+
+    },
+    "KEYBOARD SHORTCUTS" : {
+
+    },
+    "Label (optional)" : {
+
+    },
+    "Larger cache sizes improve performance but consume more memory. Cache is automatically cleared on memory warnings." : {
+
+    },
+    "Last Active" : {
+
+    },
+    "Last Run" : {
+
+    },
+    "Last Synced" : {
+
+    },
+    "Last synced: %@" : {
+
+    },
+    "Last updated %@" : {
+
+    },
+    "Last updated: %@" : {
+
+    },
+    "Last: %@" : {
+
+    },
+    "Layout" : {
+
+    },
+    "Layout name" : {
+
+    },
+    "Leave blank to use an auto-generated name based on the session." : {
+
+    },
+    "Leave both empty to match all requests for the selected tool. At least a specific tool, path glob, or command prefix is required." : {
+
+    },
+    "Leave empty for default timeout." : {
+
+    },
+    "Leave empty to match all events of this type." : {
+
+    },
+    "Leave empty to use UTC. Format: America/New_York" : {
+
+    },
+    "Light Shadow" : {
+
+    },
+    "Limit" : {
+
+    },
+    "Limit the feed to events from a single session." : {
+
+    },
+    "Limits how many sessions are stored locally. Range: 10–200." : {
+
+    },
+    "Link" : {
+
+    },
+    "List ILS projects and their session counts" : {
+
+    },
+    "List Projects" : {
+
+    },
+    "List recent Claude Code sessions and their status" : {
+
+    },
+    "List Recent Sessions" : {
+
+    },
+    "List Sessions" : {
+
+    },
+    "Live" : {
+
+    },
+    "Load earlier messages" : {
+
+    },
+    "Load more..." : {
+
     },
     "loading" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden..."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -984,19 +3779,3315 @@
             "value" : "Cargando..."
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込み中..."
+          }
+        }
+      }
+    },
+    "Loading activity…" : {
+
+    },
+    "Loading analytics data" : {
+
+    },
+    "Loading API key status..." : {
+
+    },
+    "Loading cache statistics..." : {
+
+    },
+    "Loading checkpoints…" : {
+
+    },
+    "Loading configuration..." : {
+
+    },
+    "Loading content" : {
+
+    },
+    "Loading content, please wait" : {
+
+    },
+    "Loading fork tree..." : {
+
+    },
+    "Loading health data…" : {
+
+    },
+    "Loading history..." : {
+
+    },
+    "Loading hooks..." : {
+
+    },
+    "Loading logs…" : {
+
+    },
+    "Loading notes..." : {
+
+    },
+    "Loading performance metrics..." : {
+
+    },
+    "Loading projects…" : {
+
+    },
+    "Loading queue…" : {
+
+    },
+    "Loading recording…" : {
+
+    },
+    "Loading recordings…" : {
+
+    },
+    "Loading rules..." : {
+
+    },
+    "Loading rules…" : {
+
+    },
+    "Loading session details..." : {
+
+    },
+    "Loading statistics…" : {
+
+    },
+    "Loading team metrics..." : {
+
+    },
+    "Loading templates..." : {
+
+    },
+    "Loading themes..." : {
+
+    },
+    "Loading version information..." : {
+
+    },
+    "Loading..." : {
+
+    },
+    "Loading…" : {
+
+    },
+    "Local" : {
+
+    },
+    "Local Server" : {
+
+    },
+    "Log Level" : {
+
+    },
+    "Logs" : {
+
+    },
+    "Low" : {
+
+    },
+    "Manage Auto-Approve Rules" : {
+
+    },
+    "Manage Layouts" : {
+
+    },
+    "Manual" : {
+
+    },
+    "Manually trigger iCloud sync now" : {
+
+    },
+    "Mark all events as read" : {
+
+    },
+    "Markdown" : {
+
+    },
+    "Match type" : {
+
+    },
+    "Match type picker" : {
+
+    },
+    "Matched Hooks" : {
+
+    },
+    "Matcher" : {
+
+    },
+    "Matches permission requests from any tool." : {
+
+    },
+    "Max Budget (USD)" : {
+
+    },
+    "Max Budget USD" : {
+
+    },
+    "Max budget USD text field" : {
+
+    },
+    "Max Cached Sessions" : {
+
+    },
+    "Max cached sessions: %lld" : {
+
+    },
+    "Max context: %@ tokens" : {
+
+    },
+    "Max risk level" : {
+
+    },
+    "Max Turns" : {
+
+    },
+    "Max turns stepper, current value %lld" : {
+
+    },
+    "Max Turns: %lld" : {
+
+    },
+    "Maximum Cache Size" : {
+
+    },
+    "Maximum risk level picker" : {
+
+    },
+    "MCP Marketplace" : {
+
+    },
+    "MCP Presets" : {
+
+    },
+    "mcp_servers" : {
+      "extractionState" : "manual",
+      "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Laden..."
+            "value" : "MCP-Server"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP Servers"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidores MCP"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "\u8aad\u307f\u8fbc\u307f\u4e2d..."
+            "value" : "MCPサーバー"
           }
         }
       }
+    },
+    "Medium Shadow" : {
+
+    },
+    "MEM" : {
+
+    },
+    "Memory Usage" : {
+
+    },
+    "Menlo" : {
+
+    },
+    "MeshGradient" : {
+
+    },
+    "MeshGradient Background" : {
+
+    },
+    "MeshGradient preview requires iOS 18+ / macOS 15+" : {
+
+    },
+    "Message" : {
+
+    },
+    "Message Claude..." : {
+
+    },
+    "Message Content" : {
+
+    },
+    "Message input field" : {
+
+    },
+    "Message Trend" : {
+
+    },
+    "Message..." : {
+
+    },
+    "Messages" : {
+
+    },
+    "Metric" : {
+
+    },
+    "Middle Center" : {
+
+    },
+    "Middle Left" : {
+
+    },
+    "Middle Right" : {
+
+    },
+    "Minimum Severity" : {
+
+    },
+    "Missing" : {
+
+    },
+    "Model" : {
+
+    },
+    "Model & Execution" : {
+
+    },
+    "Model selection picker" : {
+
+    },
+    "Model Usage" : {
+
+    },
+    "Model: %@" : {
+
+    },
+    "Monaco" : {
+
+    },
+    "Monitor your Claude Code rate limit usage." : {
+
+    },
+    "Monitor your ILS backend connection and health." : {
+
+    },
+    "Monitor your ILS server status and session count from the lock screen." : {
+
+    },
+    "Monospaced Font Family" : {
+
+    },
+    "Month" : {
+
+    },
+    "Monthly" : {
+
+    },
+    "More information" : {
+
+    },
+    "More options" : {
+
+    },
+    "Most Used" : {
+
+    },
+    "My Templates" : {
+
+    },
+    "my-ils-tunnel" : {
+
+    },
+    "Name" : {
+
+    },
+    "Named" : {
+
+    },
+    "Named tunnels require DNS configuration in your Cloudflare account." : {
+
+    },
+    "Navigate to %@" : {
+
+    },
+    "Navigate to add a backend connection" : {
+
+    },
+    "Navigate to backend management" : {
+
+    },
+    "Nested Container" : {
+
+    },
+    "Network" : {
+
+    },
+    "Network alert cooldown period" : {
+
+    },
+    "Network Loss" : {
+
+    },
+    "Network usage chart, %@ per second download, %@ per second upload" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network usage chart, %1$@ per second download, %2$@ per second upload"
+          }
+        }
+      }
+    },
+    "New Checkpoint" : {
+
+    },
+    "New Hook" : {
+
+    },
+    "New Layout" : {
+
+    },
+    "New Note" : {
+
+    },
+    "New Recording" : {
+
+    },
+    "New Rule" : {
+
+    },
+    "New Session" : {
+
+    },
+    "New Template" : {
+
+    },
+    "New Theme" : {
+
+    },
+    "New version available" : {
+
+    },
+    "New Workflow" : {
+
+    },
+    "New York" : {
+
+    },
+    "new_session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Sitzung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Session"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva sesion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいセッション"
+          }
+        }
+      }
+    },
+    "Next" : {
+
+    },
+    "Next key moment" : {
+
+    },
+    "Next Run" : {
+
+    },
+    "No %@ entries found" : {
+
+    },
+    "No active sessions" : {
+
+    },
+    "No Active Sessions" : {
+
+    },
+    "No activity data" : {
+
+    },
+    "No activity data available" : {
+
+    },
+    "No activity yet" : {
+
+    },
+    "No advanced settings" : {
+
+    },
+    "No Agent Teams" : {
+
+    },
+    "No alerts in the last 7 days" : {
+
+    },
+    "No Alerts Yet" : {
+
+    },
+    "No alerts yet. Configure thresholds to start monitoring." : {
+
+    },
+    "No API Key" : {
+
+    },
+    "No arguments configured" : {
+
+    },
+    "No Auto-Approve Rules" : {
+
+    },
+    "No Automation Rules" : {
+
+    },
+    "No Backends Configured" : {
+
+    },
+    "No backends configured. Add a backend in Settings → Backends to enable per-backend notifications." : {
+
+    },
+    "No Bookmarks Yet" : {
+
+    },
+    "No changed files found" : {
+
+    },
+    "No Checkpoints" : {
+
+    },
+    "No checkpoints yet" : {
+
+    },
+    "No conditions - rule will trigger for all events" : {
+
+    },
+    "No configuration loaded" : {
+
+    },
+    "No custom templates yet" : {
+
+    },
+    "No data" : {
+
+    },
+    "No data for this period" : {
+
+    },
+    "No enabled hooks match the %@ event with the provided inputs." : {
+
+    },
+    "No environment variables" : {
+
+    },
+    "No events in this recording" : {
+
+    },
+    "No Execution History" : {
+
+    },
+    "No Favorites Yet" : {
+
+    },
+    "No favorites yet. Star sessions or projects to pin them here." : {
+
+    },
+    "No files match your search" : {
+
+    },
+    "No Hooks Configured" : {
+
+    },
+    "No hooks would fire" : {
+
+    },
+    "No limit" : {
+
+    },
+    "No log entries available for %@" : {
+
+    },
+    "No Logs" : {
+
+    },
+    "No logs available" : {
+
+    },
+    "No matching events" : {
+
+    },
+    "No matching projects" : {
+
+    },
+    "No Matching Rules" : {
+
+    },
+    "No matching sessions" : {
+
+    },
+    "No MCP servers found on GitHub for \"%@\"" : {
+
+    },
+    "No Memory Notes" : {
+
+    },
+    "No messages match \"%@\"" : {
+
+    },
+    "No messages matched \"%@\". Try different keywords or adjust your filters." : {
+
+    },
+    "No Pending Permissions" : {
+
+    },
+    "No Permission History" : {
+
+    },
+    "No permissions configured" : {
+
+    },
+    "No plugins found on GitHub for \"%@\"" : {
+
+    },
+    "No pre-compaction snapshot available" : {
+
+    },
+    "No preset configurations are available" : {
+
+    },
+    "No Presets" : {
+
+    },
+    "No processes found" : {
+
+    },
+    "No project" : {
+
+    },
+    "No Project (Home Directory)" : {
+
+    },
+    "No project data for this period" : {
+
+    },
+    "No project: Start without a project context" : {
+
+    },
+    "No projects" : {
+
+    },
+    "No Projects" : {
+
+    },
+    "No projects found" : {
+
+    },
+    "No projects yet" : {
+
+    },
+    "No README available" : {
+
+    },
+    "No recent sessions" : {
+
+    },
+    "No Recent Sessions" : {
+
+    },
+    "No recordings yet" : {
+
+    },
+    "No results" : {
+
+    },
+    "No Results" : {
+
+    },
+    "No results for \"%@\"" : {
+
+    },
+    "No Results Found" : {
+
+    },
+    "No session metrics" : {
+
+    },
+    "No session metrics available" : {
+
+    },
+    "No sessions" : {
+
+    },
+    "No sessions found" : {
+
+    },
+    "No sessions in fork tree" : {
+
+    },
+    "No sessions matching \"%@\"" : {
+
+    },
+    "No Sessions Pinned" : {
+
+    },
+    "No skill usage data" : {
+
+    },
+    "No skill usage data available" : {
+
+    },
+    "No skills found on GitHub for \"%@\"" : {
+
+    },
+    "No snapshot was saved before compaction." : {
+
+    },
+    "No Tasks" : {
+
+    },
+    "No Team Templates" : {
+
+    },
+    "No teams" : {
+
+    },
+    "No Teams" : {
+
+    },
+    "No templates available" : {
+
+    },
+    "No templates in this category" : {
+
+    },
+    "No templates match \"%@\"" : {
+
+    },
+    "No Templates Yet" : {
+
+    },
+    "No Usage Data" : {
+
+    },
+    "No usage data available" : {
+
+    },
+    "No Usage Data Yet" : {
+
+    },
+    "No version detected" : {
+
+    },
+    "No version history" : {
+
+    },
+    "No workflow steps yet" : {
+
+    },
+    "No Workflows" : {
+
+    },
+    "no_sessions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Sitzungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Sessions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin sesiones"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "セッションなし"
+          }
+        }
+      }
+    },
+    "None" : {
+
+    },
+    "None (optional)" : {
+
+    },
+    "Not Connected" : {
+
+    },
+    "Not found" : {
+
+    },
+    "Note (optional)" : {
+
+    },
+    "Note content" : {
+
+    },
+    "Note title" : {
+
+    },
+    "Notes" : {
+
+    },
+    "Notification Message" : {
+
+    },
+    "Notification preferences synced via iCloud" : {
+
+    },
+    "Notification Sent" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notifications from %@" : {
+
+    },
+    "Notifications require permission. You will be prompted when enabling alerts for the first time." : {
+
+    },
+    "Notifications suppressed" : {
+
+    },
+    "Official download page" : {
+
+    },
+    "Offline" : {
+
+    },
+    "Offline — showing cached data" : {
+
+    },
+    "Offline mode. Showing cached data." : {
+
+    },
+    "Offline mode. Showing cached data. %@." : {
+
+    },
+    "offline_cached_data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline — zeige zwischengespeicherte Daten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline — showing cached data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin conexion — mostrando datos en cache"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフライン — キャッシュデータを表示中"
+          }
+        }
+      }
+    },
+    "Offset X" : {
+
+    },
+    "Offset Y" : {
+
+    },
+    "OK" : {
+
+    },
+    "Only alphanumeric characters and hyphens allowed" : {
+
+    },
+    "Only matches %@ permission requests." : {
+
+    },
+    "Opacity" : {
+
+    },
+    "Open" : {
+
+    },
+    "Open %@" : {
+
+    },
+    "Open auto-fork settings" : {
+
+    },
+    "Open Command Palette" : {
+
+    },
+    "Open Fork" : {
+
+    },
+    "Open Settings" : {
+
+    },
+    "Open Settings to enable analytics" : {
+
+    },
+    "Open Settings to grant camera permission" : {
+
+    },
+    "Open setup wizard" : {
+
+    },
+    "Open sidebar" : {
+
+    },
+    "Opens a new conversation with Claude" : {
+
+    },
+    "Opens advanced chat options" : {
+
+    },
+    "Opens Claude Code documentation for slash commands" : {
+
+    },
+    "Opens navigation sidebar" : {
+
+    },
+    "Opens team details" : {
+
+    },
+    "Opens the attachment picker" : {
+
+    },
+    "Opens the command palette for slash commands" : {
+
+    },
+    "Opens the filter sheet to narrow results by date, author, or project" : {
+
+    },
+    "Opens the full quick reply template library" : {
+
+    },
+    "Opens the layout picker to customise your dashboard" : {
+
+    },
+    "Opens the rule editor" : {
+
+    },
+    "Opens the server configuration wizard" : {
+
+    },
+    "Opens the widget picker to add a new tile to the dashboard" : {
+
+    },
+    "Opens this %@" : {
+
+    },
+    "Opens this activity event" : {
+
+    },
+    "Opens this chat session" : {
+
+    },
+    "Opens this message in its session" : {
+
+    },
+    "Opens this project" : {
+
+    },
+    "Opens this session" : {
+
+    },
+    "Operator" : {
+
+    },
+    "Optional" : {
+
+    },
+    "Options" : {
+
+    },
+    "Opus" : {
+
+    },
+    "Out" : {
+
+    },
+    "out of 100" : {
+
+    },
+    "Overlay" : {
+
+    },
+    "Overview" : {
+
+    },
+    "P%lld" : {
+
+    },
+    "Page %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Palatino" : {
+
+    },
+    "Password" : {
+
+    },
+    "Paste as Message" : {
+
+    },
+    "Paste context snapshot as a message in the chat input" : {
+
+    },
+    "Paste from Clipboard" : {
+
+    },
+    "Paste hooks JSON below. This will replace your current hooks configuration." : {
+
+    },
+    "Paste your Cloudflare tunnel URL (trycloudflare.com or custom domain)." : {
+
+    },
+    "Path glob (e.g. /src/**)" : {
+
+    },
+    "Path highlighted" : {
+
+    },
+    "Pattern (regex, optional)" : {
+
+    },
+    "Pause" : {
+
+    },
+    "Pause all running tasks" : {
+
+    },
+    "Pause playback" : {
+
+    },
+    "Peak" : {
+
+    },
+    "Peak day" : {
+
+    },
+    "Peak day: %lld sessions on %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Peak day: %1$lld sessions on %2$@"
+          }
+        }
+      }
+    },
+    "Per-language code generation volume will appear here once the session data model captures file-extension metadata." : {
+
+    },
+    "Performance Analytics" : {
+
+    },
+    "Performance Metrics" : {
+
+    },
+    "Period" : {
+
+    },
+    "Permanently deletes all sessions, messages, projects, themes, host profiles, and cached data from the server." : {
+
+    },
+    "Permission History" : {
+
+    },
+    "Permission Mode" : {
+
+    },
+    "Permission mode picker" : {
+
+    },
+    "Permission Required" : {
+
+    },
+    "Permissions" : {
+
+    },
+    "PERMISSIONS" : {
+
+    },
+    "Photo Library" : {
+
+    },
+    "PID" : {
+
+    },
+    "Pin" : {
+
+    },
+    "Pin 2–4 sessions from the sidebar to monitor them simultaneously." : {
+
+    },
+    "Pin to Split View" : {
+
+    },
+    "Pin to Toolbar" : {
+
+    },
+    "Playback position" : {
+
+    },
+    "Playback speed" : {
+
+    },
+    "Plugin" : {
+
+    },
+    "plugins" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erweiterungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugins"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complementos"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プラグイン"
+          }
+        }
+      }
+    },
+    "Port" : {
+
+    },
+    "Port number" : {
+
+    },
+    "Position %lld" : {
+
+    },
+    "Pre-compaction snapshot text" : {
+
+    },
+    "Premium" : {
+
+    },
+    "Premium Required" : {
+
+    },
+    "PRESET" : {
+
+    },
+    "Press play to begin" : {
+
+    },
+    "Preview" : {
+
+    },
+    "Previous" : {
+
+    },
+    "Previous key moment" : {
+
+    },
+    "Primary Button" : {
+
+    },
+    "Primary Font Family" : {
+
+    },
+    "Primary Text" : {
+
+    },
+    "Privacy Policy" : {
+
+    },
+    "Processes" : {
+
+    },
+    "Profile" : {
+
+    },
+    "Project" : {
+
+    },
+    "Project name" : {
+
+    },
+    "Project Name" : {
+
+    },
+    "Project Path" : {
+
+    },
+    "Project Status" : {
+
+    },
+    "Project status unavailable — offline" : {
+
+    },
+    "Project: %@" : {
+
+    },
+    "Projects" : {
+
+    },
+    "Prompt" : {
+
+    },
+    "Prompt Suggestions" : {
+
+    },
+    "Public URL" : {
+
+    },
+    "QR Code Scanner" : {
+
+    },
+    "Queue and manage multiple background agent tasks for batch processing." : {
+
+    },
+    "Quick" : {
+
+    },
+    "Quick access to your recent Claude Code sessions." : {
+
+    },
+    "Quick Actions" : {
+
+    },
+    "Quick Connect" : {
+
+    },
+    "Quick install with Homebrew:" : {
+
+    },
+    "Quick Replies" : {
+
+    },
+    "QUICK REPLY" : {
+
+    },
+    "Quick reply templates" : {
+
+    },
+    "Quick Reply Templates" : {
+
+    },
+    "Quick reply templates let you send common messages with one tap. Tap + to create your first custom template." : {
+
+    },
+    "Quick Tunnel" : {
+
+    },
+    "Quick tunnels use randomly generated URLs that change each time. Use a custom domain for a stable URL." : {
+
+    },
+    "quick_actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schnellaktionen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Actions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones rapidas"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クイックアクション"
+          }
+        }
+      }
+    },
+    "Quiet hours end time" : {
+
+    },
+    "Quiet hours start time" : {
+
+    },
+    "Radius" : {
+
+    },
+    "Rate Limit" : {
+
+    },
+    "Rate limit: %@ messages, %lld percent consumed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rate limit: %1$@ messages, %2$lld percent consumed"
+          }
+        }
+      }
+    },
+    "Rate limit: %@, %lld percent consumed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rate limit: %1$@, %2$lld percent consumed"
+          }
+        }
+      }
+    },
+    "Re-check" : {
+
+    },
+    "README" : {
+
+    },
+    "Recent" : {
+
+    },
+    "Recent Searches" : {
+
+    },
+    "Recent Sessions" : {
+
+    },
+    "recent_sessions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Sitzungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent Sessions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones recientes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近のセッション"
+          }
+        }
+      }
+    },
+    "Recently Used" : {
+
+    },
+    "Recommendations" : {
+
+    },
+    "Reconnecting..." : {
+
+    },
+    "Reconnecting…" : {
+
+    },
+    "Record" : {
+
+    },
+    "Recording name (optional)" : {
+
+    },
+    "Recordings" : {
+
+    },
+    "Recovery" : {
+
+    },
+    "Redact sensitive content" : {
+
+    },
+    "Redacting removes message content before exporting, keeping only event types and timestamps." : {
+
+    },
+    "Reduce pinned sessions to match the selected layout." : {
+
+    },
+    "Refresh Health Check" : {
+
+    },
+    "Refresh health check for %@" : {
+
+    },
+    "Refresh health status" : {
+
+    },
+    "Refresh logs" : {
+
+    },
+    "Refreshing content" : {
+
+    },
+    "Refreshing rules" : {
+
+    },
+    "Refreshing…" : {
+
+    },
+    "Related Sessions" : {
+
+    },
+    "Remote Access" : {
+
+    },
+    "Remote hostname or IP address" : {
+
+    },
+    "Remote Server" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Remove %@" : {
+
+    },
+    "Remove %@ filter" : {
+
+    },
+    "Remove %@ widget" : {
+
+    },
+    "Remove a pinned session to pin more" : {
+
+    },
+    "Remove argument %lld" : {
+
+    },
+    "Remove bookmark" : {
+
+    },
+    "Remove Bookmark" : {
+
+    },
+    "Remove filter: %@" : {
+
+    },
+    "Remove from Favorites" : {
+
+    },
+    "Remove from favourites" : {
+
+    },
+    "Removes this article from bookmarks" : {
+
+    },
+    "Rename" : {
+
+    },
+    "Rename Session" : {
+
+    },
+    "Requesting camera access…" : {
+
+    },
+    "Required" : {
+
+    },
+    "Requires a Cloudflare account with a registered domain." : {
+
+    },
+    "Reset" : {
+
+    },
+    "Reset All Filters" : {
+
+    },
+    "Reset All Shortcuts" : {
+
+    },
+    "Reset to Default" : {
+
+    },
+    "Reset to Default Layout" : {
+
+    },
+    "Reset to Default Layout?" : {
+
+    },
+    "Reset to Default?" : {
+
+    },
+    "Reset to Defaults" : {
+
+    },
+    "Reset to defaults button" : {
+
+    },
+    "Resets %@" : {
+
+    },
+    "Resize %@" : {
+
+    },
+    "Resolved permissions appear here." : {
+
+    },
+    "Response complete" : {
+
+    },
+    "Restore" : {
+
+    },
+    "Restore Checkpoint?" : {
+
+    },
+    "Restore Purchases" : {
+
+    },
+    "Restore to \"%@\"? Messages created after this checkpoint will be removed." : {
+
+    },
+    "Restore to %@" : {
+
+    },
+    "Restoring…" : {
+
+    },
+    "Result" : {
+
+    },
+    "Results" : {
+
+    },
+    "Resume" : {
+
+    },
+    "Resume %@" : {
+
+    },
+    "Resume all paused tasks" : {
+
+    },
+    "Resume Where You Left Off" : {
+
+    },
+    "retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試行"
+          }
+        }
+      }
+    },
+    "Retry" : {
+
+    },
+    "Retry Connection" : {
+
+    },
+    "Retry loading analytics" : {
+
+    },
+    "Retry loading recording" : {
+
+    },
+    "Reveal %@" : {
+
+    },
+    "Row 1" : {
+
+    },
+    "Row 2" : {
+
+    },
+    "Row 3" : {
+
+    },
+    "Rule Name" : {
+
+    },
+    "Rules" : {
+
+    },
+    "Run asynchronously" : {
+
+    },
+    "Running" : {
+
+    },
+    "San Francisco" : {
+
+    },
+    "San Francisco Rounded" : {
+
+    },
+    "save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Save" : {
+
+    },
+    "Save & Start Named Tunnel" : {
+
+    },
+    "Save 17%" : {
+
+    },
+    "Save a snapshot of the current context before compaction" : {
+
+    },
+    "Save and start named tunnel" : {
+
+    },
+    "Save Anyway" : {
+
+    },
+    "Save as Template" : {
+
+    },
+    "Save Changes" : {
+
+    },
+    "Save checkpoint" : {
+
+    },
+    "Save Checkpoint" : {
+
+    },
+    "Save Checkpoint Now" : {
+
+    },
+    "Save Error" : {
+
+    },
+    "Save key decisions, file paths, and variable names that survive context compaction." : {
+
+    },
+    "Save Snapshot" : {
+
+    },
+    "Saves this article to bookmarks" : {
+
+    },
+    "Saving..." : {
+
+    },
+    "Scan QR Code" : {
+
+    },
+    "Scan QR code for tunnel URL" : {
+
+    },
+    "Schedule Configuration" : {
+
+    },
+    "Schedule Saved" : {
+
+    },
+    "Schedule Workflow" : {
+
+    },
+    "Scope" : {
+
+    },
+    "Scope: %@ • %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scope: %1$@ • %2$@"
+          }
+        }
+      }
+    },
+    "Score Breakdown" : {
+
+    },
+    "Scrolls to the most recent message" : {
+
+    },
+    "search" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検索"
+          }
+        }
+      }
+    },
+    "Search" : {
+
+    },
+    "Search %@..." : {
+
+    },
+    "Search Across Sessions" : {
+
+    },
+    "Search across sessions…" : {
+
+    },
+    "Search all backends..." : {
+
+    },
+    "Search all sessions" : {
+
+    },
+    "Search all sessions…" : {
+
+    },
+    "Search commands..." : {
+
+    },
+    "Search commands…" : {
+
+    },
+    "Search documentation..." : {
+
+    },
+    "Search Failed" : {
+
+    },
+    "Search files…" : {
+
+    },
+    "Search GitHub for Claude Code plugins" : {
+
+    },
+    "Search GitHub for Claude Code skills" : {
+
+    },
+    "Search GitHub for MCP servers" : {
+
+    },
+    "Search GitHub for MCP servers or browse curated picks" : {
+
+    },
+    "Search GitHub for MCP servers..." : {
+
+    },
+    "Search GitHub for plugins..." : {
+
+    },
+    "Search GitHub for skills..." : {
+
+    },
+    "Search messages" : {
+
+    },
+    "Search Messages" : {
+
+    },
+    "Search messages..." : {
+
+    },
+    "Search or ask in plain English..." : {
+
+    },
+    "Search presets…" : {
+
+    },
+    "Search processes" : {
+
+    },
+    "Search projects..." : {
+
+    },
+    "Search projects…" : {
+
+    },
+    "Search query" : {
+
+    },
+    "Search rules" : {
+
+    },
+    "Search sessions" : {
+
+    },
+    "Search Sessions" : {
+
+    },
+    "Search sessions..." : {
+
+    },
+    "Search templates" : {
+
+    },
+    "Search templates..." : {
+
+    },
+    "Search themes..." : {
+
+    },
+    "Search tool, session, project" : {
+
+    },
+    "Searching…" : {
+
+    },
+    "Secondary Background" : {
+
+    },
+    "Secondary Button" : {
+
+    },
+    "Secondary level content" : {
+
+    },
+    "Secondary Text" : {
+
+    },
+    "Secondary text for less important information" : {
+
+    },
+    "See how your theme looks across different UI components" : {
+
+    },
+    "Select" : {
+
+    },
+    "Select %@" : {
+
+    },
+    "Select %lld more" : {
+
+    },
+    "Select a preset below or use custom cron expression." : {
+
+    },
+    "Select a project (optional)" : {
+
+    },
+    "Select All" : {
+
+    },
+    "Select all permissions" : {
+
+    },
+    "Select an event type, provide optional inputs, then tap Simulate to see which of your enabled hooks would fire." : {
+
+    },
+    "Select Sessions" : {
+
+    },
+    "Send ${message} to ${session}" : {
+
+    },
+    "Send a message to a Claude Code session via ILS" : {
+
+    },
+    "Send message" : {
+
+    },
+    "Send Message" : {
+
+    },
+    "Send Message to Session" : {
+
+    },
+    "Send Test Notification" : {
+
+    },
+    "send_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信"
+          }
+        }
+      }
+    },
+    "Sends the current message to Claude" : {
+
+    },
+    "Separator" : {
+
+    },
+    "Separator line above" : {
+
+    },
+    "Server name is read-only in edit mode" : {
+
+    },
+    "Server Status" : {
+
+    },
+    "Server URL" : {
+
+    },
+    "Session" : {
+
+    },
+    "SESSION BACKUP" : {
+
+    },
+    "SESSION CHECKPOINTS" : {
+
+    },
+    "Session Compacted" : {
+
+    },
+    "Session Details" : {
+
+    },
+    "Session error" : {
+
+    },
+    "Session Forked" : {
+
+    },
+    "Session Health" : {
+
+    },
+    "Session ID (optional)" : {
+
+    },
+    "Session Info" : {
+
+    },
+    "Session Memory" : {
+
+    },
+    "Session Metrics" : {
+
+    },
+    "Session name" : {
+
+    },
+    "Session Name (optional)" : {
+
+    },
+    "Session recording export" : {
+
+    },
+    "Session Suggestions" : {
+
+    },
+    "Sessions" : {
+
+    },
+    "SESSIONS" : {
+
+    },
+    "Sessions — Large" : {
+
+    },
+    "Sessions (max %lld)" : {
+
+    },
+    "sessions_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Sitzungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Sessions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d Sesiones"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%dセッション"
+          }
+        }
+      }
+    },
+    "Set %@ date" : {
+
+    },
+    "Set Up New Server" : {
+
+    },
+    "settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定"
+          }
+        }
+      }
+    },
+    "Settings" : {
+
+    },
+    "Setup" : {
+
+    },
+    "Setup server connection" : {
+
+    },
+    "SF Mono" : {
+
+    },
+    "Shadow properties: color (hex), opacity (0-1), radius and offsets (points)" : {
+
+    },
+    "Shadow Tokens (15)" : {
+
+    },
+    "Shadows" : {
+
+    },
+    "Share code" : {
+
+    },
+    "Share code as image" : {
+
+    },
+    "Share exported recording" : {
+
+    },
+    "Shell command" : {
+
+    },
+    "shortcuts.json" : {
+
+    },
+    "Show context usage bar" : {
+
+    },
+    "Show JSON Preview" : {
+
+    },
+    "Show less" : {
+
+    },
+    "Show line numbers" : {
+
+    },
+    "Show more" : {
+
+    },
+    "Show more (%lld lines)" : {
+
+    },
+    "Show only events at or above the selected severity level." : {
+
+    },
+    "Show prompt suggestions" : {
+
+    },
+    "Show Prompt Suggestions" : {
+
+    },
+    "Show session suggestions" : {
+
+    },
+    "Show Session Suggestions" : {
+
+    },
+    "Showing 8 of %lld entries." : {
+
+    },
+    "Shows rename, fork, export, and other session options" : {
+
+    },
+    "Shows the number of sessions per day" : {
+
+    },
+    "Simulate %@ event" : {
+
+    },
+    "Simulate Event" : {
+
+    },
+    "Simulation Inputs" : {
+
+    },
+    "Skill" : {
+
+    },
+    "SKILL CONTENT" : {
+
+    },
+    "Skill Name" : {
+
+    },
+    "Skill Usage" : {
+
+    },
+    "skills" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fahigkeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skills"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Habilidades"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スキル"
+          }
+        }
+      }
+    },
+    "Skills" : {
+
+    },
+    "Skip" : {
+
+    },
+    "Skip feature tour" : {
+
+    },
+    "Skip first session wizard" : {
+
+    },
+    "Skip for now" : {
+
+    },
+    "Skip onboarding" : {
+
+    },
+    "Skip onboarding setup" : {
+
+    },
+    "Skip Tour" : {
+
+    },
+    "Smart Paste" : {
+
+    },
+    "Smart search active" : {
+
+    },
+    "Snapshot from %@: %@ tokens" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Snapshot from %1$@: %2$@ tokens"
+          }
+        }
+      }
+    },
+    "Snooze" : {
+
+    },
+    "Snooze %@ alerts" : {
+
+    },
+    "Snooze Alerts" : {
+
+    },
+    "Snoozed until %@" : {
+
+    },
+    "Sonnet" : {
+
+    },
+    "Soon" : {
+
+    },
+    "Source" : {
+
+    },
+    "Source: %@" : {
+
+    },
+    "Source: Claude Code" : {
+
+    },
+    "Spacing" : {
+
+    },
+    "Spacing Tokens (10)" : {
+
+    },
+    "Spacing values in points" : {
+
+    },
+    "Sparkline chart, %lld data points, latest value %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sparkline chart, %1$lld data points, latest value %2$lld"
+          }
+        }
+      }
+    },
+    "Spawn" : {
+
+    },
+    "Spawn Teammate" : {
+
+    },
+    "Speed" : {
+
+    },
+    "Split View" : {
+
+    },
+    "Split View Full" : {
+
+    },
+    "Split View, %@" : {
+
+    },
+    "SSH Key" : {
+
+    },
+    "SSH Setup" : {
+
+    },
+    "Staff Pick" : {
+
+    },
+    "Star sessions or projects to pin them here" : {
+
+    },
+    "Start" : {
+
+    },
+    "Start a Chat" : {
+
+    },
+    "Start a new recording" : {
+
+    },
+    "Start date" : {
+
+    },
+    "Start from Scratch" : {
+
+    },
+    "Start new server setup" : {
+
+    },
+    "Start playback" : {
+
+    },
+    "Start Recording" : {
+
+    },
+    "Start Session" : {
+
+    },
+    "Start session with selected template and project" : {
+
+    },
+    "Start session without a project" : {
+
+    },
+    "Start tunnel" : {
+
+    },
+    "Start Tunnel" : {
+
+    },
+    "Start voice input" : {
+
+    },
+    "Start without a project context" : {
+
+    },
+    "Start Without Project" : {
+
+    },
+    "Start without project context" : {
+
+    },
+    "Start Your First Session" : {
+
+    },
+    "Starting tunnel..." : {
+
+    },
+    "Starting..." : {
+
+    },
+    "Starts voice dictation to compose a message" : {
+
+    },
+    "Status" : {
+
+    },
+    "Stay Here" : {
+
+    },
+    "Step 1 of 2: Choose template" : {
+
+    },
+    "Step 2 of 2: Choose project" : {
+
+    },
+    "Stop" : {
+
+    },
+    "Stop active recording" : {
+
+    },
+    "Stop recording" : {
+
+    },
+    "Stop streaming" : {
+
+    },
+    "Stop tunnel" : {
+
+    },
+    "Stops voice dictation" : {
+
+    },
+    "Store data locally for offline access" : {
+
+    },
+    "Stream Partial Messages" : {
+
+    },
+    "Stream partial messages toggle" : {
+
+    },
+    "Streaming" : {
+
+    },
+    "Subject" : {
+
+    },
+    "Succeeded" : {
+
+    },
+    "Success" : {
+
+    },
+    "Successfully Installed" : {
+
+    },
+    "Suggested Prompt" : {
+
+    },
+    "Suggestion: %@" : {
+
+    },
+    "Summary" : {
+
+    },
+    "Supercharge your Claude Code experience" : {
+
+    },
+    "Support" : {
+
+    },
+    "Supported Event Types" : {
+
+    },
+    "Suppress Notifications" : {
+
+    },
+    "Surface relevant past sessions and skills based on your current context." : {
+
+    },
+    "Swipe down or tap the search icon for quick access to commands and navigation." : {
+
+    },
+    "Switch between Last 7 Days and Last 30 Days" : {
+
+    },
+    "Switch Model" : {
+
+    },
+    "Switch to session %@" : {
+
+    },
+    "Switched to %@" : {
+
+    },
+    "Sync data from server" : {
+
+    },
+    "Sync layouts across your devices" : {
+
+    },
+    "Sync Now" : {
+
+    },
+    "Sync status: %@" : {
+
+    },
+    "Synced via iCloud" : {
+
+    },
+    "System" : {
+
+    },
+    "System (Default)" : {
+
+    },
+    "System message: %@" : {
+
+    },
+    "System Metrics" : {
+
+    },
+    "System Monospaced (Default)" : {
+
+    },
+    "System Prompt" : {
+
+    },
+    "System prompt text editor" : {
+
+    },
+    "System prompts are set using CLAUDE.md files on your host, not in settings.json. Per-session prompts can be set when creating a new session." : {
+
+    },
+    "system_monitor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemmonitor"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Monitor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor del sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムモニター"
+          }
+        }
+      }
+    },
+    "Tab" : {
+
+    },
+    "Tags" : {
+
+    },
+    "TAGS" : {
+
+    },
+    "Tap + to save a named snapshot of this session." : {
+
+    },
+    "Tap check to verify" : {
+
+    },
+    "Tap for details" : {
+
+    },
+    "Tap Record to capture this session's progression as a time-lapse." : {
+
+    },
+    "Tap to apply this template" : {
+
+    },
+    "Tap to collapse" : {
+
+    },
+    "Tap to edit, long press for options" : {
+
+    },
+    "Tap to expand" : {
+
+    },
+    "Tap to pin" : {
+
+    },
+    "Tap to unpin" : {
+
+    },
+    "Tap to use this preset" : {
+
+    },
+    "Target Model" : {
+
+    },
+    "Tasks run one at a time in order." : {
+
+    },
+    "Team Activity" : {
+
+    },
+    "Team activity unavailable — offline" : {
+
+    },
+    "Team Dashboard" : {
+
+    },
+    "Team Name" : {
+
+    },
+    "Team Templates" : {
+
+    },
+    "Team: %@" : {
+
+    },
+    "Teammate Name" : {
+
+    },
+    "Template Info" : {
+
+    },
+    "Template name" : {
+
+    },
+    "Template: %@" : {
+
+    },
+    "Templates" : {
+
+    },
+    "Terminal" : {
+
+    },
+    "Terms of Service" : {
+
+    },
+    "Tertiary Background" : {
+
+    },
+    "Tertiary Text" : {
+
+    },
+    "Tertiary text for subtle hints and metadata" : {
+
+    },
+    "Test Simulator" : {
+
+    },
+    "Test the connection before saving to confirm the backend is reachable." : {
+
+    },
+    "test_connection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung testen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Connection"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar conexion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続テスト"
+          }
+        }
+      }
+    },
+    "The cloudflared CLI tool is required to create tunnels. Install it via Homebrew or download from Cloudflare." : {
+
+    },
+    "The rule auto-approves requests at or below the selected risk level." : {
+
+    },
+    "Theme" : {
+
+    },
+    "Theme Information" : {
+
+    },
+    "Theme Marketplace" : {
+
+    },
+    "Theme Name" : {
+
+    },
+    "Theme Preview" : {
+
+    },
+    "Thinking" : {
+
+    },
+    "Thinking..." : {
+
+    },
+    "This is a card container showing how content is displayed with the theme's background colors and corner radius." : {
+
+    },
+    "This is a user message bubble" : {
+
+    },
+    "This is an assistant message bubble with more text to show how longer messages appear in the theme" : {
+
+    },
+    "This may take a few seconds while cloudflared establishes the connection to Cloudflare's network." : {
+
+    },
+    "This recording captured no events to replay." : {
+
+    },
+    "This removes all locally cached data. Content will be re-downloaded when you're back online." : {
+
+    },
+    "This replaces all layouts with the built-in Developer, DevOps, and Team Lead presets." : {
+
+    },
+    "This will create a new session forked from \"%@\" (%lld messages). Your current session will not be modified." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will create a new session forked from \"%1$@\" (%2$lld messages). Your current session will not be modified."
+          }
+        }
+      }
+    },
+    "This will permanently delete all permission history. This cannot be undone." : {
+
+    },
+    "This will permanently delete all your sessions, messages, projects, themes, and cached data. This action cannot be undone." : {
+
+    },
+    "This will permanently delete this session and all its messages." : {
+
+    },
+    "This will permanently remove all %lld log entries." : {
+
+    },
+    "This will remove all custom keyboard shortcut bindings and restore the defaults." : {
+
+    },
+    "Threshold" : {
+
+    },
+    "threshold %@" : {
+
+    },
+    "Thresholds are configured individually below." : {
+
+    },
+    "Time" : {
+
+    },
+    "Timeout (seconds)" : {
+
+    },
+    "Times New Roman" : {
+
+    },
+    "Timestamps" : {
+
+    },
+    "Timezone (Optional)" : {
+
+    },
+    "Title" : {
+
+    },
+    "Title Line Height" : {
+
+    },
+    "Title Size" : {
+
+    },
+    "Title Text" : {
+
+    },
+    "Title Weight" : {
+
+    },
+    "To" : {
+
+    },
+    "Toggle event types to show or hide them from the feed." : {
+
+    },
+    "Toggle Failed" : {
+
+    },
+    "Toggle to control whether analytics data is collected and displayed" : {
+
+    },
+    "Toggles the bookmark for this search result" : {
+
+    },
+    "Toggles the rule's active state" : {
+
+    },
+    "Token Breakdown" : {
+
+    },
+    "Token Summary" : {
+
+    },
+    "Tool" : {
+
+    },
+    "TOOL" : {
+
+    },
+    "Tool call: %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tool call: %1$@%2$@"
+          }
+        }
+      }
+    },
+    "Tool Control" : {
+
+    },
+    "Tool name pattern input" : {
+
+    },
+    "Tool name pattern..." : {
+
+    },
+    "Top Center" : {
+
+    },
+    "Top Left" : {
+
+    },
+    "Top model: " : {
+
+    },
+    "Top Right" : {
+
+    },
+    "Top skill" : {
+
+    },
+    "Top skill: %@ with %lld invocations" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Top skill: %1$@ with %2$lld invocations"
+          }
+        }
+      }
+    },
+    "Total" : {
+
+    },
+    "Total Cost" : {
+
+    },
+    "Total cost, %@" : {
+
+    },
+    "Total Entries" : {
+
+    },
+    "Total Hooks" : {
+
+    },
+    "Total Rules" : {
+
+    },
+    "Total Sessions" : {
+
+    },
+    "Total sessions, %lld" : {
+
+    },
+    "Troubleshoot" : {
+
+    },
+    "Troubleshoot %@" : {
+
+    },
+    "Troubleshooting Tips" : {
+
+    },
+    "Try a different search or category" : {
+
+    },
+    "Try a different search term" : {
+
+    },
+    "Try Again" : {
+
+    },
+    "Try again in %lld seconds" : {
+
+    },
+    "Try all premium features risk-free. Cancel anytime." : {
+
+    },
+    "Try clearing the filter to see all events" : {
+
+    },
+    "Try connecting again" : {
+
+    },
+    "Tunnel Active" : {
+
+    },
+    "Tunnel name" : {
+
+    },
+    "Tunnel Setup" : {
+
+    },
+    "Tunnel status: %@" : {
+
+    },
+    "Type" : {
+
+    },
+    "Type a query and tap Return to find messages across all your sessions." : {
+
+    },
+    "Type at least 3 characters to search" : {
+
+    },
+    "Type to search messages" : {
+
+    },
+    "type_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachricht eingeben..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type a message..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe un mensaje..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メッセージを入力..."
+          }
+        }
+      }
+    },
+    "Typography" : {
+
+    },
+    "Typography Tokens (13)" : {
+
+    },
+    "Unbookmark" : {
+
+    },
+    "Unfavorite %@" : {
+
+    },
+    "Uninstall" : {
+
+    },
+    "Uninstall Plugin" : {
+
+    },
+    "Unique identifier for this teammate" : {
+
+    },
+    "Unlock ILS Premium" : {
+
+    },
+    "Unpin" : {
+
+    },
+    "Unpin from Split View" : {
+
+    },
+    "Unpin session" : {
+
+    },
+    "Unsaved Changes" : {
+
+    },
+    "Untitled" : {
+
+    },
+    "Update Available" : {
+
+    },
+    "Update Instructions" : {
+
+    },
+    "Updated %@" : {
+
+    },
+    "Upgrade to Premium" : {
+
+    },
+    "Usage" : {
+
+    },
+    "Usage Alerts" : {
+
+    },
+    "Usage Stats" : {
+
+    },
+    "Use" : {
+
+    },
+    "Use {{variable_name}} in content to reference variables." : {
+
+    },
+    "Use a Cloudflare account and API token for a stable custom domain instead of a random trycloudflare.com URL." : {
+
+    },
+    "Use Cellular Data" : {
+
+    },
+    "Use j and k keys to move in the command palette" : {
+
+    },
+    "used" : {
+
+    },
+    "User (~/.claude/)" : {
+
+    },
+    "User Bubble" : {
+
+    },
+    "uses" : {
+
+    },
+    "UTC" : {
+
+    },
+    "utilization" : {
+
+    },
+    "v%@" : {
+
+    },
+    "Valid" : {
+
+    },
+    "Valid JSON" : {
+
+    },
+    "value" : {
+
+    },
+    "Value" : {
+
+    },
+    "value (sensitive)" : {
+
+    },
+    "Variable name" : {
+
+    },
+    "Variables" : {
+
+    },
+    "Variables allow dynamic content. Use {{name}} in the template content." : {
+
+    },
+    "Version" : {
+
+    },
+    "Version %@" : {
+
+    },
+    "Version check interval" : {
+
+    },
+    "Version Monitor" : {
+
+    },
+    "View" : {
+
+    },
+    "View All" : {
+
+    },
+    "View Fork Tree" : {
+
+    },
+    "View Full Documentation" : {
+
+    },
+    "View History" : {
+
+    },
+    "View Logs" : {
+
+    },
+    "View logs for %@" : {
+
+    },
+    "View Release on GitHub" : {
+
+    },
+    "View up to 7 recent Claude Code sessions with message previews." : {
+
+    },
+    "Vim Navigation" : {
+
+    },
+    "Vim navigation mode" : {
+
+    },
+    "Voice input recording" : {
+
+    },
+    "vs" : {
+
+    },
+    "Waiting" : {
+
+    },
+    "Waiting for data..." : {
+
+    },
+    "Waiting for input" : {
+
+    },
+    "Waiting for tunnel to become reachable..." : {
+
+    },
+    "Warning" : {
+
+    },
+    "Warning: approaching context window limit" : {
+
+    },
+    "Warning: auto-approved tools run without asking. Only enable for read-only operations." : {
+
+    },
+    "Warnings" : {
+
+    },
+    "Webhook URL" : {
+
+    },
+    "Week" : {
+
+    },
+    "Weekly" : {
+
+    },
+    "Welcome back" : {
+
+    },
+    "welcome_back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willkommen zuruck"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome back"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenido de nuevo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "おかえりなさい"
+          }
+        }
+      }
+    },
+    "What should happen when the rule triggers?" : {
+
+    },
+    "What's Inside" : {
+
+    },
+    "When should this rule activate?" : {
+
+    },
+    "Where You Left Off" : {
+
+    },
+    "Widget Refresh" : {
+
+    },
+    "Workflow" : {
+
+    },
+    "Workflow Builder" : {
+
+    },
+    "Workflow Detail" : {
+
+    },
+    "Workflow Name" : {
+
+    },
+    "Workflow Nodes" : {
+
+    },
+    "Workflows" : {
+
+    },
+    "Workload Distribution" : {
+
+    },
+    "You" : {
+
+    },
+    "You can pin at most 4 sessions to Split View. Unpin a session before adding another." : {
+
+    },
+    "You have unsaved changes. Are you sure you want to discard them?" : {
+
+    },
+    "You said: %@" : {
+
+    },
+    "You skipped the feature tour. Explore Sessions, MCP Servers, and Teams to get the most out of ILS." : {
+
+    },
+    "You'll receive a notification when rate limit consumption reaches this percentage." : {
+
+    },
+    "Your named tunnel requires DNS records in your Cloudflare dashboard. If the tunnel is active but unreachable, verify these settings." : {
+
+    },
+    "Your session was compacted" : {
+
+    },
+    "Your session was compacted. Earlier messages were truncated." : {
+
+    },
+    "Your workflow schedule has been saved successfully." : {
+
+    },
+    "zsh" : {
+
     }
   },
   "version" : "1.0"

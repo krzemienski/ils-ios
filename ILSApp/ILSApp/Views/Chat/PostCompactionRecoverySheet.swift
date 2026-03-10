@@ -80,6 +80,8 @@ struct PostCompactionRecoverySheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        // UXF-006: Prevent accidental dismissal before user reads compaction details
+        .interactiveDismissDisabled(true)
     }
 
     // MARK: - Header Banner

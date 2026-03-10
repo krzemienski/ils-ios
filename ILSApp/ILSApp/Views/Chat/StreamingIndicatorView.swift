@@ -85,5 +85,6 @@ struct StreamingIndicatorView: View {
             }
         }
         .accessibilityLabel("AI is responding")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 }

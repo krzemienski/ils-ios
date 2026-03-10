@@ -68,22 +68,30 @@ actor ClaudeExecutorService {
 
     /// Check if Claude CLI is available in PATH.
     /// - Returns: True if `claude` command is found
+    ///
+    /// CONC-005: Process.waitUntilExit() blocks the calling thread. Wrapped in
+    /// withCheckedContinuation on a DispatchQueue to avoid blocking the actor's
+    /// cooperative thread pool thread.
     func isAvailable() async -> Bool {
-        do {
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-            process.arguments = ["-l", "-c", "which claude"]
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let process = Process()
+                    process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+                    process.arguments = ["-l", "-c", "which claude"]
 
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = Pipe()
+                    let pipe = Pipe()
+                    process.standardOutput = pipe
+                    process.standardError = Pipe()
 
-            try process.run()
-            process.waitUntilExit()
+                    try process.run()
+                    process.waitUntilExit()
 
-            return process.terminationStatus == 0
-        } catch {
-            return false
+                    continuation.resume(returning: process.terminationStatus == 0)
+                } catch {
+                    continuation.resume(returning: false)
+                }
+            }
         }
     }
 
@@ -137,12 +145,24 @@ actor ClaudeExecutorService {
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-l", "-c", command]
 
+            // SEC-005: Validate workingDirectory is an existing directory before use
             if let dir = workingDirectory {
-                process.currentDirectoryURL = URL(fileURLWithPath: dir)
+                var isDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: dir, isDirectory: &isDir), isDir.boolValue {
+                    process.currentDirectoryURL = URL(fileURLWithPath: dir)
+                }
             }
 
             // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
-            process.environment = ProcessInfo.processInfo.environment
+            // SEC-004: Strip sensitive env vars and Claude nesting detection vars
+            var env = ProcessInfo.processInfo.environment
+            for key in ["CLAUDECODE", "ILS_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"] {
+                env.removeValue(forKey: key)
+            }
+            for key in env.keys where key.hasPrefix("CLAUDE_CODE_") {
+                env.removeValue(forKey: key)
+            }
+            process.environment = env
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -229,11 +249,23 @@ actor ClaudeExecutorService {
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-l", "-c", command]
 
+            // SEC-005: Validate workingDirectory is an existing directory before use
             if let dir = workingDirectory {
-                process.currentDirectoryURL = URL(fileURLWithPath: dir)
+                var isDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: dir, isDirectory: &isDir), isDir.boolValue {
+                    process.currentDirectoryURL = URL(fileURLWithPath: dir)
+                }
             }
 
-            process.environment = ProcessInfo.processInfo.environment
+            // SEC-004: Strip sensitive env vars and Claude nesting detection vars
+            var env = ProcessInfo.processInfo.environment
+            for key in ["CLAUDECODE", "ILS_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"] {
+                env.removeValue(forKey: key)
+            }
+            for key in env.keys where key.hasPrefix("CLAUDE_CODE_") {
+                env.removeValue(forKey: key)
+            }
+            process.environment = env
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()

@@ -1083,6 +1083,8 @@ struct SessionsController: RouteCollection {
     ///
     /// - Parameter req: Vapor Request (no query params required)
     /// - Returns: APIResponse with ModelStatsResponse
+    // TODO: PERF-005 — Use field projection to exclude large text columns (e.g. transcript)
+    // in list queries (.all()) for better performance with large datasets.
     @Sendable
     func modelStats(req: Request) async throws -> APIResponse<ModelStatsResponse> {
         let sessions = try await SessionModel.query(on: req.db).all()

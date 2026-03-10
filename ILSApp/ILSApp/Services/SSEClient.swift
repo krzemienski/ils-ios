@@ -1,5 +1,7 @@
-// CONC-22: @preconcurrency suppresses Sendable warnings from URLSession task group patterns.
-// URLSession is @unchecked Sendable but its key paths trigger false positives in strict mode.
+// CONC-22 / MOD-007: @preconcurrency suppresses Sendable warnings from URLSession delegate
+// conformance and task group patterns. URLSession is @unchecked Sendable but its key paths
+// trigger false positives in strict concurrency mode. Scoping to individual types is not
+// feasible because the warnings originate from URLSession's own API surface.
 @preconcurrency import Foundation
 import Observation
 import ILSShared
@@ -38,9 +40,11 @@ class SSEClient {
     // restoration can skip remaining wait and trigger an immediate retry.
     private var backoffSleepTask: Task<Void, Never>?
     // NET-RES-1: Observer for network restoration to cancel backoff and reconnect.
-    private var networkObserver: NSObjectProtocol?
+    // nonisolated(unsafe): Accessed in deinit (nonisolated) for safety-net cleanup.
+    // Only mutated on MainActor; deinit is the sole nonisolated access point.
+    @ObservationIgnored nonisolated(unsafe) private var networkObserver: NSObjectProtocol?
     #if os(iOS)
-    @ObservationIgnored private var backgroundObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var backgroundObserver: NSObjectProtocol?
     #endif
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
@@ -57,11 +61,14 @@ class SSEClient {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 300  // 5 minutes for initial response
         config.timeoutIntervalForResource = 3600 // 1 hour for entire stream duration
-        config.allowsExpensiveNetworkAccess = true
+        // ENRG-003: User-configurable — defaults to true, but respects UserDefaults override.
+        config.allowsExpensiveNetworkAccess = UserDefaults.standard.object(forKey: "allowsExpensiveNetworkAccess") as? Bool ?? true
         // ENRG-02: Intentionally false — SSE streaming should not consume metered data in Low Data Mode.
         // Users can still use the app with cached data; streaming resumes when Low Data Mode is disabled.
         config.allowsConstrainedNetworkAccess = false
-        // PLAT-04: Respect user preference for cellular data access (defaults to true).
+        // PLAT-04 / NET-003: Respect user preference for cellular data access (defaults to true).
+        // Note: URLSessionConfiguration is snapshot-on-init — changes to UserDefaults after
+        // SSEClient creation require a new SSEClient instance to take effect.
         config.allowsCellularAccess = UserDefaults.standard.object(forKey: "allowsCellularAccess") as? Bool ?? true
         self.session = URLSession(configuration: config)
 
@@ -100,6 +107,10 @@ class SSEClient {
     /// Task.cancel() and NotificationCenter.removeObserver() are thread-safe.
     deinit {
         streamTask?.cancel()
+        // MEM-002: Remove network observer in deinit as safety net (cleanup() is the primary path).
+        if let observer = networkObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
         #if os(iOS)
         if let observer = backgroundObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -197,6 +208,8 @@ class SSEClient {
             // NET-MED-2: Cancels the parent streamTask instead of throwing inside a
             // detached task (thrown errors were silently dropped, leaving stale streams).
             let parentTask = self.streamTask
+            // CONC-001: parentTask capture is safe — this watchdog is cancelled via
+            // defer when performStream exits (streamTask cancellation cascades here).
             let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s

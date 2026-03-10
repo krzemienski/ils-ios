@@ -143,16 +143,17 @@ struct ILSAppApp: App {
                             )
                         }
 
-                        // MEM-01 + H-M1: Proactive cache eviction under memory pressure.
-                        // Observer targets a singleton (MemoryManager.shared) so no retain cycle,
-                        // but NotificationCenter holds the token forever. Acceptable for app-lifetime
-                        // observer registered once in the root @main struct.
+                        // MEM-001: Memory warning observer — app-lifetime singleton pattern.
+                        // Token intentionally not stored: @main struct lives for entire process,
+                        // and the closure captures appState by value (struct copy). No leak risk.
                         NotificationCenter.default.addObserver(
                             forName: UIApplication.didReceiveMemoryWarningNotification,
                             object: nil,
                             queue: .main
                         ) { [appState] _ in
-                            Task {
+                            // CONC-006: Queue is .main and MemoryManager methods are nonisolated or @MainActor.
+                            // Task wrapper is still needed because handleMemoryWarning is async.
+                            Task { @MainActor in
                                 await MemoryManager.shared.handleMemoryWarning(
                                     connectionManager: appState.connectionManager
                                 )

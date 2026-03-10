@@ -1181,6 +1181,7 @@
 		8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoApproveRulesViewModel.swift; sourceTree = "<group>"; };
 		8657511CC86987E23682A4B8 /* ContextWindowDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextWindowDetailSheet.swift; sourceTree = "<group>"; };
 		868AEE9CAC1117D583F22E86 /* ILSWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSWidgets.entitlements; sourceTree = "<group>"; };
+		A1B2C3D4E5F6789012345678 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		869B654B4F7CD919CFF60F91 /* MacChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacChatView.swift; sourceTree = "<group>"; };
 		87BBB3407D22A2279F4D8250 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
 		8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksViewModel.swift; sourceTree = "<group>"; };
@@ -1838,6 +1839,7 @@
 			isa = PBXGroup;
 			children = (
 				8BA40A7EA5F64411CCBDE070 /* Color+Hex.swift */,
+				A1B2C3D4E5F6789012345678 /* Info.plist */,
 				868AEE9CAC1117D583F22E86 /* ILSWidgets.entitlements */,
 				6DEEEBFCDCD0416848E38B96 /* ILSWidgetsBundle.swift */,
 			);
@@ -3593,7 +3595,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				INFOPLIST_FILE = ILSWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -3816,7 +3818,7 @@
 				DEVELOPMENT_TEAM = HC36V7B67Z;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				INFOPLIST_FILE = ILSWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

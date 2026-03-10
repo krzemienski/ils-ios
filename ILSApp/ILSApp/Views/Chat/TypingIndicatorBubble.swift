@@ -45,6 +45,9 @@ struct TypingIndicatorBubble: View {
         }
         .onAppear {
             animating = true
+            #if os(iOS)
+            UIAccessibility.post(notification: .announcement, argument: "AI is typing")
+            #endif
         }
         .onChange(of: scenePhase) { _, phase in
             animating = phase == .active

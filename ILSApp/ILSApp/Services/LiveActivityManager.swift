@@ -91,6 +91,10 @@ final class LiveActivityManager {
         )
 
         do {
+            // ENRG-004 TODO: With `.pushType: .token`, the system delivers APNs push
+            // updates to the Live Activity when the app is backgrounded. If a BGTaskScheduler
+            // refresh is also registered for Live Activity updates, it may be redundant —
+            // consider removing the BGTask path if APNs push covers all update scenarios.
             let activity = try Activity.request(
                 attributes: attributes,
                 content: .init(state: initialState, staleDate: nil),

@@ -284,6 +284,10 @@ struct CachedServerConnection: Codable, FetchableRecord, PersistableRecord, Iden
 struct CachedTeam: Codable, FetchableRecord, PersistableRecord, Identifiable {
     static let databaseTableName = "cached_teams"
 
+    // PERF-007: Static shared encoder/decoder avoids per-instance allocation.
+    private static let memberEncoder = JSONEncoder()
+    private static let memberDecoder = JSONDecoder()
+
     let id: String // team name
     var name: String
     var description: String?
@@ -295,13 +299,26 @@ struct CachedTeam: Codable, FetchableRecord, PersistableRecord, Identifiable {
         self.id = team.name
         self.name = team.name
         self.description = team.description
-        self.membersData = (try? JSONEncoder().encode(team.members)) ?? Data()
+        // COD-001: Log encoding failures instead of silently dropping member data.
+        do {
+            self.membersData = try Self.memberEncoder.encode(team.members)
+        } catch {
+            AppLogger.shared.error("Failed to encode team members for '\(team.name)': \(error)", category: "database")
+            self.membersData = Data()
+        }
         self.createdAt = team.createdAt
         self.cachedAt = Date()
     }
 
     func toAgentTeam() -> AgentTeam {
-        let members = (try? JSONDecoder().decode([TeamMember].self, from: membersData)) ?? []
+        // COD-001: Log decoding failures instead of silently returning empty members.
+        let members: [TeamMember]
+        do {
+            members = try Self.memberDecoder.decode([TeamMember].self, from: membersData)
+        } catch {
+            AppLogger.shared.error("Failed to decode team members for '\(name)': \(error)", category: "database")
+            members = []
+        }
         return AgentTeam(
             name: name,
             description: description,
@@ -334,6 +351,13 @@ actor LocalDatabase {
             try fileManager.createDirectory(at: dbDir, withIntermediateDirectories: true)
         }
 
+        // STOR-001: Exclude cache directory from iCloud backup.
+        // Applied on every launch (not just creation) to survive backup restoration.
+        var excludedDir = dbDir
+        var backupValues = URLResourceValues()
+        backupValues.isExcludedFromBackup = true
+        try excludedDir.setResourceValues(backupValues)
+
         let dbPath = dbDir.appendingPathComponent("cache.sqlite").path
         var config = Configuration()
         config.prepareDatabase { db in
@@ -353,17 +377,26 @@ actor LocalDatabase {
         // Also protect WAL and SHM journal files if they exist
         let walPath = dbPath + "-wal"
         let shmPath = dbPath + "-shm"
+        // MOD-008: Log file protection errors instead of silently swallowing them.
         if fileManager.fileExists(atPath: walPath) {
-            try? fileManager.setAttributes(
-                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-                ofItemAtPath: walPath
-            )
+            do {
+                try fileManager.setAttributes(
+                    [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                    ofItemAtPath: walPath
+                )
+            } catch {
+                AppLogger.shared.error("Failed to set WAL file protection: \(error)", category: "database")
+            }
         }
         if fileManager.fileExists(atPath: shmPath) {
-            try? fileManager.setAttributes(
-                [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
-                ofItemAtPath: shmPath
-            )
+            do {
+                try fileManager.setAttributes(
+                    [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                    ofItemAtPath: shmPath
+                )
+            } catch {
+                AppLogger.shared.error("Failed to set SHM file protection: \(error)", category: "database")
+            }
         }
 
         try runMigrations()
@@ -536,6 +569,11 @@ actor LocalDatabase {
 
     // MARK: - Sessions
 
+    /// Save sessions to the cache database.
+    ///
+    /// PERF-001: Individual `record.save(db)` calls are wrapped in a single `dbPool.write`
+    /// transaction, so all 22K+ rows are committed atomically in one SQLite transaction.
+    /// GRDB's `save()` issues INSERT OR REPLACE which is efficient within a transaction.
     func saveSessions(_ sessions: [ChatSession]) throws {
         guard let dbPool else { return }
         let records = sessions.map { CachedSession(from: $0) }
@@ -750,8 +788,20 @@ actor LocalDatabase {
             _ = try CachedMCPServer.deleteAll(db)
             _ = try CachedPlugin.deleteAll(db)
             _ = try CachedTeam.deleteAll(db)
+            // STOR-005: Checkpoint WAL after truncating all tables to reclaim disk space.
+            try db.execute(sql: "PRAGMA wal_checkpoint(TRUNCATE)")
         }
         AppLogger.shared.info("All cached data cleared", category: "cache")
+    }
+
+    /// MEM-005: Checkpoint WAL to reclaim memory after memory warning.
+    /// Moves pending WAL data into the main database file, reducing memory footprint.
+    func checkpointWAL() throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            try db.execute(sql: "PRAGMA wal_checkpoint(TRUNCATE)")
+        }
+        AppLogger.shared.info("WAL checkpoint completed", category: "cache")
     }
 
     // MARK: - Server Connections (SSH Profiles)

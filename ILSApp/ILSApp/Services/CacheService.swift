@@ -68,6 +68,10 @@ actor CacheService {
     // MARK: - Private Helpers
 
     /// Applies the configured session count limit, keeping the most-recently-active sessions.
+    ///
+    /// PERF-003: Sort is required here because input comes from the network API
+    /// with no guaranteed order. The database fetch path sorts via SQL ORDER BY,
+    /// but this write path must sort to correctly select the top-N sessions.
     private func applySessionLimit(_ sessions: [ChatSession]) -> [ChatSession] {
         let limit = settings.maxSessions
         guard limit > 0, sessions.count > limit else { return sessions }
@@ -262,6 +266,18 @@ actor CacheService {
         } catch {
             AppLogger.shared.error(
                 "Failed to clear cache: \(error.localizedDescription)",
+                category: "cache"
+            )
+        }
+    }
+
+    /// MEM-005: Checkpoint SQLite WAL on memory warning to reduce memory footprint.
+    func handleMemoryWarning() async {
+        do {
+            try await db.checkpointWAL()
+        } catch {
+            AppLogger.shared.error(
+                "WAL checkpoint on memory warning failed: \(error.localizedDescription)",
                 category: "cache"
             )
         }

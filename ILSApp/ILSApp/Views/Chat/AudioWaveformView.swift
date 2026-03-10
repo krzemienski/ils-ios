@@ -47,8 +47,8 @@ struct AudioWaveformView: View {
         .frame(width: size.width, height: size.height)
         .onAppear { startAnimating() }
         .onDisappear { phase = 0 }
-        .accessibilityLabel("Audio waveform")
-        .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityLabel("Audio waveform animation")
+        .accessibilityAddTraits([.isImage, .updatesFrequently])
     }
 
     private func startAnimating() {

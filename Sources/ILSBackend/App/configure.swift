@@ -67,6 +67,12 @@ func configure(_ app: Application) async throws {
     let sqliteConfig = SQLiteConfiguration(storage: .file(path: dbPath), enableForeignKeys: true)
     app.databases.use(.sqlite(sqliteConfig), as: .sqlite)
 
+    // SEC-006: Restrict SQLite file permissions (owner read/write only)
+    let fm = FileManager.default
+    if fm.fileExists(atPath: dbPath) {
+        try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: dbPath)
+    }
+
     // ENRG-LOW-02: Enable WAL mode for reduced disk I/O and better concurrent reads.
     // WAL (Write-Ahead Logging) avoids blocking readers during writes and batches
     // disk syncs, significantly reducing energy impact on mobile backends.
@@ -143,13 +149,15 @@ func configure(_ app: Application) async throws {
 
     // Server configuration
     let port = Int(Environment.get("PORT") ?? "9999") ?? 9999
-    app.http.server.configuration.hostname = "0.0.0.0"
+    // SEC-002: Default to localhost; set ILS_LAN_ENABLED=true to bind 0.0.0.0 for LAN access
+    let hostname = Environment.get("ILS_LAN_ENABLED") == "true" ? "0.0.0.0" : "127.0.0.1"
+    app.http.server.configuration.hostname = hostname
     app.http.server.configuration.port = port
 
     // Enable gzip response compression for JSON/text responses
     app.http.server.configuration.responseCompression = .enabled
 
-    app.logger.info("ILS Backend starting on http://0.0.0.0:\(port)")
+    app.logger.info("ILS Backend starting on http://\(hostname):\(port)")
 
     // Bonjour/mDNS auto-discovery — publish _ils._tcp so iOS clients can find the backend
     // BonjourPublisherService is @MainActor so NetService runs on the main RunLoop.

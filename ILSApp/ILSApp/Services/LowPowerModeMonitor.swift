@@ -7,6 +7,10 @@ import Observation
 ///
 /// Publishes `isLowPowerModeEnabled` for polling services to adapt intervals.
 /// Models on NetworkMonitor singleton pattern. Uses @Observable for SwiftUI integration.
+///
+/// ENRG-008: Watchdog timeout (in SSEClient) is read once at stream creation. If LPM changes
+/// mid-stream, the timeout is not re-evaluated. Acceptable trade-off for simplicity — the
+/// stream would need cancellation and restart to pick up a new timeout, which risks data loss.
 @MainActor
 @Observable
 final class LowPowerModeMonitor {

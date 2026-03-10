@@ -36,6 +36,7 @@ struct PromptSuggestionsChipBar: View {
 
     var body: some View {
         Group {
+            // UXF-007: Return empty view when no suggestions to avoid wasting vertical space
             if showSuggestions && !promptSuggestions.isEmpty && !isLoading {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: theme.spacingXS) {

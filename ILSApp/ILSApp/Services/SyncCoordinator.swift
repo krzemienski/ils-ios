@@ -11,6 +11,10 @@ struct QueuedOperation: Codable, Identifiable, Sendable {
     let createdAt: Date
     var retryCount: Int
     var nextRetryAt: Date
+    /// COD-004: Schema version for forward-compatible deserialization.
+    /// Increment when the QueuedOperation format changes so old entries
+    /// can be detected and migrated or discarded during loadQueue().
+    let schemaVersion: Int
 
     init(
         method: String,
@@ -25,6 +29,21 @@ struct QueuedOperation: Codable, Identifiable, Sendable {
         self.createdAt = Date()
         self.retryCount = retryCount
         self.nextRetryAt = Date()
+        self.schemaVersion = 1
+    }
+
+    /// Custom decoder to handle backward compatibility: existing persisted entries
+    /// without `schemaVersion` default to version 1.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        method = try container.decode(String.self, forKey: .method)
+        endpoint = try container.decode(String.self, forKey: .endpoint)
+        bodyData = try container.decodeIfPresent(Data.self, forKey: .bodyData)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        retryCount = try container.decode(Int.self, forKey: .retryCount)
+        nextRetryAt = try container.decode(Date.self, forKey: .nextRetryAt)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
     }
 }
 
@@ -220,9 +239,23 @@ actor SyncCoordinator {
     }
 
     private func flushQueueToDisk() {
+        let url = Self.queueFileURL
+
+        // ENRG-005: Don't write empty queue — delete the file instead
+        if queue.isEmpty {
+            try? FileManager.default.removeItem(at: url)
+            return
+        }
+
         do {
             let data = try encoder.encode(queue)
-            try data.write(to: Self.queueFileURL, options: [.atomic])
+            try data.write(to: url, options: [.atomic])
+
+            // STOR-002: Exclude sync queue from iCloud backup (contains chat message bodies)
+            var mutableURL = url
+            var resourceValues = URLResourceValues()
+            resourceValues.isExcludedFromBackup = true
+            try mutableURL.setResourceValues(resourceValues)
         } catch {
             AppLogger.shared.error(
                 "Failed to persist sync queue: \(error.localizedDescription)",

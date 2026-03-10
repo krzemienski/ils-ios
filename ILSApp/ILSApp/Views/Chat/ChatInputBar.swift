@@ -37,6 +37,7 @@ import ILSShared
 /// - ``quickReplyTemplates`` - Templates displayed as chips above the input row (pinned first, then most-used)
 /// - ``onTemplateSelected`` - Called when a template chip is tapped; receives the selected template
 /// - ``onShowAllTemplates`` - Called when the trailing "+" chip is tapped to open the full template sheet
+// TODO: SUIL-001 — Verify keyboard avoidance with .scrollDismissesKeyboard(.interactively)
 struct ChatInputBar: View {
     /// Two-way binding to the message text being composed.
     @Binding var text: String

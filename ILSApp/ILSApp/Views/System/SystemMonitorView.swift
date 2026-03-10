@@ -57,6 +57,7 @@ struct SystemMonitorView: View {
                                 Text(String(format: "%.2f", value))
                                     .font(.system(size: theme.fontBody, weight: .bold, design: theme.fontDesign))
                                     .foregroundStyle(theme.textPrimary)
+                                    .accessibilityAddTraits(.updatesFrequently)
                                 Text(label)
                                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(theme.textTertiary)
@@ -66,6 +67,7 @@ struct SystemMonitorView: View {
                     }
                     .padding(theme.spacingMD)
                     .modifier(GlassCard())
+                    .accessibilityElement(children: .contain)
                 }
 
                 // Memory & Disk - 2-column grid
@@ -365,6 +367,9 @@ struct SystemMonitorView: View {
                 .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                 .foregroundStyle(viewModel.isConnected ? theme.success : theme.error)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(viewModel.isConnected ? "Live metrics active" : "Metrics offline")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     // MARK: - Helpers

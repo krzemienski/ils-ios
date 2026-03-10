@@ -25,6 +25,8 @@ struct InfoTooltipButton: View {
                 .padding(theme.spacingSM)
                 .frame(maxWidth: 280)
                 .presentationCompactAdaptation(.popover)
+                // SUIL-008: Constrain sheet height on iPhone when popover falls back to sheet
+                .presentationDetents([.medium])
         }
         .accessibilityLabel("More information")
         .accessibilityHint(text)

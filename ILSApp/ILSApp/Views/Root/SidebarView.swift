@@ -828,6 +828,7 @@ struct SidebarView: View {
         }
         .accessibilityLabel(clampedBadge > 0 ? "\(label), \(clampedBadge) unread" : label)
         .accessibilityHint("Navigate to \(label)")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 
     // MARK: - Helpers

@@ -27,6 +27,7 @@ import ILSShared
 ///   integration phase (subtask 5-2)
 ///
 /// Time groups are ordered: Today → Yesterday → This Week → Earlier.
+// TODO: SUIP-002 + UXF-005 — Add pagination (50 sessions per page) for large session lists
 struct UnifiedSessionsView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
