@@ -39,6 +39,8 @@ struct SidebarSessionRow: View {
     /// When non-empty and the session is not active, any case-insensitive occurrence of
     /// this string within ``sessionDisplayName`` is rendered in `theme.accent`.
     var searchText: String = ""
+    /// Number of bookmarked messages in this session. When > 0 a small badge is shown.
+    var bookmarkCount: Int = 0
     /// Sync status for this session. When not `.synced`, a ``SessionSyncBadge`` is shown.
     var syncStatus: SyncStatus = .synced
     /// Called when the user taps "Retry" on a failed sync badge.
@@ -108,6 +110,20 @@ struct SidebarSessionRow: View {
                 }
 
                 Spacer()
+
+                if bookmarkCount > 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: "bookmark.fill")
+                            .font(.system(size: 9, design: theme.fontDesign))
+                        Text("\(bookmarkCount)")
+                            .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                    }
+                    .foregroundStyle(theme.accent)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(theme.accent.opacity(0.15))
+                    .clipShape(Capsule())
+                }
 
                 // Sync status badge — hidden when synced to avoid visual noise
                 if syncStatus != .synced {

@@ -90,6 +90,9 @@ struct SidebarView: View {
     /// Shared bookmark manager for toggling session bookmarks.
     private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
+    /// Shared message bookmarks manager for displaying per-session bookmark counts.
+    private var messageBookmarksManager: MessageBookmarksManager { MessageBookmarksManager.shared }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -620,7 +623,8 @@ struct SidebarView: View {
                         },
                         onConflictTap: {
                             presentConflictSheet(for: session)
-                        }
+                        },
+                        bookmarkCount: messageBookmarksManager.bookmarkCount(for: session.id)
                     ) {
                         QueryLearningService.shared.recordSessionSelected(
                             forQuery: sessionsViewModel.searchText,
