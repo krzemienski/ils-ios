@@ -1,8 +1,8 @@
 # ILS Backend API Reference
 
-**Version:** 1.2
+**Version:** 1.3
 **Base URL:** `http://localhost:9999`
-**Last Updated:** 2026-02-28
+**Last Updated:** 2026-03-09
 
 ## Table of Contents
 
@@ -12,6 +12,7 @@
 - [Projects](#projects)
 - [Sessions](#sessions)
 - [Chat & Streaming](#chat--streaming)
+- [Checkpoints](#checkpoints)
 - [Skills](#skills)
 - [Plugins](#plugins)
 - [MCP Servers](#mcp-servers)
@@ -23,6 +24,9 @@
 - [Tunnel](#tunnel)
 - [Host Profiles](#host-profiles)
 - [Data Erasure](#data-erasure)
+- [Activity Feed](#activity-feed)
+- [Permissions](#permissions)
+- [Pairing](#pairing)
 - [WebSocket Protocol](#websocket-protocol)
 - [Error Handling](#error-handling)
 
@@ -2731,6 +2735,368 @@ curl -X DELETE http://localhost:9999/api/v1/data/all \
 
 ---
 
+## Activity Feed
+
+### List Activity Events
+
+**Endpoint:** `GET /api/v1/activity/events`
+**Description:** Retrieve recent activity events derived from sessions and messages.
+
+**Query Parameters:**
+- `limit` (optional, int, default: 50, max: 200) - Maximum events to return
+- `since` (optional, ISO 8601 date) - Only return events after this timestamp
+- `eventType` (optional, comma-separated string) - Filter by event types (e.g., `session_created,message_sent`)
+- `sessionId` (optional, UUID) - Restrict to a single session
+- `projectName` (optional, string) - Restrict to sessions in a project
+- `severity` (optional, string) - Filter by severity: `info`, `warning`, or `error`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "events": [
+      {
+        "id": "uuid",
+        "timestamp": "2026-02-28T12:00:00Z",
+        "eventType": "session_created",
+        "severity": "info",
+        "sessionId": "uuid",
+        "projectName": "my-project",
+        "title": "Session created",
+        "details": "string"
+      }
+    ],
+    "totalCount": 5,
+    "unreadCount": 2,
+    "hasMore": false
+  }
+}
+```
+
+**Example:**
+
+```bash
+# Get recent events
+curl http://localhost:9999/api/v1/activity/events
+
+# Get events since a specific time
+curl "http://localhost:9999/api/v1/activity/events?since=2026-02-28T00:00:00Z"
+
+# Filter by type and severity
+curl "http://localhost:9999/api/v1/activity/events?eventType=session_created,message_sent&severity=error"
+```
+
+---
+
+### Stream Activity Events
+
+**Endpoint:** `GET /api/v1/activity/events/stream`
+**Description:** Server-Sent Events stream providing real-time activity updates.
+
+**Behavior:**
+- Polls database every 5 seconds for new activity
+- Sends heartbeat comment every 15 seconds to keep connection alive
+- Supports same query parameters as `/activity/events` for filtering
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/activity/events/stream
+```
+
+---
+
+## Checkpoints
+
+Checkpoints allow saving and restoring the state of a session's messages at a specific point in time.
+
+### List Checkpoints
+
+**Endpoint:** `GET /api/v1/sessions/:id/checkpoints`
+**Description:** List all checkpoints for a session, ordered newest first.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "sessionId": "uuid",
+      "label": "Checkpoint name",
+      "messageCount": 42,
+      "isAuto": false,
+      "createdAt": "2026-02-28T12:00:00Z"
+    }
+  ]
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/sessions/12345678-1234-1234-1234-123456789abc/checkpoints
+```
+
+---
+
+### Create Checkpoint
+
+**Endpoint:** `POST /api/v1/sessions/:id/checkpoints`
+**Description:** Create a new checkpoint, snapshots current message IDs.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Request Body:**
+```json
+{
+  "label": "Checkpoint name",
+  "isAuto": false,
+  "maxRetained": 20
+}
+```
+
+**Response:** Returns the newly created checkpoint object.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/sessions/12345678-1234-1234-1234-123456789abc/checkpoints \
+  -H "Content-Type: application/json" \
+  -d '{"label":"Before refactoring","isAuto":false}'
+```
+
+---
+
+### Delete Checkpoint
+
+**Endpoint:** `DELETE /api/v1/sessions/:id/checkpoints/:checkpointId`
+**Description:** Delete a specific checkpoint.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+- `checkpointId` (path, UUID) - Checkpoint ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/sessions/12345678-1234-1234-1234-123456789abc/checkpoints/abcdef01-2345-6789-abcd-ef0123456789
+```
+
+---
+
+### Restore Checkpoint
+
+**Endpoint:** `POST /api/v1/sessions/:id/checkpoints/:checkpointId/restore`
+**Description:** Restore session to the message state captured in a checkpoint.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+- `checkpointId` (path, UUID) - Checkpoint ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "uuid",
+    "messagesRestored": 42
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/sessions/12345678-1234-1234-1234-123456789abc/checkpoints/abcdef01-2345-6789-abcd-ef0123456789/restore
+```
+
+---
+
+## Permissions
+
+Manage Claude Code tool-use permission requests and history.
+
+### List Pending Permissions
+
+**Endpoint:** `GET /api/v1/permissions/pending`
+**Description:** List all pending permission requests.
+
+**Query Parameters:**
+- `sessionId` (optional, UUID) - Filter to a specific session
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "requestId": "string",
+        "sessionId": "uuid",
+        "toolName": "read_file",
+        "toolInput": { "path": "/path/to/file" },
+        "timestamp": "2026-02-28T12:00:00Z"
+      }
+    ],
+    "total": 3,
+    "pendingCount": 3
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/permissions/pending
+```
+
+---
+
+### List Permission History
+
+**Endpoint:** `GET /api/v1/permissions/history`
+**Description:** List resolved permission records (allow/deny decisions).
+
+**Query Parameters:**
+- `limit` (optional, int, default: 50, max: 500) - Maximum records to return
+- `sessionId` (optional, UUID) - Filter to a specific session
+
+**Response:** Similar structure to pending permissions, with decisions included.
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/permissions/history?limit=100
+```
+
+---
+
+### Submit Permission Decision
+
+**Endpoint:** `POST /api/v1/permissions/:requestId/decide`
+**Description:** Submit an allow or deny decision for a pending permission request.
+
+**Parameters:**
+- `requestId` (path, string) - Permission request ID
+
+**Request Body:**
+```json
+{
+  "decision": "allow"
+}
+```
+
+**Decision Values:** `allow` or `deny`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:9999/api/v1/permissions/req-123/decide \
+  -H "Content-Type: application/json" \
+  -d '{"decision":"allow"}'
+```
+
+---
+
+### Clear Pending Permissions
+
+**Endpoint:** `DELETE /api/v1/permissions/pending`
+**Description:** Clear all pending permission requests.
+
+**Query Parameters:**
+- `sessionId` (optional, UUID) - Clear only pending requests for a specific session
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "cleared": true }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/permissions/pending
+```
+
+---
+
+## Pairing
+
+QR code-based pairing for device registration and authentication.
+
+### Generate Pairing QR Code
+
+**Endpoint:** `GET /api/v1/pairing/qr`
+**Description:** Generate a new QR code pairing token.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "token": "uuid",
+    "qrData": "{\"backendUrl\":\"http://...\",\"version\":\"1.0.0\"}",
+    "expiresAt": "2026-02-28T13:00:00Z"
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl http://localhost:9999/api/v1/pairing/qr
+```
+
+---
+
+### Invalidate Pairing Token
+
+**Endpoint:** `DELETE /api/v1/pairing/qr/:token`
+**Description:** Invalidate a pairing token. Safe to call even if token already expired.
+
+**Parameters:**
+- `token` (path, UUID) - Pairing token to invalidate
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": { "invalidated": true }
+}
+```
+
+**Example:**
+
+```bash
+curl -X DELETE http://localhost:9999/api/v1/pairing/qr/12345678-1234-1234-1234-123456789abc
+```
+
+---
+
 ## WebSocket Protocol
 
 The WebSocket protocol provides bidirectional real-time communication for chat sessions.
@@ -2983,6 +3349,14 @@ The API does not currently implement CORS headers. For web clients, you may need
 ---
 
 ## Changelog
+
+**v1.3.0 (2026-03-09)**
+- Added Activity Feed section (GET /activity/events, GET /activity/events/stream with SSE)
+- Added Checkpoints section (create, list, delete, restore session state)
+- Added Permissions section (list pending/history, submit decisions, clear pending)
+- Added Pairing section (QR code generation and token management)
+- Updated documentation with comprehensive request/response examples
+- All new endpoints tested and verified against actual backend controllers
 
 **v1.2.0 (2026-02-28)**
 - Added Host Profiles section (list, register, activate, delete, health-check endpoints)

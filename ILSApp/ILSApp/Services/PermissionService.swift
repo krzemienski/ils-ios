@@ -208,7 +208,10 @@ final class PermissionService {
     }
 
     /// Loads auto-approve rules from `UserDefaults`.
-    func loadAutoApproveRules() {
+    ///
+    /// Decodes JSON-serialized rule list. On decode failure, defaults to empty array
+    /// so app continues without auto-approve functionality (graceful degradation).
+    private func loadAutoApproveRules() {
         guard let data = UserDefaults.standard.data(forKey: PermissionServiceKeys.autoApproveRules) else {
             autoApproveRules = []
             return
@@ -219,7 +222,10 @@ final class PermissionService {
     }
 
     /// Persists current auto-approve rules to `UserDefaults`.
-    func saveAutoApproveRules() {
+    ///
+    /// Encodes rules as JSON and stores under `autoApproveRules` key.
+    /// On encode failure, silently skips persistence (rules remain in memory until app restart).
+    private func saveAutoApproveRules() {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         if let data = try? encoder.encode(autoApproveRules) {

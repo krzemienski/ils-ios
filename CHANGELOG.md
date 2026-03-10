@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dark Mode** - Native iOS dark theme with custom ILSTheme design system
 
 #### Backend
-- **Vapor 4 REST API** - Full-featured backend server on port 9090
+- **Vapor 4 REST API** - Full-featured backend server on port 9999
 - **SQLite Database** - Persistent storage with Fluent ORM
 - **Sessions API** - CRUD operations for chat sessions
 - **Messages API** - Message history retrieval per session
@@ -137,6 +137,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API prefix: `/api/v1` auto-added by APIClient
 - Architecture: `@Observable` replaces `ObservableObject`, `ThemeSnapshot` struct replaces protocol
 - Navigation: `ActiveScreen` enum with 22 cases replaces tab-based navigation
+
+---
+
+## [1.1.1] - 2026-03-09
+
+### Fixed
+
+#### Storage & Persistence
+- iCloud backup exclusion on cache database and sync queue files
+- Empty-write elimination to reduce unnecessary disk I/O
+- File-backed persistence migration for `SyncCoordinator` actor state
+
+#### Security Hardening
+- Backend binds to `127.0.0.1` by default (was `0.0.0.0`)
+- Database file permissions hardened to `0o600`
+- Environment variable stripping in `ClaudeExecutorService` to prevent nesting detection issues
+- Working directory validation in chat execution
+- X-Forwarded-For rate limiting for proxied requests
+- Tighter rate limits on chat endpoints
+
+#### Concurrency & Memory Safety
+- `nonisolated(unsafe)` annotations for deinit-accessed properties
+- `@ObservationIgnored` for non-observable lifecycle state
+- Memory warning observer token retention fix to prevent premature deallocation
+
+#### Energy Efficiency
+- Idle detection doubles polling interval during inactivity
+- Debounced sync queue persistence to reduce write frequency
+- Low Power Mode watchdog timeout extension (avoids aggressive timeout during battery saving)
+
+#### Networking & Connectivity
+- Split retry logic: distinguish between transient failures vs host-unreachable errors
+- Resource timeout increased from 30s to 60s for large session exports
+- Cache invalidation now includes base path to prevent stale data
+- Network unavailable notification for user feedback
+
+#### iCloud Sync
+- CloudKit operations now execute in `Task.detached` to avoid blocking main actor
+- Re-entrancy guard on external change handler
+- Quota violation handling with graceful degradation
+- Stale key cleanup to prevent memory leaks
+
+#### Accessibility
+- Dynamic labels on copy/send buttons
+- Accessibility traits on sidebar selection and system monitor
+- Reduce motion support on streaming/typing indicators
+- Grouped accessibility on chat message elements
+
+#### Backend
+- Non-blocking `waitUntilExit` via `DispatchQueue` instead of blocking main thread
+- `SessionsController` Sendable compliance for thread-safe actor usage
+
+#### Infrastructure
+- Widget Info.plist configuration explicitly set (was implicitly generated)
+- IDE streaming enabled in debug scheme for better Xcode logging
+
+### Validation
+- 8 screens tested on simulator: Home, Chat, Sessions, System Monitor, Fleet, Settings, Themes, Hooks
+- 0 crashes during comprehensive interaction testing
+- All API endpoints returning data correctly
+- Deep link routing functional across 20+ URL schemes
+- Baseline metrics: 41 sessions, 1,483 skills, 15 MCP servers, 84 plugins indexed
 
 ---
 

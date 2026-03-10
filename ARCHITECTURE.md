@@ -1332,13 +1332,68 @@ After dedup:
   det-UUID-C (external, claudeId=Z) ← no DB match; included
 ```
 
+## Concurrency & Thread Safety
+
+ILS uses Swift's structured concurrency model with strict actor isolation to prevent data races and ensure memory safety.
+
+### iOS App Concurrency
+
+**Main Actor & View Models**
+- All ViewModels use `@Observable @MainActor` for thread-safe state updates
+- UI updates automatically sync to `@MainActor` via `@State`/`@Binding`
+- Background work via `Task` or `Task.detached` for non-blocking operations
+
+**Actor-based Services**
+- `SyncCoordinator` actor manages iCloud CloudKit operations with re-entrancy guards
+- `APIClient` actor wraps URLSession for safe concurrent requests
+- `LocalDatabase` actor handles SQLite access serialization
+- `LowPowerModeMonitor` actor monitors system power state changes
+
+**iCloud Sync Safety**
+- External CloudKit change handler executes in `Task.detached` to avoid main actor blocking
+- Quota violation handling with graceful degradation (disables sync, logs error)
+- Stale key cleanup prevents memory leaks from orphaned metadata
+- Re-entrancy guard prevents concurrent external change handler execution
+
+**Memory Warning Handling**
+- Memory warning observer token retained for callback deregistration
+- Weak self captures in all Task closures to prevent retain cycles
+- `nonisolated(unsafe)` annotations only on deinit-accessed properties
+
+### Backend Concurrency
+
+**Vapor Event Loop Safety**
+- All database operations execute on event loop thread via Fluent ORM
+- `SessionsController` conforms to `Sendable` for actor compliance
+- Long-running tasks (process spawning) use `DispatchQueue` to avoid blocking event loop
+- Non-blocking `waitUntilExit()` via background queue in `ClaudeExecutorService`
+
+**Process Management**
+- Child process stdout reading via `DispatchQueue` (not RunLoop — incompatible with NIO)
+- Environment variable stripping to prevent Claude nesting detection issues
+- Working directory validation prevents path traversal attacks
+
+### Energy & Performance
+
+**Idle Detection**
+- Polling interval doubles during inactivity (reduce CPU wake-ups)
+- Low Power Mode watchdog timeout extends to prevent aggressive timeouts
+
+**Debounced Persistence**
+- Sync queue file writes debounced to batch multiple updates
+- Empty-write elimination skips redundant disk I/O
+
 ## Security Considerations
 
-- Backend binds to `0.0.0.0` (all interfaces) - use Cloudflare tunnel for secure remote access
+- Backend binds to `127.0.0.1` by default (localhost-only) — use Cloudflare tunnel for secure remote access
+- Database file permissions enforced as `0o600` (owner read/write only)
 - No authentication on API endpoints (local-only assumption)
 - MCP server env vars displayed as `***` in API responses
 - File browser restricted to home directory
 - Claude CLI inherits host machine permissions
+- Environment variables stripped before subprocess spawning (prevents nesting detection)
+- Working directory validated in chat execution (prevents path traversal)
+- X-Forwarded-For rate limiting for proxied requests
 - No CORS headers (add via reverse proxy for web clients)
 
 ## Performance Optimizations

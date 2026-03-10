@@ -4,10 +4,18 @@ import Observation
 
 // MARK: - Connection Type
 
+/// Describes the active network interface type.
+///
+/// Used to determine whether the device should respect Low Data Mode
+/// and bandwidth-constrained settings.
 enum ConnectionType: String, Sendable {
+    /// WiFi network connection (high bandwidth, typically unconstrained).
     case wifi
+    /// Cellular network connection (metered, subject to constraints).
     case cellular
+    /// Wired Ethernet connection (high bandwidth, typically unconstrained).
     case wiredEthernet
+    /// Network type could not be determined or is unavailable.
     case unknown
 }
 

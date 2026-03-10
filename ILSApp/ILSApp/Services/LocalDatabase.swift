@@ -334,6 +334,20 @@ struct CachedTeam: Codable, FetchableRecord, PersistableRecord, Identifiable {
 ///
 /// Uses GRDB with WAL mode for concurrent read/write access.
 /// All tables store flattened versions of ILSShared model types.
+/// SQLite cache for offline access to sessions, messages, projects, skills, MCP servers, and plugins.
+///
+/// Provides GRDB-backed persistence for cached API responses with per-entity TTL expiry.
+/// Supports session count limiting and automatic cleanup of stale entries.
+///
+/// ## Usage
+/// Call ``initialize()`` once at app launch. Then use cache-first methods like ``fetchSessions(newerThan:isOffline:)``,
+/// ``saveSessions(_:)``, ``fetchMessages(forSession:)``, etc. to manage offline data.
+///
+/// ## Storage Location
+/// SQLite database stored at `~/Library/Application Support/ILS/cache.sqlite` (excluded from iCloud backup).
+///
+/// ## Thread Safety
+/// Actor-isolated for thread safety. All database operations are internally async/await based.
 actor LocalDatabase {
     static let shared = LocalDatabase()
 

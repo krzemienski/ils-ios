@@ -33,7 +33,11 @@ actor CacheService {
     ///
     /// When `OfflineCacheSettings.maxSessions` is non-zero, the list is sorted by
     /// `lastActiveAt` descending and trimmed to the limit before saving, so the most
-    /// recently active sessions are always retained.
+    /// recently active sessions are always retained. Sessions not in the top-N are discarded
+    /// to keep cache size bounded.
+    ///
+    /// - Parameter sessions: Array of ChatSession objects from the backend API.
+    /// - Note: No-ops silently if caching is disabled for the session type.
     func cacheSessions(_ sessions: [ChatSession]) async {
         guard settings.isCachingEnabled(for: .sessions) else { return }
         do {

@@ -57,24 +57,29 @@ ils-ios/
 │   ├── ILSShared/             # Shared models & DTOs (26 files)
 │   └── ILSBackend/            # Vapor REST API server (52 files)
 │       ├── App/               # Server config, routes, middleware
-│       ├── Controllers/       # 31 API controllers (216 endpoints)
-│       ├── Models/            # Fluent ORM database models
+│       ├── Controllers/       # 31 API controllers (216+ endpoints)
+│       ├── Models/            # Fluent ORM database models (5 models)
 │       ├── Migrations/        # Database schema migrations
-│       └── Services/          # Business logic, GitHub, filesystem
+│       ├── Services/          # 18 business logic services
+│       ├── Middleware/        # Request/response middleware
+│       └── Extensions/        # Utility extensions
 ├── ILSApp/                    # Xcode project
-│   ├── ILSApp/               # iOS app (149 Swift files)
+│   ├── ILSApp/               # iOS app (149+ Swift files)
 │   │   ├── Views/            # 24 screen directories
-│   │   ├── ViewModels/       # @Observable @MainActor view models
-│   │   ├── Services/         # APIClient, SSEClient, ICloudSync
+│   │   ├── ViewModels/       # 51+ @Observable @MainActor view models
+│   │   ├── Services/         # 15+ services (APIClient, SSEClient, ICloudSync, etc.)
 │   │   ├── Theme/            # ThemeSnapshot + 13 built-in themes
 │   │   ├── Widgets/          # WidgetKit extensions
 │   │   ├── LiveActivity/     # Live Activity support
-│   │   └── Intents/          # App Intents + Shortcuts
-│   └── ILSMacApp/            # macOS app (14 Swift files)
+│   │   ├── Intents/          # App Intents + Shortcuts
+│   │   └── Resources/        # Localization strings
+│   ├── ILSMacApp/            # macOS app (14+ Swift files, 3-pane layout)
+│   └── ILSWidgets/           # Widget target with Info.plist
 ├── fastlane/                  # CI/CD: build, beta, screenshots
-├── scripts/                   # Setup, backend service, automation
+├── scripts/                   # Setup, backend service, automation, SDK wrapper
+├── docs/                      # Documentation
 ├── Package.swift              # Swift Package manifest
-└── ils.sqlite                 # SQLite database (auto-created)
+└── ils.sqlite                 # SQLite database (auto-created on startup)
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design, data flow diagrams, and technical decisions.
@@ -112,7 +117,7 @@ cd ils-ios
 
 ```bash
 PORT=9999 swift run ILSBackend
-# Server starts on http://0.0.0.0:9999
+# Server starts on http://127.0.0.1:9999
 # Database created automatically on first run
 ```
 
@@ -229,15 +234,19 @@ ILS uses [Fastlane](https://fastlane.tools/) for builds and TestFlight:
 
 | Component | Technology |
 |-----------|------------|
-| Backend | [Vapor 4](https://vapor.codes) |
+| Backend | [Vapor 4](https://vapor.codes) (Swift) |
 | Database | SQLite via [Fluent ORM](https://docs.vapor.codes/fluent/overview/) |
 | iOS/macOS UI | SwiftUI (iOS 17+ / macOS 14+) |
-| Architecture | MVVM with `@Observable` |
-| Networking | URLSession + SSE |
+| Architecture | MVVM with `@Observable @MainActor` |
+| Concurrency | Swift actors, `@MainActor`, async/await |
+| Networking | URLSession + Server-Sent Events (SSE) |
+| Code Execution | Python Agent SDK + CLI fallback |
 | Code Highlighting | [Splash](https://github.com/JohnSundell/Splash) |
 | YAML | [Yams](https://github.com/jpsim/Yams) |
+| Sync | iCloud CloudKit (with graceful degradation) |
 | CI/CD | [Fastlane](https://fastlane.tools/) |
 | Subscriptions | StoreKit 2 |
+| Localizations | 7,175+ string keys (Localizable.xcstrings) |
 
 ## Development
 
