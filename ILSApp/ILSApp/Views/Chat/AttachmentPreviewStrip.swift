@@ -80,7 +80,8 @@ struct AttachmentPreviewStrip: View {
 
             if let filename = attachment.filename {
                 Text(filename)
-                    .font(.system(size: 9, weight: .medium))
+                    // ACC-007: Use theme caption size for Dynamic Type compliance
+                    .font(.system(size: theme.fontCaption, weight: .medium))
                     .foregroundStyle(theme.textSecondary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)

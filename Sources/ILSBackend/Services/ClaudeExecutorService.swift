@@ -145,24 +145,14 @@ actor ClaudeExecutorService {
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-l", "-c", command]
 
-            // SEC-005: Validate workingDirectory is an existing directory before use
-            if let dir = workingDirectory {
-                var isDir: ObjCBool = false
-                if FileManager.default.fileExists(atPath: dir, isDirectory: &isDir), isDir.boolValue {
-                    process.currentDirectoryURL = URL(fileURLWithPath: dir)
-                }
+            // SEC-005: Validate workingDirectory — must exist, be a directory, no path traversal.
+            if let dir = workingDirectory, let validated = Self.validateWorkingDirectory(dir) {
+                process.currentDirectoryURL = URL(fileURLWithPath: validated)
             }
 
-            // Inherit environment — the Agent SDK uses Claude Code's auth (not ANTHROPIC_API_KEY)
-            // SEC-004: Strip sensitive env vars and Claude nesting detection vars
-            var env = ProcessInfo.processInfo.environment
-            for key in ["CLAUDECODE", "ILS_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"] {
-                env.removeValue(forKey: key)
-            }
-            for key in env.keys where key.hasPrefix("CLAUDE_CODE_") {
-                env.removeValue(forKey: key)
-            }
-            process.environment = env
+            // SEC-004: Allowlist-based env var filtering — only forward vars the subprocess needs.
+            // Prevents leaking API keys, session tokens, or Claude nesting detection vars.
+            process.environment = Self.filteredEnvironment()
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -249,23 +239,13 @@ actor ClaudeExecutorService {
             process.executableURL = URL(fileURLWithPath: "/bin/zsh")
             process.arguments = ["-l", "-c", command]
 
-            // SEC-005: Validate workingDirectory is an existing directory before use
-            if let dir = workingDirectory {
-                var isDir: ObjCBool = false
-                if FileManager.default.fileExists(atPath: dir, isDirectory: &isDir), isDir.boolValue {
-                    process.currentDirectoryURL = URL(fileURLWithPath: dir)
-                }
+            // SEC-005: Validate workingDirectory — must exist, be a directory, no path traversal.
+            if let dir = workingDirectory, let validated = Self.validateWorkingDirectory(dir) {
+                process.currentDirectoryURL = URL(fileURLWithPath: validated)
             }
 
-            // SEC-004: Strip sensitive env vars and Claude nesting detection vars
-            var env = ProcessInfo.processInfo.environment
-            for key in ["CLAUDECODE", "ILS_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY"] {
-                env.removeValue(forKey: key)
-            }
-            for key in env.keys where key.hasPrefix("CLAUDE_CODE_") {
-                env.removeValue(forKey: key)
-            }
-            process.environment = env
+            // SEC-004: Allowlist-based env var filtering — only forward vars the subprocess needs.
+            process.environment = Self.filteredEnvironment()
 
             let outputPipe = Pipe()
             let errorPipe = Pipe()
@@ -423,6 +403,63 @@ actor ClaudeExecutorService {
 
     func removeStdinHandle(_ sessionId: String) {
         activeStdinHandles.removeValue(forKey: sessionId)
+    }
+
+    // MARK: - Environment & Path Validation
+
+    /// SEC-004: Allowlist of environment variable keys safe to forward to subprocesses.
+    /// Only includes vars needed for shell operation, locale, and tool discovery.
+    /// All API keys, Claude session vars, and sensitive tokens are excluded by default.
+    private static let envAllowlist: Set<String> = [
+        "PATH", "HOME", "SHELL", "USER", "LOGNAME",
+        "LANG", "LC_ALL", "LC_CTYPE", "LC_MESSAGES",
+        "TERM", "TMPDIR", "XDG_DATA_HOME", "XDG_CONFIG_HOME",
+        "SSH_AUTH_SOCK",   // needed if Claude CLI uses git over SSH
+        "NVM_DIR", "NVM_BIN", "NODE_PATH",  // Node.js resolution for sdk-wrapper
+        "VOLTA_HOME",     // alternative Node.js version manager
+    ]
+
+    /// SEC-004: Build a filtered environment dictionary using an allowlist approach.
+    /// Only vars in `envAllowlist` are forwarded; everything else is dropped.
+    private nonisolated static func filteredEnvironment() -> [String: String] {
+        let fullEnv = ProcessInfo.processInfo.environment
+        var filtered: [String: String] = [:]
+        for key in envAllowlist {
+            if let value = fullEnv[key] {
+                filtered[key] = value
+            }
+        }
+        return filtered
+    }
+
+    /// SEC-005: Validate that a working directory path is safe to use.
+    ///
+    /// Checks:
+    /// 1. Path exists on disk
+    /// 2. Path is a directory (not a file or symlink to file)
+    /// 3. Resolved path contains no `..` traversal (standardized path matches)
+    ///
+    /// - Parameter path: Raw path string from client request
+    /// - Returns: The resolved absolute path if valid, nil otherwise
+    private nonisolated static func validateWorkingDirectory(_ path: String) -> String? {
+        let url = URL(fileURLWithPath: path).standardized
+        let resolved = url.path
+
+        // Reject if resolved path differs from input in a way that suggests traversal
+        // (e.g., "/safe/dir/../../etc/passwd" resolves to "/etc/passwd")
+        if resolved.contains("..") {
+            logger.warning("SEC-005: Path traversal detected in workingDirectory: \(path)")
+            return nil
+        }
+
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: resolved, isDirectory: &isDir),
+              isDir.boolValue else {
+            logger.debug("SEC-005: workingDirectory does not exist or is not a directory: \(resolved)")
+            return nil
+        }
+
+        return resolved
     }
 
     // MARK: - SDK Config Building

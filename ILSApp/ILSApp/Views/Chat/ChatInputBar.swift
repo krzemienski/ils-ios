@@ -321,7 +321,7 @@ struct ChatInputBar: View {
         .disabled(text.isEmpty || isDisabled)
         .keyboardShortcut(.return, modifiers: .command)
         .accessibilityIdentifier("send-button")
-        .accessibilityLabel("Send message")
+        .accessibilityLabel(text.isEmpty ? "Send message, empty" : "Send message")
         .accessibilityHint("Sends the current message to Claude")
     }
 

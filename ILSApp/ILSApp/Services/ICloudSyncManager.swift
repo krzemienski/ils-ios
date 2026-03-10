@@ -33,6 +33,9 @@ final class ICloudSyncManager {
     private(set) var syncStatus: ICloudSyncStatus = .idle
     private(set) var lastSyncDate: Date?
     private(set) var isSyncEnabled: Bool
+    /// ICLD-004: Set to true when iCloud KV quota is exceeded so the UI can
+    /// display a warning. Reset when sync is re-enabled or status clears.
+    private(set) var isQuotaExceeded: Bool = false
 
     // MARK: - Constants
 
@@ -117,6 +120,7 @@ final class ICloudSyncManager {
 
         if enabled {
             syncStatus = .idle
+            isQuotaExceeded = false
             performInitialSync()
             AppLogger.shared.info("iCloud sync enabled", category: "icloud")
         } else {
@@ -332,12 +336,17 @@ final class ICloudSyncManager {
             reason = "initial"
         case NSUbiquitousKeyValueStoreQuotaViolationChange:
             reason = "quota_violation"
-            // ICLD-004: Log clearly and disable sync so the user/dev knows why sync stopped.
-            // The iCloud KV store has a 1 MB total limit and 1024 key limit.
+            // ICLD-004: Log clearly, set observable flag, and post notification so the
+            // UI can inform the user. The iCloud KV store has a 1 MB total / 1024 key limit.
             syncStatus = .error
+            isQuotaExceeded = true
             AppLogger.shared.error(
                 "iCloud KV quota exceeded — sync disabled. Reduce stored data size to re-enable.",
                 category: "icloud"
+            )
+            NotificationCenter.default.post(
+                name: .iCloudQuotaExceeded,
+                object: nil
             )
         case NSUbiquitousKeyValueStoreAccountChange:
             reason = "account_change"
@@ -563,4 +572,6 @@ extension Notification.Name {
     /// The `userInfo` dictionary contains `ICloudSyncManager.changedKeysUserInfoKey`
     /// with an array of the changed key strings.
     static let iCloudPreferencesDidChange = Notification.Name("iCloudPreferencesDidChange")
+    /// ICLD-004: Posted when iCloud KV store quota is exceeded.
+    static let iCloudQuotaExceeded = Notification.Name("iCloudQuotaExceeded")
 }

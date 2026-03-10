@@ -227,12 +227,14 @@ actor SyncCoordinator {
     }
 
     /// Debounced persist: coalesces rapid queue mutations into a single
-    /// file write after a 500ms quiet period.
+    /// file write after a quiet period (500ms normal, 2s in Low Power Mode).
     private func persistQueue() {
         persistTask?.cancel()
         persistTask = Task { [weak self] in
-            // ENRG-08: 500ms debounce reduces file write frequency during rapid queue mutations.
-            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms debounce
+            // ENRG-005: Increase debounce from 500ms to 2s in Low Power Mode to reduce I/O.
+            let isLPM = await LowPowerModeMonitor.shared.isLowPowerModeEnabled
+            let debounceNanos: UInt64 = isLPM ? 2_000_000_000 : 500_000_000
+            try? await Task.sleep(nanoseconds: debounceNanos)
             guard !Task.isCancelled, let self else { return }
             await self.flushQueueToDisk()
         }
@@ -249,7 +251,11 @@ actor SyncCoordinator {
 
         do {
             let data = try encoder.encode(queue)
-            try data.write(to: url, options: [.atomic])
+            // PERF-006: Only use atomic write for files > 1KB. Atomic write creates
+            // a temporary copy then renames, doubling I/O. For small queue files the
+            // data-loss risk from non-atomic write is negligible vs. the I/O overhead.
+            let writeOptions: Data.WritingOptions = data.count > 1024 ? [.atomic] : []
+            try data.write(to: url, options: writeOptions)
 
             // STOR-002: Exclude sync queue from iCloud backup (contains chat message bodies)
             var mutableURL = url

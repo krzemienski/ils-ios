@@ -57,7 +57,11 @@ actor APIClient {
 
     /// Optional API key for authenticated requests.
     /// When set, all /api/v1 requests include `Authorization: Bearer <key>`.
+    ///
+    /// MOD-001: Lazily loaded from Keychain on first access (not in init) to avoid
+    /// synchronous Keychain I/O during actor initialization.
     private var apiKey: String?
+    private var apiKeyLoaded = false
 
     /// Keychain key for persisting the API key (migrated from UserDefaults).
     private static let apiKeyKeychainKey = "ils_api_key"
@@ -109,19 +113,8 @@ actor APIClient {
         // Initialize conditional cache byte limit to match NSCache limit
         self.conditionalCacheByteLimit = cacheSizeBytes
 
-        // MOD-001: Sync Keychain read in init is acceptable — init runs on caller context,
-        // not the actor executor, so it does not block the cooperative thread pool.
-        // Load API key from Keychain (migrate from UserDefaults if legacy key exists)
-        if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
-            self.apiKey = keychainKey
-        } else if let legacyKey = UserDefaults.standard.string(forKey: APIClient.apiKeyKeychainKey), !legacyKey.isEmpty {
-            // One-time migration from UserDefaults to Keychain
-            KeychainService.saveSync(key: APIClient.apiKeyKeychainKey, value: legacyKey)
-            UserDefaults.standard.removeObject(forKey: APIClient.apiKeyKeychainKey)
-            self.apiKey = legacyKey
-        } else {
-            self.apiKey = nil
-        }
+        // MOD-001: Keychain read deferred to first use via loadAPIKeyIfNeeded().
+        // This avoids synchronous Keychain I/O during actor initialization.
 
         // Configure session with reasonable timeouts
         let config = URLSessionConfiguration.default
@@ -160,6 +153,7 @@ actor APIClient {
 
     /// Returns the current API key (masked for display).
     func maskedAPIKey() -> String? {
+        loadAPIKeyIfNeeded()
         guard let key = apiKey, !key.isEmpty else { return nil }
         if key.count <= 8 {
             return String(repeating: "*", count: key.count)
@@ -171,11 +165,28 @@ actor APIClient {
 
     /// Whether an API key is currently configured.
     func hasAPIKey() -> Bool {
+        loadAPIKeyIfNeeded()
         return apiKey != nil && !(apiKey?.isEmpty ?? true)
+    }
+
+    /// MOD-001: Lazily load API key from Keychain on first access.
+    /// Migrates from UserDefaults if a legacy key exists.
+    private func loadAPIKeyIfNeeded() {
+        guard !apiKeyLoaded else { return }
+        apiKeyLoaded = true
+        if let keychainKey = KeychainService.loadSync(key: APIClient.apiKeyKeychainKey) {
+            self.apiKey = keychainKey
+        } else if let legacyKey = UserDefaults.standard.string(forKey: APIClient.apiKeyKeychainKey), !legacyKey.isEmpty {
+            // One-time migration from UserDefaults to Keychain
+            KeychainService.saveSync(key: APIClient.apiKeyKeychainKey, value: legacyKey)
+            UserDefaults.standard.removeObject(forKey: APIClient.apiKeyKeychainKey)
+            self.apiKey = legacyKey
+        }
     }
 
     /// Apply authorization header to a request if an API key is configured.
     private func applyAuth(to request: inout URLRequest) {
+        loadAPIKeyIfNeeded()
         if let key = apiKey, !key.isEmpty {
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         }
@@ -213,15 +224,21 @@ actor APIClient {
     private func estimatedCost<T>(for value: T) -> Int {
         let baseStride = MemoryLayout<T>.stride
         if let array = value as? any RandomAccessCollection {
-            // Rough heap estimate: stride * element count + base overhead
-            return max(baseStride, baseStride * array.count + 64)
+            // PERF-002: Each element likely contains Strings with heap allocations.
+            // Use 3x stride as a conservative multiplier for typical model objects
+            // that contain multiple String/Optional<String> fields.
+            let elementCost = max(baseStride, 3 * baseStride)
+            return max(baseStride, elementCost * array.count + 64)
         }
         if let string = value as? String {
-            return max(baseStride, baseStride + string.utf8.count)
+            // PERF-002: Swift String stores UTF-16 internally for non-ASCII.
+            // Multiply utf8 byte count by 2 to approximate UTF-16 heap footprint.
+            return max(baseStride, baseStride + string.utf8.count * 2)
         }
         // For structs with heap-allocated fields, baseStride under-reports.
-        // Add a 2x multiplier as a conservative estimate for typical model objects.
-        return baseStride * 2
+        // Add a 3x multiplier as a conservative estimate for typical model objects
+        // with multiple String properties on the heap.
+        return baseStride * 3
     }
 
     // MARK: - Generic Request Methods
@@ -545,20 +562,51 @@ actor APIClient {
     }
 
     /// Bulk-export multiple sessions as a JSON array of `ChatExport` objects.
+    ///
+    /// NET-002: Uses the long-timeout session (5 min resource timeout) because
+    /// bulk export can involve thousands of sessions with full message content.
+    ///
     /// - Parameters:
     ///   - sessionIds: Session UUIDs to include in the export.
     ///   - format: Export format string ("json", "markdown", or "text"). Defaults to "json".
     ///   - includeMessages: Whether to include full message content. Defaults to `nil` (server default).
     func bulkExport<T: Decodable>(sessionIds: [UUID], format: String = "json", includeMessages: Bool? = nil) async throws -> T {
         let body = BulkExportBody(sessionIds: sessionIds, format: format, includeMessages: includeMessages)
-        return try await post("/sessions/bulk-export", body: body)
+        guard let url = URL(string: "\(baseURL)/api/v1/sessions/bulk-export") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1/sessions/bulk-export")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try encoder.encode(body)
+        applyAuth(to: &request)
+
+        let (data, response) = try await performWithRetryLongTimeout(request: request)
+        try validateResponse(response, data: data)
+        invalidateCacheForMutation(path: "/sessions/bulk-export")
+        return try decoder.decode(T.self, from: data)
     }
 
     /// Run an integrity check verifying session `messageCount` against stored messages.
+    ///
+    /// NET-002: Uses the long-timeout session (5 min resource timeout) because
+    /// integrity checks scan all sessions and can take several minutes.
+    ///
     /// - Parameter fix: If `true`, the backend repairs inconsistencies in place.
     func runIntegrityCheck<T: Decodable>(fix: Bool = false) async throws -> T {
         let path = fix ? "/sessions/integrity-check?fix=true" : "/sessions/integrity-check"
-        return try await get(path, cacheTTL: 0)
+        guard let url = URL(string: "\(baseURL)/api/v1\(path)") else {
+            throw APIError.invalidURL("\(baseURL)/api/v1\(path)")
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        applyAuth(to: &request)
+
+        let (data, response) = try await performWithRetryLongTimeout(request: request)
+        try validateResponse(response, data: data)
+        return try decoder.decode(T.self, from: data)
     }
 
     /// Invalidate cache entries affected by a mutation (POST/PUT/DELETE).
@@ -586,9 +634,11 @@ actor APIClient {
         }
 
         // Remove list endpoint (e.g. /sessions) and cancel its in-flight GET
-        let components = path.split(separator: "/")
-        if components.count >= 1 {
-            let listPath = "/\(components[0])"
+        // PERF-008: Use firstIndex(of:) instead of split(separator:) to extract
+        // only the first path component without allocating a full Substring array.
+        let searchStart = path.index(after: path.startIndex) // skip leading "/"
+        if let nextSlash = path[searchStart...].firstIndex(of: "/") {
+            let listPath = String(path[path.startIndex..<nextSlash])
             inFlightGETs[listPath]?.cancel()
             inFlightGETs.removeValue(forKey: listPath)
             cache.removeObject(forKey: listPath as NSString)
@@ -691,6 +741,52 @@ actor APIClient {
         invalidateCache(for: nil)
         cacheHits = 0
         cacheMisses = 0
+    }
+
+    // MARK: - Long-Timeout Session (NET-002)
+
+    /// Lazy URLSession with extended resource timeout for bulk operations
+    /// (export, import, integrity check). Avoids penalising normal requests
+    /// with an oversized timeout while preventing premature cancellation
+    /// of long-running server-side work.
+    private lazy var longTimeoutSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 300 // 5 minutes for bulk ops
+        config.waitsForConnectivity = true
+        config.allowsExpensiveNetworkAccess = true
+        config.allowsConstrainedNetworkAccess = true
+        config.allowsCellularAccess = UserDefaults.standard.object(forKey: "allowsCellularAccess") as? Bool ?? true
+        return URLSession(configuration: config)
+    }()
+
+    /// Execute a request using the long-timeout session for bulk operations.
+    private func performWithRetryLongTimeout(request: URLRequest, maxAttempts: Int = 3) async throws -> (Data, URLResponse) {
+        var lastError: Error?
+        for attempt in 1...maxAttempts {
+            do {
+                let (data, response) = try await longTimeoutSession.data(for: request)
+                return (data, response)
+            } catch {
+                lastError = error
+                let nsError = error as NSError
+                let isTransient = nsError.domain == NSURLErrorDomain && [
+                    NSURLErrorTimedOut,
+                    NSURLErrorNetworkConnectionLost
+                ].contains(nsError.code)
+                let isHostUnreachable = nsError.domain == NSURLErrorDomain && [
+                    NSURLErrorCannotConnectToHost,
+                    NSURLErrorNotConnectedToInternet
+                ].contains(nsError.code)
+                let shouldRetry = isTransient || (isHostUnreachable && attempt == 1)
+                if !shouldRetry || attempt == maxAttempts {
+                    throw APIError.networkError(error)
+                }
+                let delay = 0.5 * pow(2.0, Double(attempt - 1))
+                try await Task.sleep(for: .seconds(delay))
+            }
+        }
+        throw APIError.networkError(lastError ?? URLError(.unknown))
     }
 
     // MARK: - Retry Logic

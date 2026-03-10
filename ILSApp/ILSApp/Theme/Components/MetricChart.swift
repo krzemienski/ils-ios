@@ -92,6 +92,7 @@ struct MetricChart: View {
         .modifier(GlassCard())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(metricAccessibilityLabel)
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private var metricAccessibilityLabel: String {

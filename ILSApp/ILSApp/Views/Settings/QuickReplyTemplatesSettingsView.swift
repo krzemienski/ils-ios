@@ -205,7 +205,8 @@ struct QuickReplyTemplatesSettingsView: View {
             // Pin indicator
             if template.isFavorite {
                 Image(systemName: "pin.fill")
-                    .font(.system(size: 10))
+                    // ACC-007: Use theme caption size for Dynamic Type compliance
+                    .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.accent)
                     .accessibilityHidden(true)
             }
@@ -218,7 +219,8 @@ struct QuickReplyTemplatesSettingsView: View {
 
                     if template.hasVariables {
                         Image(systemName: "curlybraces")
-                            .font(.system(size: 10))
+                            // ACC-007: Use theme caption size for Dynamic Type compliance
+                            .font(.system(size: theme.fontCaption))
                             .foregroundStyle(theme.textTertiary)
                             .accessibilityHidden(true)
                     }

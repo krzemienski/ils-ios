@@ -2,7 +2,20 @@ import Foundation
 import Security
 import LocalAuthentication
 
-/// Secure storage service using iOS Keychain with biometric protection
+/// Secure storage service using iOS Keychain with biometric protection.
+///
+/// ## Thread Safety (SEC-003)
+///
+/// This service is an `actor`, so all instance methods are inherently serialized.
+///
+/// The `nonisolated static` convenience methods (`loadSync`, `saveSync`, `deleteSync`)
+/// call Security framework `SecItem*` functions directly. These are thread-safe on
+/// modern Apple platforms — the Keychain Services API uses an internal XPC connection
+/// to `securityd` and handles its own synchronization (see Apple TN3137).
+///
+/// The delete-then-add sequence in `saveSync` has a theoretical TOCTOU window, but
+/// Keychain enforces attribute uniqueness at the OS level, so a concurrent `saveSync`
+/// for the same key will fail with `errSecDuplicateItem` rather than corrupt data.
 actor KeychainService {
     static let shared = KeychainService()
 
@@ -136,9 +149,10 @@ actor KeychainService {
 
     // MARK: - Synchronous Convenience (for use in non-async init contexts)
 
-    // SEC-003: Static sync methods below call SecItem* APIs which are OS-atomic;
+    // SEC-003: SecItem* API is thread-safe per Apple documentation (TN3137).
+    // Static sync methods below are safe to call from any thread/queue.
     // TOCTOU risk between delete-then-add in saveSync is theoretical only —
-    // the Keychain enforces uniqueness at the OS level.
+    // the Keychain enforces uniqueness at the OS level via securityd XPC.
 
     /// Synchronous Keychain read — safe to call from non-async code (e.g. actor init).
     /// Uses the default `com.ils.app` service name.

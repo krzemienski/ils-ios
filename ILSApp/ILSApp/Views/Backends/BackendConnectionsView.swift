@@ -152,10 +152,12 @@ struct BackendConnectionsView: View {
                 }
                 Task {
                     try? await Task.sleep(for: .seconds(3))
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        showSwitchBanner = false
+                    await MainActor.run {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showSwitchBanner = false
+                        }
+                        viewModel.lastActivatedBackendName = nil
                     }
-                    viewModel.lastActivatedBackendName = nil
                 }
             }
         }

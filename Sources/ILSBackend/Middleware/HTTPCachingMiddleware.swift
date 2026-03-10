@@ -45,7 +45,12 @@ struct HTTPCachingMiddleware: AsyncMiddleware {
             return response
         }
 
-        // Compute ETag as SHA256 hash of body bytes (weak ETag: W/"<hex>").
+        // NET-005: ETag generation strategy.
+        // Computes a SHA256 hash of the full response body bytes, formatted as a weak
+        // ETag (W/"<hex>"). SHA256 provides strong collision resistance — two responses
+        // produce the same ETag only if their body bytes are byte-identical.
+        // Weak ETag (W/) is appropriate because semantic equivalence may differ despite
+        // identical bytes (e.g., different Transfer-Encoding).
         // Use .map — SHA256 digest bytes are never nil, so compactMap is misleading.
         let hash = SHA256.hash(data: bodyBytes)
         let hexString = hash.map { String(format: "%02x", $0) }.joined()

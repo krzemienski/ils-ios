@@ -253,11 +253,13 @@ struct GlobalCommandPaletteView: View {
 
     /// Total number of visible command rows across all currently shown sections.
     private var totalVisibleCount: Int {
-        searchText.isEmpty
-            ? registry.recentCommands().count + registry.allCommands.filter {
-                !Set(registry.recentCommands().map(\.id)).contains($0.id)
-              }.count
-            : filteredCommands.count
+        if searchText.isEmpty {
+            let recent = registry.recentCommands()
+            let recentIds = Set(recent.map(\.id))
+            return recent.count + registry.allCommands.filter { !recentIds.contains($0.id) }.count
+        } else {
+            return filteredCommands.count
+        }
     }
 
     /// Clamps `selectedIndex` and moves it by `delta`.

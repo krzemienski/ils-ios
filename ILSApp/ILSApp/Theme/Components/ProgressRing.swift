@@ -67,6 +67,7 @@ struct ProgressRing: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(ringAccessibilityLabel)
         .accessibilityValue("\(Int(progress * 100)) percent")
+        .accessibilityAddTraits(.updatesFrequently)
     }
 
     private var ringAccessibilityLabel: String {

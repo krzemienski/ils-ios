@@ -52,13 +52,17 @@ private struct TemplateChip: View {
     let theme: ThemeSnapshot
     let action: () -> Void
 
-    /// Maximum number of characters shown in a chip label.
-    private let maxTitleLength = 20
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    // UXF-008: Shorter chip labels on compact devices to fit more chips on screen
+    private var maxTitleLength: Int {
+        sizeClass == .compact ? 14 : 20
+    }
 
     private var displayTitle: String {
         let title = template.name
         guard title.count > maxTitleLength else { return title }
-        return String(title.prefix(maxTitleLength - 1)) + "…"
+        return String(title.prefix(maxTitleLength - 1)) + "\u{2026}"
     }
 
     var body: some View {
@@ -66,7 +70,8 @@ private struct TemplateChip: View {
             HStack(spacing: 4) {
                 if template.isFavorite {
                     Image(systemName: "pin.fill")
-                        .font(.system(size: 10, weight: .medium))
+                        // ACC-007: Use theme caption size for Dynamic Type compliance
+                        .font(.system(size: theme.fontCaption, weight: .medium))
                         .foregroundStyle(theme.accent)
                 }
                 Text(displayTitle)
@@ -74,7 +79,8 @@ private struct TemplateChip: View {
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
             }
-            .padding(.horizontal, 10)
+            // UXF-008: Tighter padding on compact devices
+            .padding(.horizontal, sizeClass == .compact ? 8 : 10)
             .padding(.vertical, 6)
             .background(
                 Capsule()

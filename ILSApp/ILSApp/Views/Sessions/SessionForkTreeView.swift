@@ -341,10 +341,12 @@ struct SessionForkTreeView: View {
             // Status row
             HStack(spacing: 4) {
                 Image(systemName: nodeStatusIcon(for: session.status))
-                    .font(.system(size: 10))
+                    // ACC-007: Use 11pt minimum for Dynamic Type compliance
+                    .font(.system(size: 11))
                     .foregroundStyle(statusColor)
                 Text(session.status.rawValue.capitalized)
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    // ACC-007: Use 11pt minimum for Dynamic Type compliance
+                    .font(.system(size: 11, design: theme.fontDesign))
                     .foregroundStyle(statusColor)
             }
 
@@ -353,13 +355,15 @@ struct SessionForkTreeView: View {
             // Bottom row: message count + date
             HStack {
                 Label("\(session.messageCount)", systemImage: "message")
-                    .font(.system(size: 10, design: theme.fontDesign))
+                    // ACC-007: Use 11pt minimum for Dynamic Type compliance
+                    .font(.system(size: 11, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
                 Spacer()
 
                 Text(session.createdAt, style: .date)
-                    .font(.system(size: 9, design: theme.fontDesign))
+                    // ACC-007: Use 11pt minimum for Dynamic Type compliance
+                    .font(.system(size: 11, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }

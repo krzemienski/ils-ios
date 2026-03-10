@@ -149,7 +149,14 @@ func configure(_ app: Application) async throws {
 
     // Server configuration
     let port = Int(Environment.get("PORT") ?? "9999") ?? 9999
-    // SEC-002: Default to localhost; set ILS_LAN_ENABLED=true to bind 0.0.0.0 for LAN access
+    // SEC-002: Network binding security.
+    // Default: 127.0.0.1 (localhost only — no external access).
+    // Set ILS_LAN_ENABLED=true to bind 0.0.0.0 for LAN/fleet/remote access.
+    // When LAN-enabled, access control relies on:
+    //   - RateLimitMiddleware (per-IP request throttling)
+    //   - APIKeyMiddleware (opt-in via ILS_API_KEY env var)
+    //   - Cloudflare tunnel for internet-facing scenarios
+    // Do NOT remove the default localhost binding — it protects dev environments.
     let hostname = Environment.get("ILS_LAN_ENABLED") == "true" ? "0.0.0.0" : "127.0.0.1"
     app.http.server.configuration.hostname = hostname
     app.http.server.configuration.port = port

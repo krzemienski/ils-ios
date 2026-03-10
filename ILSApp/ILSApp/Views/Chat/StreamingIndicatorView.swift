@@ -84,7 +84,8 @@ struct StreamingIndicatorView: View {
                 isPulsing = false
             }
         }
-        .accessibilityLabel("AI is responding")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Claude is responding")
         .accessibilityAddTraits(.updatesFrequently)
     }
 }
