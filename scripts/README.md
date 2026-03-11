@@ -14,6 +14,11 @@ Automation scripts for building, deploying, and testing the ILS backend.
 | [`run_regression_tests.sh`](#run_regression_testssh) | Run the full iOS regression test suite | Before merging PRs or after major changes |
 | [`reinstall-plugins.sh`](#reinstall-pluginssh) | Reinstall Claude Code plugins to local scope | When plugins appear disabled after updates |
 | [`api-audit.sh`](#api-auditsh) | Test all API endpoints against the live backend | Verifying a backend deployment is healthy |
+| [`extract-performance-metrics.sh`](#performance-scripts) | Extract performance metrics from xcresult bundles | After running regression tests |
+| [`generate-performance-report.py`](#performance-scripts) | Generate HTML performance regression report | Comparing performance across builds |
+| [`update-performance-baseline.sh`](#performance-scripts) | Update performance baseline from latest results | After confirming performance is acceptable |
+| [`check-performance-regression.py`](#performance-scripts) | Check for performance regressions vs baseline | In CI before merging |
+| [`sdk-wrapper.py`](#sdk-wrapperpy) | Python wrapper for Claude Agent SDK | Used by backend chat execution |
 
 > **Note:** Run all scripts from the **repository root**, not from within `scripts/`.
 
@@ -468,3 +473,75 @@ sleep 5
 - **Creates and cleans up test data:** Sessions, projects, skills, MCP servers, themes, teams, and fleet hosts are created and immediately deleted as part of the audit.
 - The script fails fast if the backend is not reachable before tests begin.
 - WebSocket endpoints (`/chat/ws/:sessionId`, `/system/metrics/live`) are skipped and require a dedicated WebSocket client to test.
+
+---
+
+## Performance Scripts
+
+Four scripts for tracking performance regressions across builds. Run after `run_regression_tests.sh`.
+
+| Script | Purpose |
+|--------|---------|
+| `extract-performance-metrics.sh` | Extracts timing metrics from `.xcresult` bundles |
+| `generate-performance-report.py` | Generates HTML report comparing current vs baseline |
+| `update-performance-baseline.sh` | Saves current results as the new baseline |
+| `check-performance-regression.py` | Exits non-zero if any metric regresses beyond threshold |
+
+### Prerequisites
+
+- `xcresulttool` (bundled with Xcode)
+- `python3` in PATH
+- A `.xcresult` bundle from `run_regression_tests.sh`
+
+### Typical Workflow
+
+```bash
+# 1. Run regression tests (produces TestResults_*.xcresult)
+./scripts/run_regression_tests.sh
+
+# 2. Extract metrics
+./scripts/extract-performance-metrics.sh TestResults_*.xcresult
+
+# 3. Check for regressions vs baseline
+python3 scripts/check-performance-regression.py
+
+# 4. If acceptable, update the baseline
+./scripts/update-performance-baseline.sh
+
+# 5. Generate HTML report for review
+python3 scripts/generate-performance-report.py
+```
+
+---
+
+## `sdk-wrapper.py`
+
+Python wrapper that invokes the Claude Agent SDK (`claude-agent-sdk`) for chat execution. Called by `ClaudeExecutorService` in the backend when processing chat requests.
+
+### Prerequisites
+
+- `claude-agent-sdk` pip package installed
+- `claude` CLI configured with valid credentials
+
+### Usage
+
+Not intended for direct invocation. Called by the backend:
+
+```bash
+python3 scripts/sdk-wrapper.py --session-id <UUID> --prompt "<text>" [--project-id <UUID>]
+```
+
+### Output
+
+Emits NDJSON to stdout, one event per line, parsed by `ClaudeExecutorService`:
+
+```json
+{"type": "assistant", "content": [...]}
+{"type": "result", "usage": {...}, "cost": 0.0419}
+```
+
+### Notes
+
+- Uses `include_partial_messages=True` for streaming
+- Inherits Claude CLI OAuth auth — no `ANTHROPIC_API_KEY` required
+- The backend strips `CLAUDECODE=1` and `CLAUDE_CODE_*` env vars before invocation to prevent nesting detection from blocking execution

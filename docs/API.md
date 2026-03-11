@@ -1,8 +1,8 @@
 # ILS Backend API Reference
 
-**Version:** 1.3
+**Version:** 1.4
 **Base URL:** `http://localhost:9999`
-**Last Updated:** 2026-03-09
+**Last Updated:** 2026-03-10
 
 ## Table of Contents
 
@@ -27,6 +27,18 @@
 - [Activity Feed](#activity-feed)
 - [Permissions](#permissions)
 - [Pairing](#pairing)
+- [Analytics](#analytics)
+- [Usage](#usage)
+- [Audit Trail](#audit-trail)
+- [Workflows](#workflows)
+- [Agent Queue](#agent-queue)
+- [Session Templates](#session-templates)
+- [Session Health](#session-health)
+- [Automation Rules](#automation-rules)
+- [Suggestions](#suggestions)
+- [Terminal](#terminal)
+- [SSH](#ssh)
+- [Recordings](#recordings)
 - [WebSocket Protocol](#websocket-protocol)
 - [Error Handling](#error-handling)
 
@@ -92,23 +104,50 @@ All API responses (except health check and streaming endpoints) follow this stan
 
 ## Health Check
 
-### Check API Health
+### Check API Health (Simple)
 
 **Endpoint:** `GET /health`
-**Description:** Simple health check to verify the API is running.
-
-**Response:** Plain text `"OK"`
+**Description:** Simple health check. Returns plain text `"OK"`.
 
 **Example:**
-
 ```bash
 curl http://localhost:9999/health
 ```
 
-**Response:**
+---
+
+### Detailed Health Check
+
+**Endpoint:** `GET /api/v1/health`
+**Description:** Detailed health check with component status.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "version": "1.4.0",
+    "claudeAvailable": true,
+    "databaseConnected": true,
+    "uptime": 3600
+  }
+}
 ```
-OK
-```
+
+---
+
+### Readiness Check
+
+**Endpoint:** `GET /api/v1/health/ready`
+**Description:** Kubernetes-style readiness probe. Returns 200 when ready to serve traffic.
+
+---
+
+### Liveness Check
+
+**Endpoint:** `GET /api/v1/health/live`
+**Description:** Kubernetes-style liveness probe. Returns 200 when process is alive.
 
 ---
 
@@ -168,6 +207,78 @@ curl http://localhost:9999/api/v1/projects
 
 ```bash
 curl http://localhost:9999/api/v1/projects/EC342AC4-974A-4846-B4E0-114DE149F4EC
+```
+
+---
+
+### Create Project
+
+**Endpoint:** `POST /api/v1/projects`
+**Description:** Create a new project record in the database.
+
+**Request Body:**
+```json
+{
+  "name": "my-project",
+  "path": "/Users/nick/code/my-project",
+  "defaultModel": "sonnet",
+  "description": "Optional description"
+}
+```
+
+**Response:** Returns the created project object.
+
+---
+
+### Update Project
+
+**Endpoint:** `PUT /api/v1/projects/:id`
+**Description:** Update project metadata (name, description, defaultModel).
+
+**Parameters:**
+- `id` (path, UUID) - Project ID
+
+**Request Body:**
+```json
+{
+  "name": "updated-name",
+  "description": "Updated description",
+  "defaultModel": "opus"
+}
+```
+
+**Response:** Returns the updated project object.
+
+---
+
+### Delete Project
+
+**Endpoint:** `DELETE /api/v1/projects/:id`
+**Description:** Delete a project record from the database.
+
+**Parameters:**
+- `id` (path, UUID) - Project ID
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Bulk Delete Projects
+
+**Endpoint:** `POST /api/v1/projects/bulk-delete`
+**Description:** Bulk-delete projects by ID array (max 100).
+
+**Request Body:**
+```json
+{ "ids": ["uuid1", "uuid2"] }
+```
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
 ```
 
 ---
@@ -530,6 +641,335 @@ curl "http://localhost:9999/api/v1/sessions/12345678-1234-1234-1234-123456789abc
 
 ```bash
 curl http://localhost:9999/api/v1/sessions/transcript/{encodedPath}/{sessionId}
+```
+
+---
+
+### Get Transcript Files
+
+**Endpoint:** `GET /api/v1/sessions/transcript/:encodedProjectPath/:sessionId/files`
+**Description:** List files modified during an external session (from JSONL transcript).
+
+**Parameters:**
+- `encodedProjectPath` (path, string) - Base64-encoded project path
+- `sessionId` (path, string) - Claude session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "files": ["path/to/file1.swift", "path/to/file2.swift"],
+    "changes": [
+      {
+        "path": "path/to/file.swift",
+        "operation": "write",
+        "timestamp": "2026-02-13T00:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Search All Sessions (FTS)
+
+**Endpoint:** `GET /api/v1/sessions/search`
+**Description:** Full-text search across all session messages using FTS5.
+
+**Query Parameters:**
+- `q` (required, string) - Search query
+- `limit` (optional, int, default: 20) - Max results
+- `offset` (optional, int, default: 0) - Pagination offset
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "sessionId": "uuid",
+        "sessionName": "string",
+        "messageId": "uuid",
+        "snippet": "...matching text...",
+        "createdAt": "2026-02-13T00:00:00Z"
+      }
+    ],
+    "total": 5
+  }
+}
+```
+
+---
+
+### Get Search History
+
+**Endpoint:** `GET /api/v1/sessions/search/history`
+**Description:** Get recent search queries (last 20 unique queries).
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "queries": ["authentication", "refactor", "fix bug"]
+  }
+}
+```
+
+---
+
+### Clear Search History
+
+**Endpoint:** `DELETE /api/v1/sessions/search/history`
+**Description:** Clear all stored search history.
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Get Model Stats
+
+**Endpoint:** `GET /api/v1/sessions/model-stats`
+**Description:** Aggregate model usage statistics across all sessions.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "models": [
+      {
+        "model": "sonnet",
+        "sessionCount": 100,
+        "messageCount": 500,
+        "totalCostUSD": 1.23
+      }
+    ],
+    "totalSessions": 150
+  }
+}
+```
+
+---
+
+### Suggest Model
+
+**Endpoint:** `POST /api/v1/sessions/suggest-model`
+**Description:** Get a smart model routing suggestion based on the task description.
+
+**Request Body:**
+```json
+{
+  "prompt": "Refactor the entire authentication module",
+  "projectId": "uuid"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "suggestedModel": "opus",
+    "reasoning": "Complex refactoring task benefits from Opus's deeper reasoning"
+  }
+}
+```
+
+---
+
+### Compare Sessions
+
+**Endpoint:** `GET /api/v1/sessions/compare`
+**Description:** Compare two sessions side-by-side.
+
+**Query Parameters:**
+- `a` (required, UUID) - First session ID
+- `b` (required, UUID) - Second session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionA": { /* session object */ },
+    "sessionB": { /* session object */ },
+    "diff": {
+      "messageCountDiff": 5,
+      "costDiff": 0.02
+    }
+  }
+}
+```
+
+---
+
+### Integrity Check
+
+**Endpoint:** `GET /api/v1/sessions/integrity-check`
+**Description:** Verify session messageCount integrity. Pass `?fix=true` to auto-correct counts.
+
+**Query Parameters:**
+- `fix` (optional, bool) - If true, fix mismatched counts
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "checked": 150,
+    "mismatches": 3,
+    "fixed": 3
+  }
+}
+```
+
+---
+
+### Update Session Model
+
+**Endpoint:** `PATCH /api/v1/sessions/:id/model`
+**Description:** Update the Claude model for an existing session.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Request Body:**
+```json
+{ "model": "opus" }
+```
+
+**Response:** Returns the updated session object.
+
+---
+
+### Bulk Delete Sessions
+
+**Endpoint:** `POST /api/v1/sessions/bulk-delete`
+**Description:** Delete multiple sessions by ID array (max 100).
+
+**Request Body:**
+```json
+{ "ids": ["uuid1", "uuid2"] }
+```
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Bulk Export Sessions
+
+**Endpoint:** `POST /api/v1/sessions/bulk-export`
+**Description:** Export multiple sessions as a JSON archive.
+
+**Request Body:**
+```json
+{ "ids": ["uuid1", "uuid2"] }
+```
+
+**Response:** Returns a JSON array of session export objects (messages included).
+
+---
+
+### Import Session
+
+**Endpoint:** `POST /api/v1/sessions/import`
+**Description:** Import a previously exported session (restores session + messages).
+
+**Request Body:** Session export JSON object (as produced by bulk-export).
+
+**Response:** Returns the imported session object.
+
+---
+
+### Get Fork Tree
+
+**Endpoint:** `GET /api/v1/sessions/:id/fork-tree`
+**Description:** Get the complete fork lineage for a session family (parent + all forks).
+
+**Parameters:**
+- `id` (path, UUID) - Any session ID in the family
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "root": { /* session object */ },
+    "forks": [{ /* session object */ }]
+  }
+}
+```
+
+---
+
+### Search Session Messages
+
+**Endpoint:** `GET /api/v1/sessions/:id/messages/search`
+**Description:** Search within a specific session's messages.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Query Parameters:**
+- `q` (required, string) - Search query
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "role": "assistant",
+        "content": "...matching content...",
+        "createdAt": "2026-02-13T00:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Export Session
+
+**Endpoint:** `GET /api/v1/sessions/:id/export`
+**Description:** Export a single session as JSON (session metadata + all messages).
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Response:** JSON export object (Content-Type: application/json).
+
+---
+
+### Register Live Activity Token
+
+**Endpoint:** `POST /api/v1/sessions/:id/live-activity-token`
+**Description:** Register an iOS Live Activity push token for a session (used to push content-state updates when app is backgrounded).
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Request Body:**
+```json
+{ "token": "apns-push-token-string" }
+```
+
+**Response:**
+```json
+{ "success": true, "data": { "acknowledged": true } }
 ```
 
 ---
@@ -960,6 +1400,49 @@ curl -X DELETE http://localhost:9999/api/v1/skills/my-skill
 
 ---
 
+### Preview Skill from GitHub
+
+**Endpoint:** `GET /api/v1/skills/preview`
+**Description:** Preview a skill from a GitHub repository before installing.
+
+**Query Parameters:**
+- `repository` (required, string) - GitHub repo in `owner/repo` format
+- `skillPath` (optional, string, default: `SKILL.md`) - Path to skill file within repo
+
+**Response:** Returns a skill object with full content preview.
+
+---
+
+### Enable Skill
+
+**Endpoint:** `POST /api/v1/skills/:name/enable`
+**Description:** Enable a skill (sets `isActive: true`).
+
+**Parameters:**
+- `name` (path, string) - Skill name
+
+**Response:**
+```json
+{ "success": true, "data": { "enabled": true } }
+```
+
+---
+
+### Disable Skill
+
+**Endpoint:** `POST /api/v1/skills/:name/disable`
+**Description:** Disable a skill (sets `isActive: false`).
+
+**Parameters:**
+- `name` (path, string) - Skill name
+
+**Response:**
+```json
+{ "success": true, "data": { "enabled": false } }
+```
+
+---
+
 ## Plugins
 
 Plugins extend Claude Code functionality. Installed plugins are tracked in `~/.claude/plugins/installed_plugins.json`.
@@ -1181,6 +1664,66 @@ curl -X POST http://localhost:9999/api/v1/plugins/cache@official/disable
 
 ---
 
+### Search Plugins on GitHub
+
+**Endpoint:** `GET /api/v1/plugins/github-search`
+**Description:** Search GitHub for plugins by keyword.
+
+**Query Parameters:**
+- `q` (required, string) - Search query
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "repository": "owner/repo",
+        "description": "Plugin description",
+        "stars": 42
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Preview Plugin from GitHub
+
+**Endpoint:** `GET /api/v1/plugins/preview`
+**Description:** Preview a plugin from a GitHub repository before installing.
+
+**Query Parameters:**
+- `repository` (required, string) - GitHub repo in `owner/repo` format
+
+**Response:** Returns a plugin object with content preview.
+
+---
+
+### Check Plugin Update
+
+**Endpoint:** `GET /api/v1/plugins/:name/check-update`
+**Description:** Check if an installed plugin has an available update.
+
+**Parameters:**
+- `name` (path, string) - Plugin name
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "hasUpdate": true,
+    "currentVersion": "1.0.0",
+    "latestVersion": "1.1.0"
+  }
+}
+```
+
+---
+
 ### Uninstall Plugin
 
 **Endpoint:** `DELETE /api/v1/plugins/:name`
@@ -1388,6 +1931,166 @@ curl -X DELETE "http://localhost:9999/api/v1/mcp/my-mcp?scope=project"
 
 ---
 
+### Search MCP Servers
+
+**Endpoint:** `GET /api/v1/mcp/search`
+**Description:** Search available MCP servers in the marketplace.
+
+**Query Parameters:**
+- `q` (optional, string) - Search query
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "name": "firecrawl",
+        "description": "Web scraping MCP server",
+        "command": "npx",
+        "args": ["-y", "firecrawl-mcp"]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get MCP Marketplace
+
+**Endpoint:** `GET /api/v1/mcp/marketplace`
+**Description:** List available MCP servers from the official marketplace.
+
+**Response:** Returns an array of available MCP server configurations.
+
+---
+
+### Get MCP Presets
+
+**Endpoint:** `GET /api/v1/mcp/presets`
+**Description:** Get pre-configured MCP server presets for quick setup.
+
+**Response:** Returns an array of preset MCP server configurations with name, command, args, and env template.
+
+---
+
+### Validate MCP Config
+
+**Endpoint:** `POST /api/v1/mcp/validate`
+**Description:** Validate an MCP server configuration without saving it.
+
+**Request Body:**
+```json
+{
+  "name": "my-mcp",
+  "command": "npx",
+  "args": ["-y", "my-mcp-package"]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "isValid": true,
+    "errors": []
+  }
+}
+```
+
+---
+
+### Get MCP Server Health
+
+**Endpoint:** `GET /api/v1/mcp/:name/health`
+**Description:** Check health of a specific MCP server.
+
+**Parameters:**
+- `name` (path, string) - MCP server name
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "name": "firecrawl",
+    "status": "healthy",
+    "latencyMs": 42
+  }
+}
+```
+
+---
+
+### Get MCP Server Logs
+
+**Endpoint:** `GET /api/v1/mcp/:name/logs`
+**Description:** Get recent logs for an MCP server.
+
+**Parameters:**
+- `name` (path, string) - MCP server name
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "logs": ["line1", "line2"],
+    "name": "firecrawl"
+  }
+}
+```
+
+---
+
+### Enable MCP Server
+
+**Endpoint:** `POST /api/v1/mcp/:name/enable`
+**Description:** Enable a configured MCP server.
+
+**Parameters:**
+- `name` (path, string) - MCP server name
+
+**Response:**
+```json
+{ "success": true, "data": { "enabled": true } }
+```
+
+---
+
+### Disable MCP Server
+
+**Endpoint:** `POST /api/v1/mcp/:name/disable`
+**Description:** Disable an MCP server without removing its configuration.
+
+**Parameters:**
+- `name` (path, string) - MCP server name
+
+**Response:**
+```json
+{ "success": true, "data": { "enabled": false } }
+```
+
+---
+
+### Restart MCP Server
+
+**Endpoint:** `POST /api/v1/mcp/:name/restart`
+**Description:** Restart a running MCP server.
+
+**Parameters:**
+- `name` (path, string) - MCP server name
+
+**Response:**
+```json
+{ "success": true, "data": { "restarted": true } }
+```
+
+---
+
 ## Configuration
 
 Configuration management for Claude Code settings across different scopes.
@@ -1478,6 +2181,36 @@ curl -X PUT http://localhost:9999/api/v1/config \
 
 ---
 
+### Get Effective Configuration
+
+**Endpoint:** `GET /api/v1/config/effective`
+**Description:** Get the merged/effective configuration (all scopes combined with precedence).
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "scope": "effective",
+    "content": {
+      "model": "sonnet",
+      "permissions": { "allow": ["Read", "Edit"] }
+    }
+  }
+}
+```
+
+---
+
+### Export Configuration
+
+**Endpoint:** `GET /api/v1/config/export`
+**Description:** Export all configuration scopes as a single JSON document for backup/transfer.
+
+**Response:** JSON export of all scopes (user, project, local).
+
+---
+
 ### Validate Configuration
 
 **Endpoint:** `POST /api/v1/config/validate`
@@ -1530,6 +2263,29 @@ curl -X POST http://localhost:9999/api/v1/config/validate \
       "model": "sonnet"
     }
   }'
+```
+
+---
+
+### Validate API Key
+
+**Endpoint:** `POST /api/v1/config/validate-api-key`
+**Description:** Validate an Anthropic API key by making a test call.
+
+**Request Body:**
+```json
+{ "apiKey": "sk-ant-..." }
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "isValid": true,
+    "error": null
+  }
+}
 ```
 
 ---
@@ -1781,6 +2537,194 @@ curl "http://localhost:9999/api/v1/system/files?path=/Users/user/Documents"
 ```bash
 curl http://localhost:9999/api/v1/system/metrics/source
 ```
+
+---
+
+### Get Claude Processes
+
+**Endpoint:** `GET /api/v1/system/processes/claude`
+**Description:** List only Claude CLI processes currently running.
+
+**Response Schema:**
+```json
+[
+  {
+    "name": "claude",
+    "pid": 1234,
+    "cpuPercent": 5.2,
+    "memoryMB": 200.0,
+    "sessionId": "uuid"
+  }
+]
+```
+
+---
+
+### Get Process History
+
+**Endpoint:** `GET /api/v1/system/processes/history`
+**Description:** Get historical process resource usage snapshots.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "snapshots": [
+      {
+        "timestamp": "2026-03-10T12:00:00Z",
+        "cpu": 45.2,
+        "memoryMB": 8192
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Kill Process
+
+**Endpoint:** `POST /api/v1/system/processes/:pid/kill`
+**Description:** Send SIGTERM to a running process by PID.
+
+**Parameters:**
+- `pid` (path, int) - Process ID
+
+**Response:**
+```json
+{ "success": true, "data": { "killed": true } }
+```
+
+---
+
+### Get Process Alerts
+
+**Endpoint:** `GET /api/v1/system/processes/alerts`
+**Description:** Get alerts for processes exceeding CPU or memory thresholds.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "alerts": [
+      {
+        "pid": 1234,
+        "name": "node",
+        "type": "high_cpu",
+        "value": 98.5,
+        "threshold": 80.0
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Current Version
+
+**Endpoint:** `GET /api/v1/system/version/current`
+**Description:** Get the current ILS backend version.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "version": "1.4.0",
+    "buildDate": "2026-03-10",
+    "claudeCliVersion": "1.0.15"
+  }
+}
+```
+
+---
+
+### Get Version History
+
+**Endpoint:** `GET /api/v1/system/version/history`
+**Description:** Get the version history / changelog entries.
+
+**Response:** Array of version objects with version string and release notes.
+
+---
+
+### Check for Updates
+
+**Endpoint:** `GET /api/v1/system/version/check-updates`
+**Description:** Check if a newer version of ILS is available.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "hasUpdate": false,
+    "latestVersion": "1.4.0",
+    "currentVersion": "1.4.0"
+  }
+}
+```
+
+---
+
+### Check Compatibility
+
+**Endpoint:** `GET /api/v1/system/version/compatibility`
+**Description:** Check compatibility between the iOS client and backend versions.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "compatible": true,
+    "minClientVersion": "1.0.0",
+    "minBackendVersion": "1.3.0"
+  }
+}
+```
+
+---
+
+### Get System Limits
+
+**Endpoint:** `GET /api/v1/system/limits`
+**Description:** Get current session resource limits (max turns, budget caps).
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "defaultMaxTurns": 10,
+    "defaultMaxBudgetUSD": 5.0,
+    "sessionLimits": {}
+  }
+}
+```
+
+---
+
+### Update Session Limits
+
+**Endpoint:** `PUT /api/v1/system/limits/:sessionId`
+**Description:** Update resource limits for a specific session.
+
+**Parameters:**
+- `sessionId` (path, string) - Session ID
+
+**Request Body:**
+```json
+{
+  "maxTurns": 20,
+  "maxBudgetUSD": 10.0
+}
+```
+
+**Response:** Returns the updated limits for the session.
 
 ---
 
@@ -2444,6 +3388,40 @@ curl http://localhost:9999/api/v1/tunnel/status
 
 ---
 
+### Get Tunnel Health
+
+**Endpoint:** `GET /api/v1/tunnel/health`
+**Description:** Check if the tunnel is healthy and reachable.
+
+**Response Schema:**
+```json
+{
+  "healthy": true,
+  "url": "https://random-name.trycloudflare.com",
+  "latencyMs": 45
+}
+```
+
+---
+
+### Get Tunnel Logs
+
+**Endpoint:** `GET /api/v1/tunnel/logs`
+**Description:** Get recent cloudflared process logs.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "logs": ["2026-03-10T12:00:00Z INF Tunnel connected", "..."],
+    "lineCount": 50
+  }
+}
+```
+
+---
+
 ## Host Profiles
 
 Host profiles represent remote machines in the ILS fleet for distributed Claude Code execution. The active host profile determines which machine ILS connects to. The underlying database table is `fleet_hosts` to preserve existing data.
@@ -3097,6 +4075,1536 @@ curl -X DELETE http://localhost:9999/api/v1/pairing/qr/12345678-1234-1234-1234-1
 
 ---
 
+## Analytics
+
+Analytics endpoints compute data from existing sessions and filesystem sources.
+
+### Get Activity Timeline
+
+**Endpoint:** `GET /api/v1/analytics/activity`
+**Description:** Daily activity timeline of session and message counts.
+
+**Query Parameters:**
+- `period` (optional, string, default: `week`) - `week` (7 days) or `month` (30 days)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "projectName": "All Projects",
+    "dataPoints": [
+      {
+        "date": "2026-03-04",
+        "sessionCount": 5,
+        "messageCount": 42,
+        "tokensUsed": 0
+      }
+    ],
+    "startDate": "2026-03-04",
+    "endDate": "2026-03-10",
+    "granularity": "day"
+  }
+}
+```
+
+---
+
+### Get Session Metrics
+
+**Endpoint:** `GET /api/v1/analytics/sessions`
+**Description:** Aggregated session effectiveness metrics including model breakdown and completion rates.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "projectName": "All Projects",
+    "totalSessions": 150,
+    "avgMessagesPerSession": 8.5,
+    "avgSessionDurationSeconds": 0,
+    "completedSessions": 140,
+    "abandonedSessions": 10,
+    "completionRate": 93.3,
+    "avgIterationsPerSession": 8.5,
+    "modelUsage": [
+      {
+        "model": "sonnet",
+        "sessionCount": 100,
+        "messageCount": 800,
+        "tokensUsed": 0,
+        "usagePercentage": 66.7
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Skill Analytics
+
+**Endpoint:** `GET /api/v1/analytics/skills`
+**Description:** Skill usage analytics listing all configured skills with active/inactive status.
+
+**Query Parameters:**
+- `period` (optional, string, default: `week`) - `week` or `month`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "projectName": "All Projects",
+    "totalSessions": 150,
+    "skillStats": [
+      {
+        "skillName": "research",
+        "invocationCount": 1,
+        "sessionCount": 0,
+        "usagePercentage": 0.0,
+        "avgEffectivenessRating": null
+      }
+    ],
+    "startDate": "2026-03-04",
+    "endDate": "2026-03-10"
+  }
+}
+```
+
+---
+
+### Get Analytics Summary
+
+**Endpoint:** `GET /api/v1/analytics/summary`
+**Description:** High-level summary of activity for the given period.
+
+**Query Parameters:**
+- `period` (optional, string, default: `week`) - `week` or `month`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "projectName": "All Projects",
+    "periodLabel": "Last 7 days",
+    "startDate": "2026-03-04",
+    "endDate": "2026-03-10",
+    "totalSessions": 25,
+    "totalMessages": 200,
+    "totalTokensUsed": 0,
+    "completionRate": 92.0,
+    "topModel": "sonnet",
+    "topSkill": "research"
+  }
+}
+```
+
+---
+
+### Export Analytics
+
+**Endpoint:** `GET /api/v1/analytics/export`
+**Description:** Full analytics export combining activity, session metrics, skill analytics, and summary.
+
+**Query Parameters:**
+- `period` (optional, string, default: `week`) - `week` or `month`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "projectName": "All Projects",
+    "exportedAt": "2026-03-10T12:00:00Z",
+    "summary": { /* AnalyticsSummary */ },
+    "activityTimeline": [ /* ActivityDataPoint[] */ ],
+    "sessionMetrics": { /* SessionMetricsResponse */ },
+    "skillAnalytics": { /* SkillAnalyticsResponse */ }
+  }
+}
+```
+
+---
+
+## Usage
+
+Usage metrics and rate limit tracking.
+
+### Get Usage Metrics
+
+**Endpoint:** `GET /api/v1/usage`
+**Description:** Aggregate usage metrics with daily breakdown and rate limit status.
+
+**Query Parameters:**
+- `period` (optional, string, default: `monthly`) - `daily`, `weekly`, or `monthly`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "period": "monthly",
+    "periodStart": "2026-02-09",
+    "periodEnd": "2026-03-10",
+    "totalMessages": 1200,
+    "totalSessions": 150,
+    "averageMessagesPerSession": 8.0,
+    "totalDurationSeconds": 0,
+    "dailyBreakdown": [
+      {
+        "date": "2026-03-10",
+        "messageCount": 42,
+        "sessionCount": 5,
+        "totalDurationSeconds": 0
+      }
+    ],
+    "projectBreakdown": [
+      {
+        "projectName": "ils-ios",
+        "messageCount": 800,
+        "sessionCount": 100,
+        "totalDurationSeconds": 0,
+        "percentageOfTotal": 66.7
+      }
+    ],
+    "rateLimitStatus": {
+      "messagesUsed": 12,
+      "messagesLimit": 45,
+      "windowResetsAt": "2026-03-10T17:00:00Z",
+      "windowDurationSeconds": 18000
+    }
+  }
+}
+```
+
+---
+
+### Export Usage as CSV
+
+**Endpoint:** `GET /api/v1/usage/export`
+**Description:** Export usage data as a CSV file (date, messages, cost).
+
+**Query Parameters:**
+- `period` (optional, string, default: `monthly`) - `daily`, `weekly`, or `monthly`
+
+**Response:** CSV file download (`Content-Type: text/csv`).
+
+```
+date,messages,cost
+2026-03-10,42,0.00
+2026-03-09,38,0.00
+```
+
+---
+
+## Audit Trail
+
+The AI action audit trail records every file operation, command execution, and tool use performed by Claude. Entries are immutable (append-only). File operations can be rolled back.
+
+### List Audit Actions
+
+**Endpoint:** `GET /api/v1/audit-actions`
+**Description:** List audit actions with optional filtering.
+
+**Query Parameters:**
+- `sessionId` (optional, string) - Filter to a specific session
+- `actionType` (optional, string) - Filter by action type (e.g. `file_write`, `file_create`, `file_delete`, `command`, `tool_use`, `rollback`)
+- `filePath` (optional, string) - Filter by file path (prefix match)
+- `since` (optional, ISO 8601) - Only actions at or after this time
+- `until` (optional, ISO 8601) - Only actions at or before this time
+- `limit` (optional, int, default: 50, max: 500)
+- `offset` (optional, int, default: 0)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "actions": [
+      {
+        "id": "uuid",
+        "sessionId": "string",
+        "sessionName": "string",
+        "actionType": "file_write",
+        "description": "Wrote 42 lines to main.swift",
+        "filePath": "/Users/nick/Desktop/ils-ios/Sources/main.swift",
+        "command": null,
+        "toolName": "Edit",
+        "beforeContent": "old content",
+        "afterContent": "new content",
+        "metadata": {},
+        "isRollbackable": true,
+        "rollbackStatus": "not_rolled_back",
+        "rolledBackAt": null,
+        "rollbackAuditId": null,
+        "createdAt": "2026-03-10T12:00:00Z"
+      }
+    ],
+    "totalCount": 150,
+    "hasMore": true
+  }
+}
+```
+
+**Action Types:**
+- `file_write` - File content modified
+- `file_create` - New file created
+- `file_delete` - File deleted
+- `command` - Shell command executed
+- `tool_use` - Claude tool invoked (non-file)
+- `rollback` - Rollback action recorded
+
+---
+
+### Create Audit Action
+
+**Endpoint:** `POST /api/v1/audit-actions`
+**Description:** Record a new audit action entry. The trail is append-only.
+
+**Request Body:**
+```json
+{
+  "sessionId": "string",
+  "sessionName": "My Session",
+  "actionType": "file_write",
+  "description": "Updated authentication logic",
+  "filePath": "/path/to/file.swift",
+  "command": null,
+  "toolName": "Edit",
+  "beforeContent": "old content",
+  "afterContent": "new content",
+  "metadata": {},
+  "isRollbackable": true
+}
+```
+
+**Response:** Returns the created audit action object.
+
+---
+
+### Rollback Audit Action
+
+**Endpoint:** `POST /api/v1/audit-actions/:id/rollback`
+**Description:** Roll back a specific audit action. For file operations (`file_write`, `file_create`, `file_delete`), restores the file to its pre-action state. The rollback itself is recorded as a new immutable audit entry.
+
+**Parameters:**
+- `id` (path, UUID) - Audit action ID
+
+**Request Body (optional):**
+```json
+{ "reason": "Accidentally deleted wrong file" }
+```
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "actionId": "uuid",
+        "succeeded": true,
+        "errorMessage": null,
+        "rollbackAuditAction": { /* AuditAction */ }
+      }
+    ]
+  }
+}
+```
+
+**Errors:**
+- `422` - Action is not rollbackable (`isRollbackable: false`)
+- `409` - Action has already been rolled back
+
+---
+
+## Workflows
+
+Workflow automation management. Workflows are stored as JSON files on the filesystem.
+
+### List Workflows
+
+**Endpoint:** `GET /api/v1/workflows`
+**Description:** List all workflows, sorted by most recently updated.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "name": "My Workflow",
+      "description": "string",
+      "status": "idle",
+      "nodes": [],
+      "connections": [],
+      "createdAt": "2026-03-10T12:00:00Z",
+      "updatedAt": "2026-03-10T12:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### Create Workflow
+
+**Endpoint:** `POST /api/v1/workflows`
+**Description:** Create a new workflow.
+
+**Request Body:**
+```json
+{
+  "name": "My Workflow",
+  "description": "Optional description",
+  "nodes": [],
+  "connections": []
+}
+```
+
+**Response:** Returns the created workflow object.
+
+---
+
+### Get Workflow
+
+**Endpoint:** `GET /api/v1/workflows/:id`
+**Description:** Get a specific workflow by ID.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Response:** Returns the workflow object.
+
+---
+
+### Update Workflow
+
+**Endpoint:** `PUT /api/v1/workflows/:id`
+**Description:** Update an existing workflow.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Request Body:**
+```json
+{
+  "name": "Updated Name",
+  "description": "Updated description",
+  "status": "idle",
+  "nodes": [],
+  "connections": []
+}
+```
+
+**Response:** Returns the updated workflow object.
+
+---
+
+### Delete Workflow
+
+**Endpoint:** `DELETE /api/v1/workflows/:id`
+**Description:** Delete a workflow by ID.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Execute Workflow
+
+**Endpoint:** `POST /api/v1/workflows/:id/execute`
+**Description:** Start executing a workflow.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Request Body (optional):**
+```json
+{ "parameters": { "key": "value" } }
+```
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "execution-uuid",
+    "workflowId": "string",
+    "status": "running",
+    "progress": 0.0,
+    "currentNodeId": null,
+    "startedAt": "2026-03-10T12:00:00Z",
+    "completedAt": null,
+    "error": null
+  }
+}
+```
+
+---
+
+### Pause Workflow
+
+**Endpoint:** `POST /api/v1/workflows/:id/pause`
+**Description:** Pause a running workflow execution.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Response:** Returns the updated execution object with `status: "paused"`.
+
+---
+
+### Cancel Workflow
+
+**Endpoint:** `POST /api/v1/workflows/:id/cancel`
+**Description:** Cancel an active workflow execution.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Response:** Returns the updated execution object with `status: "cancelled"`.
+
+---
+
+### Stream Latest Execution (SSE)
+
+**Endpoint:** `GET /api/v1/workflows/:id/executions/latest`
+**Description:** Stream execution progress for the latest execution via Server-Sent Events. Polls every 500ms until terminal state reached.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**SSE Events:** Each event contains the full `WorkflowExecution` JSON. Stream ends when status is `completed`, `failed`, or `cancelled`.
+
+---
+
+### Create Workflow Schedule
+
+**Endpoint:** `POST /api/v1/workflows/:id/schedules`
+**Description:** Create a cron schedule for a workflow.
+
+**Parameters:**
+- `id` (path, string) - Workflow ID
+
+**Request Body:**
+```json
+{
+  "cron": "0 9 * * 1-5",
+  "enabled": true,
+  "timezone": "America/New_York"
+}
+```
+
+**Response:** Returns the created `WorkflowSchedule` object (HTTP 201).
+
+---
+
+### List Workflow Schedules
+
+**Endpoint:** `GET /api/v1/workflows/:id/schedules`
+**Description:** List all schedules for a workflow.
+
+**Response:** Returns an array of `WorkflowSchedule` objects.
+
+---
+
+### Get Workflow Schedule
+
+**Endpoint:** `GET /api/v1/workflows/:id/schedules/:scheduleId`
+**Description:** Get a specific schedule.
+
+---
+
+### Update Workflow Schedule
+
+**Endpoint:** `PUT /api/v1/workflows/:id/schedules/:scheduleId`
+**Description:** Update a schedule's cron expression, enabled state, or timezone.
+
+**Request Body:**
+```json
+{
+  "cron": "0 10 * * 1-5",
+  "enabled": false,
+  "timezone": "UTC"
+}
+```
+
+---
+
+### Delete Workflow Schedule
+
+**Endpoint:** `DELETE /api/v1/workflows/:id/schedules/:scheduleId`
+**Description:** Delete a workflow schedule.
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+## Agent Queue
+
+Task queue for running Claude agents sequentially or in parallel.
+
+### List Queue
+
+**Endpoint:** `GET /api/v1/queue`
+**Description:** List all queue items with counts.
+
+**Query Parameters:**
+- `status` (optional, string) - Filter by status: `queued`, `running`, `paused`, `completed`, `failed`, `cancelled`
+- `projectId` (optional, UUID) - Filter by project
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "title": "Run code review",
+        "description": "Review all uncommitted changes",
+        "status": "queued",
+        "priority": 0,
+        "position": 0,
+        "executionMode": "sequential",
+        "projectId": null,
+        "dependsOn": [],
+        "createdAt": "2026-03-10T12:00:00Z",
+        "startedAt": null,
+        "completedAt": null
+      }
+    ],
+    "executionMode": "sequential",
+    "isPaused": false,
+    "totalCount": 3,
+    "runningCount": 1,
+    "pendingCount": 2
+  }
+}
+```
+
+---
+
+### Enqueue Task
+
+**Endpoint:** `POST /api/v1/queue`
+**Description:** Add a new task to the queue.
+
+**Request Body:**
+```json
+{
+  "title": "Run code review",
+  "description": "Review all uncommitted changes for bugs",
+  "priority": 0,
+  "executionMode": "sequential",
+  "projectId": "uuid",
+  "dependsOn": []
+}
+```
+
+**Response:** Returns the created `AgentQueueItem`.
+
+---
+
+### Get Queue Templates
+
+**Endpoint:** `GET /api/v1/queue/templates`
+**Description:** List built-in task templates for common batch operations.
+
+**Built-in Templates:** `run-all-tests`, `code-review`, `fix-lint`, `update-dependencies`, `generate-docs`, `security-audit`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "code-review",
+      "title": "Code Review",
+      "description": "Review all uncommitted changes for quality and correctness",
+      "prompt": "Review all uncommitted changes...",
+      "tags": ["review", "quality"]
+    }
+  ]
+}
+```
+
+---
+
+### Get Queue Item
+
+**Endpoint:** `GET /api/v1/queue/:id`
+**Description:** Get a specific queue item by ID.
+
+---
+
+### Update Queue Item
+
+**Endpoint:** `PUT /api/v1/queue/:id`
+**Description:** Update mutable fields of a queue item (title, description, priority, dependsOn). Running items cannot have priority or dependencies changed.
+
+**Request Body:**
+```json
+{
+  "title": "Updated title",
+  "priority": 1,
+  "dependsOn": ["uuid1"]
+}
+```
+
+---
+
+### Delete Queue Item
+
+**Endpoint:** `DELETE /api/v1/queue/:id`
+**Description:** Delete a queue item. Running items are cancelled before deletion.
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Pause Queue Item
+
+**Endpoint:** `POST /api/v1/queue/:id/pause`
+**Description:** Pause a currently running queue item.
+
+**Response:** Returns the updated `AgentQueueItem` with `status: "paused"`.
+
+---
+
+### Resume Queue Item
+
+**Endpoint:** `POST /api/v1/queue/:id/resume`
+**Description:** Resume a paused queue item.
+
+**Response:** Returns the updated `AgentQueueItem` with `status: "queued"`.
+
+---
+
+### Cancel Queue Item
+
+**Endpoint:** `POST /api/v1/queue/:id/cancel`
+**Description:** Cancel a queue item, stopping execution if running.
+
+**Response:** Returns the updated `AgentQueueItem` with `status: "cancelled"`.
+
+---
+
+### Bulk Delete Queue Items
+
+**Endpoint:** `POST /api/v1/queue/bulk-delete`
+**Description:** Delete multiple queue items by UUID array. Running items are cancelled first.
+
+**Request Body:**
+```json
+{ "ids": ["uuid1", "uuid2"] }
+```
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Reorder Queue
+
+**Endpoint:** `POST /api/v1/queue/reorder`
+**Description:** Reorder queued items by specifying the desired ID sequence. Items not in the list are appended at the end preserving relative order.
+
+**Request Body:**
+```json
+{ "orderedIds": ["uuid2", "uuid1", "uuid3"] }
+```
+
+**Response:** Returns the full updated `AgentQueue` snapshot.
+
+---
+
+## Session Templates
+
+Session templates provide reusable configurations (model, permission mode, system prompt) for quick session creation.
+
+### List Templates
+
+**Endpoint:** `GET /api/v1/templates`
+**Description:** List all templates: built-in defaults merged with user-created DB templates.
+
+**Query Parameters:**
+- `search` (optional, string) - Case-insensitive filter on name and description
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "name": "Default",
+        "description": "Standard session with default settings",
+        "model": "sonnet",
+        "permissionMode": "default",
+        "systemPrompt": "",
+        "maxBudgetUSD": null,
+        "maxTurns": null,
+        "isFavorite": false,
+        "isBuiltIn": true
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Create Template
+
+**Endpoint:** `POST /api/v1/templates`
+**Description:** Create a new user-defined template.
+
+**Request Body:**
+```json
+{
+  "name": "My Template",
+  "description": "For TypeScript projects",
+  "model": "sonnet",
+  "permissionMode": "acceptEdits",
+  "systemPrompt": "You are working on a TypeScript project...",
+  "maxBudgetUSD": 2.0,
+  "maxTurns": 20,
+  "isFavorite": false
+}
+```
+
+**Response:** Returns the created template object.
+
+---
+
+### Get Template
+
+**Endpoint:** `GET /api/v1/templates/:id`
+**Description:** Get a specific template by ID. Checks built-in templates first, then DB.
+
+---
+
+### Update Template
+
+**Endpoint:** `PUT /api/v1/templates/:id`
+**Description:** Update a user-defined template. Returns 403 if the template is built-in.
+
+---
+
+### Delete Template
+
+**Endpoint:** `DELETE /api/v1/templates/:id`
+**Description:** Delete a user-defined template. Returns 403 if built-in.
+
+---
+
+### Bulk Delete Templates
+
+**Endpoint:** `POST /api/v1/templates/bulk-delete`
+**Description:** Bulk-delete user-defined templates (max 100). Returns 403 if any ID is a built-in template.
+
+**Request Body:**
+```json
+{ "ids": ["uuid1", "uuid2"] }
+```
+
+---
+
+## Session Health
+
+Health analysis for sessions and projects.
+
+### Get Health Summary
+
+**Endpoint:** `GET /api/v1/sessions/health/summary`
+**Description:** Overall health summary across all sessions.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalSessions": 150,
+    "healthySessions": 140,
+    "warningSessions": 8,
+    "criticalSessions": 2,
+    "overallScore": 94.5
+  }
+}
+```
+
+---
+
+### Export Health Report
+
+**Endpoint:** `GET /api/v1/sessions/health/export`
+**Description:** Export health report as JSON for all sessions.
+
+**Response:** Health report JSON (Content-Type: application/json).
+
+---
+
+### Get Session Health
+
+**Endpoint:** `GET /api/v1/sessions/:id/health`
+**Description:** Get health metrics for a specific session.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "uuid",
+    "score": 85.0,
+    "status": "warning",
+    "issues": [
+      {
+        "type": "high_cost",
+        "severity": "warning",
+        "message": "Session cost exceeds $2"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Projects Health
+
+**Endpoint:** `GET /api/v1/projects/health`
+**Description:** Get aggregated health metrics per project.
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "projectName": "ils-ios",
+      "sessionCount": 50,
+      "avgScore": 90.0,
+      "status": "healthy"
+    }
+  ]
+}
+```
+
+---
+
+## Automation Rules
+
+Event-driven automation rules that trigger actions when session conditions are met.
+
+### List Automation Rules
+
+**Endpoint:** `GET /api/v1/automation-rules`
+**Description:** List all automation rules with optional filters.
+
+**Query Parameters:**
+- `sessionId` (optional, UUID) - Filter by session
+- `projectName` (optional, string) - Filter by project
+- `isEnabled` (optional, bool) - Filter by enabled state
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "rules": [
+      {
+        "id": "uuid",
+        "name": "High Cost Alert",
+        "description": "Notify when cost exceeds $5",
+        "triggerType": "cost_threshold",
+        "conditions": [
+          { "field": "cost_usd", "operator": "greater_than", "value": "5.0" }
+        ],
+        "actionType": "notify",
+        "actionConfig": { "notificationMessage": "Cost exceeded $5" },
+        "isEnabled": true,
+        "sessionId": null,
+        "projectName": null,
+        "createdAt": "2026-03-10T12:00:00Z"
+      }
+    ],
+    "totalCount": 3
+  }
+}
+```
+
+**Trigger Types:** `cost_threshold`, `session_complete`, `error_occurred`, `idle_timeout`, `context_near_limit`
+
+**Action Types:** `notify`, `export`, `fork`
+
+---
+
+### Create Automation Rule
+
+**Endpoint:** `POST /api/v1/automation-rules`
+**Description:** Create a new automation rule.
+
+**Request Body:**
+```json
+{
+  "name": "High Cost Alert",
+  "description": "Notify when session cost exceeds $5",
+  "triggerType": "cost_threshold",
+  "conditions": [
+    { "field": "cost_usd", "operator": "greater_than", "value": "5.0" }
+  ],
+  "actionType": "notify",
+  "actionConfig": { "notificationMessage": "Session cost exceeded $5" },
+  "isEnabled": true,
+  "sessionId": null,
+  "projectName": null
+}
+```
+
+**Response:** Returns the created rule object.
+
+---
+
+### Get Automation Rule
+
+**Endpoint:** `GET /api/v1/automation-rules/:id`
+**Description:** Get a specific automation rule by ID.
+
+---
+
+### Update Automation Rule
+
+**Endpoint:** `PUT /api/v1/automation-rules/:id`
+**Description:** Update an existing automation rule (partial update — only provided fields changed).
+
+---
+
+### Delete Automation Rule
+
+**Endpoint:** `DELETE /api/v1/automation-rules/:id`
+**Description:** Delete an automation rule.
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Get Rule Execution History
+
+**Endpoint:** `GET /api/v1/automation-rules/executions`
+**Description:** Get rule execution history with optional filters.
+
+**Query Parameters:**
+- `ruleId` (optional, UUID) - Filter by rule
+- `sessionId` (optional, UUID) - Filter by session
+- `status` (optional, string) - Filter by status: `success`, `failed`, `skipped`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "executions": [
+      {
+        "id": "uuid",
+        "ruleId": "uuid",
+        "sessionId": "uuid",
+        "status": "success",
+        "executedAt": "2026-03-10T12:00:00Z",
+        "error": null
+      }
+    ],
+    "totalCount": 15
+  }
+}
+```
+
+---
+
+### Get Rule Templates
+
+**Endpoint:** `GET /api/v1/automation-rules/templates`
+**Description:** Get pre-built rule templates for common automation scenarios.
+
+**Built-in Templates:** `high-cost-alert`, `auto-export-on-complete`, `fork-on-error`, `idle-timeout-notify`, `context-limit-warning`
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "templates": [
+      {
+        "id": "high-cost-alert",
+        "name": "High Cost Alert",
+        "description": "Notify when session cost exceeds $5",
+        "triggerType": "cost_threshold",
+        "conditions": [{ "field": "cost_usd", "operator": "greater_than", "value": "5.0" }],
+        "actionType": "notify",
+        "actionConfig": { "notificationMessage": "Session cost exceeded $5" }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Suggestions
+
+Smart suggestion engine for sessions, skills, and prompt inputs.
+
+### Get Session Suggestions
+
+**Endpoint:** `GET /api/v1/suggestions/sessions`
+**Description:** Get ranked session suggestions based on context, recency, and interaction history.
+
+**Query Parameters:**
+- `context` (optional, string) - Free-text context for keyword scoring
+- `projectName` (optional, string) - Boost sessions from same project
+- `gitBranch` (optional, string) - Boost sessions matching branch name
+- `limit` (optional, int, default: 5, max: 50)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "sessionId": "uuid",
+        "sessionName": "Auth refactor",
+        "projectName": "ils-ios",
+        "score": 0.85,
+        "reason": "Recent activity in same project"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Skill Suggestions
+
+**Endpoint:** `GET /api/v1/suggestions/skills`
+**Description:** Get ranked skill suggestions based on project and context.
+
+**Query Parameters:**
+- `projectName` (optional, string) - Project name for tag-based matching
+- `context` (optional, string) - Free-text context
+- `limit` (optional, int, default: 5, max: 50)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "skillName": "research",
+        "description": "Orchestrate parallel scientist agents",
+        "score": 0.72,
+        "tags": ["research", "agents"]
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Abandoned Sessions
+
+**Endpoint:** `GET /api/v1/suggestions/abandoned`
+**Description:** Get sessions inactive for 24+ hours that are worth resuming.
+
+**Query Parameters:**
+- `limit` (optional, int, default: 5, max: 20)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "sessionId": "uuid",
+        "sessionName": "Refactor auth module",
+        "projectName": "ils-ios",
+        "lastActiveAt": "2026-03-08T10:00:00Z",
+        "hoursSinceActive": 50,
+        "messageCount": 12
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Get Continuation Summary
+
+**Endpoint:** `GET /api/v1/suggestions/continuation/:sessionId`
+**Description:** Get a smart continuation summary for a specific session (last messages, open tasks, suggested next steps).
+
+**Parameters:**
+- `sessionId` (path, UUID) - Session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "sessionId": "uuid",
+    "sessionName": "Auth refactor",
+    "lastMessageAt": "2026-03-08T10:00:00Z",
+    "summary": "Working on authentication module refactoring. Last action: rewrote login flow.",
+    "suggestedContinuation": "Continue with the token refresh implementation",
+    "openTasks": ["Implement token refresh", "Add error handling"]
+  }
+}
+```
+
+---
+
+### Get Prompt Suggestions
+
+**Endpoint:** `GET /api/v1/suggestions/prompts`
+**Description:** Get context-aware prompt suggestions for chat input.
+
+**Query Parameters:**
+- `sessionId` (optional, UUID) - Session context
+- `context` (optional, string) - Current conversation context
+- `projectContext` (optional, string) - Project-specific context (language/framework)
+- `limit` (optional, int, default: 4, max: 10)
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "text": "Explain what this code does",
+        "category": "analysis",
+        "score": 0.9
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Submit Suggestion Feedback
+
+**Endpoint:** `POST /api/v1/suggestions/feedback`
+**Description:** Record user interaction with a suggestion (boosts relevance or dismisses).
+
+**Request Body:**
+```json
+{
+  "targetId": "uuid-or-prompt-text",
+  "suggestionType": "session",
+  "action": "click"
+}
+```
+
+**Supported actions:** `click` (boosts score), `dismiss` (hides from abandoned results)
+
+**Response:**
+```json
+{ "success": true, "data": { "acknowledged": true } }
+```
+
+---
+
+## Terminal
+
+Embedded terminal for executing shell commands on the backend host.
+
+### Execute Command
+
+**Endpoint:** `POST /api/v1/terminal/execute`
+**Description:** Execute a shell command and return full output (blocking).
+
+**Request Body:**
+```json
+{
+  "command": "ls -la",
+  "workingDirectory": "/Users/nick/Desktop/ils-ios",
+  "environment": { "NODE_ENV": "development" },
+  "timeout": 30
+}
+```
+
+**Response Schema:**
+```json
+{
+  "stdout": "total 48\ndrwxr-xr-x ...",
+  "stderr": "",
+  "exitCode": 0,
+  "duration": 0.05,
+  "workingDirectory": "/Users/nick/Desktop/ils-ios"
+}
+```
+
+---
+
+### Get Terminal Config
+
+**Endpoint:** `GET /api/v1/terminal/config`
+**Description:** Get current terminal configuration (working directory, shell).
+
+**Response Schema:**
+```json
+{
+  "shell": "/bin/zsh",
+  "workingDirectory": "/Users/nick",
+  "environment": {}
+}
+```
+
+---
+
+### Reset Terminal
+
+**Endpoint:** `POST /api/v1/terminal/reset`
+**Description:** Reset working directory to the user's home directory.
+
+**Response:** Returns updated terminal config.
+
+---
+
+### Stream Terminal (WebSocket)
+
+**Endpoint:** `WS /api/v1/terminal/stream`
+**Description:** Stream command output in real time over WebSocket.
+
+**Protocol:**
+1. Client sends JSON: `{ "command": "npm test", "workingDirectory": "/path", "timeout": 60 }`
+2. Server streams frames:
+   - `{ "type": "stdout", "data": "chunk of output" }`
+   - `{ "type": "stderr", "data": "error output" }`
+   - `{ "type": "exit", "data": "", "exitCode": 0 }`
+3. Multiple commands can be sent sequentially over the same connection.
+
+**Example:**
+```bash
+websocat ws://localhost:9999/api/v1/terminal/stream
+# Then send: {"command":"ls","workingDirectory":"/tmp"}
+```
+
+---
+
+## SSH
+
+SSH connection management for remote host execution. **Note:** SSH execution is not yet implemented — endpoints return `501 Not Implemented`.
+
+### Connect
+
+**Endpoint:** `POST /api/v1/ssh/connect`
+**Description:** Establish SSH connection to a remote host.
+
+**Request Body:**
+```json
+{
+  "host": "192.168.1.100",
+  "port": 22,
+  "username": "nick",
+  "authMethod": "key",
+  "credential": "/path/to/key"
+}
+```
+
+**Response:** `SSHStatusResponse` (currently returns 501).
+
+---
+
+### Disconnect
+
+**Endpoint:** `POST /api/v1/ssh/disconnect`
+**Description:** Disconnect from the current SSH session.
+
+---
+
+### Get SSH Status
+
+**Endpoint:** `GET /api/v1/ssh/status`
+**Description:** Get current SSH connection status.
+
+**Response Schema:**
+```json
+{
+  "connected": false,
+  "host": null,
+  "username": null,
+  "platform": null,
+  "connectedAt": null,
+  "uptime": null
+}
+```
+
+---
+
+### Execute Remote Command
+
+**Endpoint:** `POST /api/v1/ssh/execute`
+**Description:** Execute a command on the remote host via SSH.
+
+**Request Body:**
+```json
+{
+  "command": "ls -la",
+  "workingDirectory": "/home/nick"
+}
+```
+
+**Response:** `SSHExecuteResponse` (currently returns 501).
+
+---
+
+## Recordings
+
+Session recording and playback for capturing and replaying Claude interactions.
+
+### Start Recording
+
+**Endpoint:** `POST /api/v1/sessions/:id/recordings`
+**Description:** Start a new recording for a session.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "sessionId": "uuid",
+    "status": "recording",
+    "startedAt": "2026-03-10T12:00:00Z"
+  }
+}
+```
+
+---
+
+### List Session Recordings
+
+**Endpoint:** `GET /api/v1/sessions/:id/recordings`
+**Description:** List all recordings for a session.
+
+**Parameters:**
+- `id` (path, UUID) - Session ID
+
+**Response:** Array of recording objects.
+
+---
+
+### Get Recording
+
+**Endpoint:** `GET /api/v1/recordings/:recordingId`
+**Description:** Get a specific recording by ID.
+
+**Parameters:**
+- `recordingId` (path, UUID) - Recording ID
+
+---
+
+### Stop Recording
+
+**Endpoint:** `POST /api/v1/recordings/:recordingId/stop`
+**Description:** Stop an active recording.
+
+**Parameters:**
+- `recordingId` (path, UUID) - Recording ID
+
+**Response:** Returns the updated recording object with `status: "completed"`.
+
+---
+
+### Delete Recording
+
+**Endpoint:** `DELETE /api/v1/recordings/:recordingId`
+**Description:** Delete a recording.
+
+**Parameters:**
+- `recordingId` (path, UUID) - Recording ID
+
+**Response:**
+```json
+{ "success": true, "data": { "deleted": true } }
+```
+
+---
+
+### Get Playback Events
+
+**Endpoint:** `GET /api/v1/recordings/:recordingId/events`
+**Description:** Get all recorded events for playback.
+
+**Parameters:**
+- `recordingId` (path, UUID) - Recording ID
+
+**Response Schema:**
+```json
+{
+  "success": true,
+  "data": {
+    "events": [
+      {
+        "timestamp": "2026-03-10T12:00:00Z",
+        "type": "message",
+        "data": {}
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Export Recording
+
+**Endpoint:** `GET /api/v1/recordings/:recordingId/export`
+**Description:** Export a recording as a JSON archive.
+
+**Parameters:**
+- `recordingId` (path, UUID) - Recording ID
+
+**Response:** JSON export (Content-Type: application/json).
+
+---
+
 ## WebSocket Protocol
 
 The WebSocket protocol provides bidirectional real-time communication for chat sessions.
@@ -3349,6 +5857,29 @@ The API does not currently implement CORS headers. For web clients, you may need
 ---
 
 ## Changelog
+
+**v1.4.0 (2026-03-10)**
+- Added Health Check detail endpoints (`GET /health/ready`, `GET /health/live`, `GET /api/v1/health`)
+- Added Sessions: search (FTS5), search history, model-stats, suggest-model, compare, integrity-check, PATCH model, bulk-delete, bulk-export, import, fork-tree, messages/search, export, live-activity-token, transcript/files
+- Added Projects: create (POST), update (PUT), delete (DELETE), bulk-delete
+- Added Skills: preview, enable, disable
+- Added Plugins: github-search, preview, check-update
+- Added MCP: search, marketplace, presets, validate, per-server health/logs/enable/disable/restart
+- Added Config: effective, export, validate-api-key
+- Added System: claude processes, process history, kill process, process alerts, version endpoints, limits CRUD
+- Added Tunnel: health, logs
+- Added Analytics section (activity, sessions, skills, summary, export)
+- Added Usage section (metrics, CSV export, rate limit status)
+- Added Audit Trail section (list, create, rollback with file restoration)
+- Added Workflows section (CRUD, execute, pause, cancel, SSE stream, schedules CRUD)
+- Added Agent Queue section (list, enqueue, templates, CRUD, pause/resume/cancel, bulk-delete, reorder)
+- Added Session Templates section (list, CRUD, bulk-delete, built-in protection)
+- Added Session Health section (summary, export, per-session health, projects health)
+- Added Automation Rules section (list, CRUD, execution history, templates)
+- Added Suggestions section (sessions, skills, abandoned, continuation, prompts, feedback)
+- Added Terminal section (execute, config, reset, WebSocket stream)
+- Added SSH section (connect, disconnect, status, execute — currently 501 Not Implemented)
+- Added Recordings section (start, list, get, stop, delete, playback events, export)
 
 **v1.3.0 (2026-03-09)**
 - Added Activity Feed section (GET /activity/events, GET /activity/events/stream with SSE)

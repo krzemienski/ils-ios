@@ -1,6 +1,6 @@
 # ILS System Architecture
 
-**Version:** 1.1.1 | **Last Updated:** 2026-03-10
+**Version:** 1.2.0 | **Last Updated:** 2026-03-10
 
 ---
 
@@ -11,15 +11,15 @@ ILS is a three-tier distributed system:
 ```
 ┌─────────────────────────────────────────────────────┐
 │         Frontend (iOS & macOS Clients)              │
-│  - 149 files (iOS), 14 files (macOS)                │
+│  - 405 files (iOS), 18 files (macOS)                │
 │  - SwiftUI views, ViewModels, services              │
 │  - Local SQLite cache, theme system                 │
 └─────────────────────────────────────────────────────┘
             ↕ HTTP + SSE + WebSocket
 ┌─────────────────────────────────────────────────────┐
 │         Backend (Vapor Server)                      │
-│  - 52 Swift files (31 controllers, 39 services)     │
-│  - REST API (/api/v1), real-time connections       │
+│  - 123 Swift files (34 controllers, 47 services)    │
+│  - REST API (/api/v1), real-time connections        │
 │  - SQLite database (ils.sqlite), Python executor    │
 └─────────────────────────────────────────────────────┘
             ↕ CLI execution
@@ -95,31 +95,69 @@ SQLite (ils.sqlite)
 ```
 ILSAppApp (@main)
 └─ SidebarRootView
-    ├─ Sidebar (sheet on iPhone)
-    │   └─ NavigationLink → ActiveScreen enum routing
-    ├─ SessionsList → ChatView
-    ├─ DashboardView
+    ├─ SidebarView (sheet on iPhone, persistent on iPad)
+    │   └─ ActiveScreen enum → content routing
+    ├─ HomeView
+    ├─ UnifiedSessionsView → ChatView
+    ├─ BrowserView (Skills, MCP, Plugins, GitHub preview)
+    ├─ TeamsView (AgentTeams, TeamDashboard, TeamMessages)
+    ├─ WorkflowsListView → WorkflowBuilderView / ExecutionView
+    ├─ AuditTrailView → AuditActionDetailSheet
+    ├─ SystemMonitorView
     ├─ SettingsView
-    ├─ BrowserView (Skills, Plugins, MCP)
-    ├─ SystemMonitor
-    ├─ ThemesEditor
-    ├─ TeamsView
-    └─ [18+ more screens]
+    ├─ ThemeEditorView
+    ├─ HooksView
+    ├─ ActivityFeedView
+    ├─ AgentQueueView
+    ├─ AnalyticsView / UsageDashboardView
+    ├─ PermissionsView
+    ├─ TerminalView
+    ├─ DocumentationView
+    ├─ HostProfilesView (Fleet)
+    ├─ BackendsView
+    └─ [MultiSessionSplitView, GlobalSearchView, ...]
 ```
 
 **Navigation Pattern:**
 ```swift
-// All routing through ActiveScreen enum
-enum ActiveScreen {
+// All routing through SidebarRootView.ActiveScreen enum (22 cases)
+enum ActiveScreen: Hashable {
     case home
-    case sessions
-    case chat(sessionId: UUID)
+    case chat(ChatSession)
+    case sessionForkTree(ChatSession)
+    case system
     case settings
+    case browser
+    case teams
+    case hostProfiles        // also reachable as "fleet"
     case themes
-    // ...
+    case hooks
+    case activityFeed
+    case agentQueue
+    case documentation
+    case terminal
+    case backends
+    case unifiedSessions
+    case splitView
+    case analytics
+    case permissions
+    case search
+    case usage
+    case workflows
 }
 
-// Changed via SidebarRootView.activeScreen @State
+// Changed via @State activeScreen in SidebarRootView
+// Deep-link host strings map to cases (e.g. "fleet" → .hostProfiles)
+```
+
+**macOS Layout:**
+```
+ILSMacApp (@main)
+└─ MacContentView (NavigationSplitView)
+    ├─ MacSessionsListView (sidebar)
+    ├─ MacChatView (detail)
+    ├─ MacSettingsView
+    └─ MacProjectsListView
 ```
 
 ### State Management
@@ -130,10 +168,11 @@ enum ActiveScreen {
 - Deep link handling
 - Notification preferences
 
-**Screen-Level State (ViewModels):**
-- @Observable classes (one per screen)
-- @MainActor for thread safety
-- Local @State for UI interaction
+**Screen-Level State (ViewModels — 53 total):**
+- `@Observable @MainActor` classes, one per screen
+- All extend `BaseViewModel` (cancel tracking, loading/error state)
+- `nonisolated(unsafe)` for `Task` properties stored on `@MainActor` class
+- Local `@State` for transient UI interaction (not persisted)
 
 **Persistent State (UserDefaults + Keychain):**
 - Theme selection, display density
@@ -167,37 +206,53 @@ Controller (SessionsController, ChatController, etc.)
              Models (Fluent ORM → SQLite)
 ```
 
-### Controllers (31 Total)
+### Controllers (34 Total)
 
-| Controller | Purpose | Key Methods |
+| Controller | Purpose | Key Endpoints |
 |-----------|---------|-------------|
 | **SessionsController** | Session CRUD | list, create, read, update, delete, fork, search |
-| **ChatController** | Real-time chat | stream, loadHistory, search |
+| **ChatController** | Real-time chat | stream (SSE), loadHistory, search |
 | **MCPController** | MCP servers | list, status, health check |
 | **PluginsController** | Plugin management | list, install, enable, config |
 | **SkillsController** | Skill discovery | list, search, install from GitHub |
-| **SystemController** | System info | cpu, memory, disk, network metrics |
+| **SystemController** | System info | CPU, memory, disk, network metrics |
 | **ProjectsController** | Project management | list, detail, search |
-| **WorkflowsController** | Workflow execution | list, create, schedule, run |
-| **TeamsController** | Agent teams | list, members, messaging |
-| **WebSocketController** | Real-time metrics | upgrade for WebSocket (metrics feed) |
-| [21 more controllers] | Config, hooks, recordings, activity feed, etc. |
+| **WorkflowsController** | Workflow execution | list, create, schedule, run, builder |
+| **TeamsController** | Agent teams | list, members, messaging, spawn |
+| **AuditController** | Audit trail | list actions, create, rollback |
+| **AgentQueueController** | Agent job queue | list, enqueue, dequeue, status |
+| **AnalyticsController** | Usage analytics | aggregated stats and trends |
+| **AutomationRulesController** | Automation rules | list, create, update, delete |
+| **CheckpointsController** | Session checkpoints | create, list, restore |
+| **PermissionsController** | Permission history | list, approve, deny |
+| **RecordingController** | Session recordings | list, start, stop, playback |
+| **TerminalController** | Terminal sessions | open, exec, WebSocket upgrade |
+| **SSHController** | SSH tunneling | connect, list profiles |
+| **HostProfileController** | Fleet host profiles | list, add, edit, remove |
+| [15 more controllers] | Config, hooks, health, data erasure, pairing, stats, etc. |
 
-### Services (39 Total)
+### Services (47 Total)
 
 | Service | Purpose | Key Method |
 |---------|---------|-----------|
-| **ClaudeExecutorService** | Execute Claude Code | executeWithSDK(python subprocess) |
-| **ProcessMonitorService** | Monitor system processes | collect metrics (CPU, memory) |
-| **WorkflowExecutionEngine** | Run workflows | execute workflow steps with sequencing |
+| **ClaudeExecutorService** | Execute Claude Code | executeWithSDK() via python subprocess |
+| **TeamsExecutorService** | Spawn team agents | spawn teammate, manage lifecycle |
+| **WorkflowExecutionEngine** | Run workflows | execute steps with sequencing |
 | **WorkflowScheduler** | Schedule workflows | Vapor Jobs + cron |
-| **SessionFileService** | File I/O | read/write session files to disk |
-| **SystemMetricsService** | Collect metrics | CPU, memory, disk, network (top, vmstat) |
+| **ProcessMonitorService** | Monitor system processes | collect CPU/memory metrics |
+| **SystemMetricsService** | System telemetry | CPU, memory, disk, network (top/vmstat) |
 | **GitHubService** | GitHub integration | fetch skills, search repositories |
 | **FileSystemService** | File operations | watch directories, file access |
-| **SuggestionService** | Generate suggestions | AI suggestions for workflows |
-| **TeamMetricsService** | Team analytics | aggregate metrics across users |
-| [29 more services] | Plugins, MCP, config, permissions, etc. |
+| **SessionFileService** | Session file I/O | read/write session files to disk |
+| **SessionHealthService** | Session health scoring | score, flag, remediate |
+| **RuleExecutionService** | Automation rule engine | evaluate triggers, execute actions |
+| **RuleTriggerEvaluator** | Rule conditions | evaluate per-event rule conditions |
+| **AgentQueueService** | Job queue | enqueue, dequeue, prioritize agent jobs |
+| **TunnelService** | Cloudflare tunnel | start, stop, configure tunnel |
+| **TerminalService** | Terminal subprocess | spawn, pipe I/O, WebSocket bridge |
+| **TeamMetricsService** | Team analytics | aggregate metrics across teammates |
+| **SuggestionService** | AI suggestions | prompt-based suggestions for workflows |
+| [30 more services] | APNs, Bonjour, MCP file, model routing, indexing, etc. |
 
 ### Database Schema (SQLite)
 
@@ -251,7 +306,21 @@ mcp_servers
 └─ [health, status]
 ```
 
-**33+ more tables** for workflows, teams, hooks, checkpoints, recordings, etc.
+**Additional tables (18 models total):**
+- `audit_actions` — AI action trail with rollback reference
+- `automation_rules` — trigger/action rule definitions
+- `rule_execution_logs` — rule run history
+- `agent_queue_items` — agent job queue entries
+- `checkpoints` / `session_checkpoints` — fork-able session snapshots
+- `session_recordings` — recorded session playback data
+- `host_profiles` — fleet host connection profiles
+- `config_profiles` — named configuration snapshots
+- `permission_events` — permission approval/deny history
+- `templates` — reusable session/workflow templates
+- `theme_configs` — user-defined custom themes
+- `version_history` — version checkpoint tracking
+- `search_history` — cross-session search cache
+- `process_history` — system process snapshots
 
 ### Real-Time Connections
 
@@ -331,6 +400,18 @@ MetricsWebSocketClient (frontend) updates SystemMonitorView
 | GET | `/mcp` | List MCP servers |
 | GET | `/system/metrics` | System info |
 | WebSocket | `/ws/metrics` | Real-time metrics stream |
+| GET | `/audit` | List audit trail actions |
+| POST | `/audit` | Record an AI action |
+| POST | `/audit/{id}/rollback` | Roll back a recorded action |
+| GET | `/workflows` | List workflows |
+| POST | `/workflows` | Create workflow |
+| POST | `/workflows/{id}/run` | Execute workflow |
+| GET | `/teams` | List agent teams |
+| POST | `/teams/{id}/spawn` | Spawn a new teammate |
+| GET | `/agent-queue` | List agent job queue |
+| GET | `/permissions` | List permission events |
+| GET | `/terminal` | Terminal sessions |
+| GET | `/host-profiles` | Fleet host profiles |
 
 See `docs/API.md` for complete reference.
 
