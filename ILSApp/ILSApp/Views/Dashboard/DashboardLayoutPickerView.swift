@@ -193,7 +193,8 @@ struct DashboardLayoutPickerView: View {
 
                         if isPreset {
                             Text("PRESET")
-                                .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                                // ACC-007: Use 11pt minimum for Dynamic Type compliance
+                                .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
                                 .foregroundStyle(theme.textTertiary)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)

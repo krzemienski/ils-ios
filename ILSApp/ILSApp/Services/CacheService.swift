@@ -287,10 +287,43 @@ actor CacheService {
         }
     }
 
+    /// STOR-004: Hard maximum cache size in bytes (500 MB).
+    /// If the SQLite cache exceeds this limit, aggressively prune oldest entries
+    /// even if they haven't expired by TTL yet.
+    private static let hardMaxCacheBytes: Int64 = 500 * 1024 * 1024
+
     /// Remove expired cache entries using the configured TTL.
+    /// Also enforces the hard maximum cache size (STOR-004).
     func cleanupExpired() async {
+        // Read @MainActor-isolated setting once before entering actor-isolated work.
+        let ttl = await settings.cacheTTL
         do {
-            try await db.cleanupExpired(olderThan: settings.cacheTTL)
+            try await db.cleanupExpired(olderThan: ttl)
+
+            // STOR-004: If cache still exceeds hard limit after TTL cleanup,
+            // aggressively prune by halving the TTL until under limit.
+            var currentSize = await db.cacheStorageBytes()
+            var aggressiveTTL = ttl / 2
+            while currentSize > Self.hardMaxCacheBytes, aggressiveTTL > 60 {
+                AppLogger.shared.warning(
+                    "Cache size \(currentSize / (1024 * 1024)) MB exceeds \(Self.hardMaxCacheBytes / (1024 * 1024)) MB limit — pruning with TTL \(Int(aggressiveTTL))s",
+                    category: "cache"
+                )
+                try await db.cleanupExpired(olderThan: aggressiveTTL)
+                currentSize = await db.cacheStorageBytes()
+                aggressiveTTL /= 2
+            }
+            // If still over limit after aggressive TTL pruning, clear everything
+            if currentSize > Self.hardMaxCacheBytes {
+                AppLogger.shared.warning(
+                    "Cache still \(currentSize / (1024 * 1024)) MB after aggressive prune — clearing all",
+                    category: "cache"
+                )
+                try await db.clearAll()
+            }
+
+            // MEM-005: Checkpoint WAL after cleanup to reclaim disk space freed by deletions.
+            try? await db.checkpointWAL()
         } catch {
             AppLogger.shared.error(
                 "Failed to cleanup expired cache: \(error.localizedDescription)",

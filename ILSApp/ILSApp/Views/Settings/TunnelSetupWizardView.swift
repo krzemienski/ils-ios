@@ -155,7 +155,8 @@ struct TunnelSetupWizardView: View {
                             }
 
                             Text(step.title)
-                                .font(.system(size: 10, weight: isActive ? .semibold : .regular, design: theme.fontDesign))
+                                // ACC-007: Use theme caption size for Dynamic Type compliance
+                                .font(.system(size: theme.fontCaption, weight: isActive ? .semibold : .regular, design: theme.fontDesign))
                                 .foregroundStyle(isActive ? theme.accent : (isDone ? theme.success : theme.textTertiary))
                                 .lineLimit(1)
                         }
@@ -319,7 +320,8 @@ struct TunnelSetupWizardView: View {
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             .foregroundStyle(theme.accent)
                         Image(systemName: "arrow.up.right")
-                            .font(.system(size: 10))
+                            // ACC-007: Use theme caption size for Dynamic Type compliance
+                            .font(.system(size: theme.fontCaption))
                             .foregroundStyle(theme.accent)
                     }
                 }
@@ -394,7 +396,8 @@ struct TunnelSetupWizardView: View {
                             .foregroundStyle(theme.textPrimary)
                         Spacer()
                         Text(badge)
-                            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+                            // ACC-007: Use theme caption size for Dynamic Type compliance
+                            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                             .foregroundStyle(isSelected ? theme.textOnAccent : theme.textTertiary)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)

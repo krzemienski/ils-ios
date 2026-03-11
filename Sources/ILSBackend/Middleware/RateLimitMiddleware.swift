@@ -95,12 +95,24 @@ struct RateLimitMiddleware: AsyncMiddleware {
             return try await next.respond(to: request)
         }
 
-        // SEC-001: Prefer X-Forwarded-For when behind a reverse proxy
-        let clientIP = request.headers.first(name: "X-Forwarded-For")?.split(separator: ",").first.map(String.init)
-            ?? request.remoteAddress?.ipAddress
-            ?? "unknown"
-        // SEC-009: Use prefix match instead of fragile substring contains
-        let isChatSend = request.method == .POST && request.url.path.hasPrefix("/api/v1/chat")
+        // SEC-001: Prefer X-Forwarded-For when behind a reverse proxy.
+        // X-Forwarded-For is comma-separated; the FIRST entry is the original client IP.
+        // Trim whitespace since proxies may add spaces after commas.
+        let clientIP: String
+        if let xff = request.headers.first(name: .xForwardedFor) {
+            clientIP = xff.split(separator: ",").first
+                .map { String($0).trimmingCharacters(in: .whitespaces) }
+                ?? request.peerAddress?.ipAddress
+                ?? request.remoteAddress?.ipAddress
+                ?? "unknown"
+        } else {
+            clientIP = request.peerAddress?.ipAddress
+                ?? request.remoteAddress?.ipAddress
+                ?? "unknown"
+        }
+        // SEC-009: Use specific path prefix (not substring) to avoid false positives
+        // on unrelated routes like /api/v1/chatbots
+        let isChatSend = request.method == .POST && request.url.path.hasPrefix("/api/v1/chat/")
         let limit = isChatSend ? chatLimit : generalLimit
         let rateLimitKey = isChatSend ? "\(clientIP):chat" : clientIP
 

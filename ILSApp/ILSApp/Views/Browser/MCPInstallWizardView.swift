@@ -66,7 +66,7 @@ struct MCPInstallWizardView: View {
                     .fill(theme.entityMCP.opacity(0.15))
                     .frame(width: 56, height: 56)
                 Image(systemName: "server.rack")
-                    .font(.system(size: 24))
+                    .font(.system(size: theme.fontTitle3))
                     .foregroundStyle(theme.entityMCP)
             }
 

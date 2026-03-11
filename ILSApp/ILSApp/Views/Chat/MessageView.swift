@@ -363,10 +363,12 @@ struct MessageContentView: View {
                         }
 
                 case .codeBlock(let codeBlock):
+                    // ACC-003: Accessibility label for code block containers
                     CodeBlockView(
                         code: codeBlock.code,
                         language: codeBlock.language
                     )
+                    .accessibilityLabel("Code block\(codeBlock.language.map { " in \($0)" } ?? "")")
 
                 case .inlineCode(let code):
                     Text(code)

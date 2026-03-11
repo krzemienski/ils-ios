@@ -14,11 +14,10 @@ struct HookExecutionLogView: View {
     let viewModel: HooksViewModel
 
     @State private var showClearConfirm = false
-
-    // Reverse-chronological so newest entries are at the top.
-    private var reversedLog: [HookExecutionEntry] {
-        viewModel.executionLog.reversed()
-    }
+    /// Cached reverse-chronological log to avoid re-reversing on every body evaluation.
+    @State private var cachedReversedLog: [HookExecutionEntry] = []
+    /// Cached count of succeeded entries to avoid O(n) filter on every body evaluation.
+    @State private var cachedSuccessCount: Int = 0
 
     // MARK: - Body
 
@@ -59,6 +58,14 @@ struct HookExecutionLogView: View {
         } message: {
             Text("This will permanently remove all \(viewModel.executionLog.count) log entries.")
         }
+        .onAppear { updateCachedLog() }
+        .onChange(of: viewModel.executionLog.count) { _, _ in updateCachedLog() }
+    }
+
+    /// Refreshes the cached reversed log and success count from the source array.
+    private func updateCachedLog() {
+        cachedReversedLog = viewModel.executionLog.reversed()
+        cachedSuccessCount = viewModel.executionLog.filter(\.succeeded).count
     }
 
     // MARK: - Log List
@@ -67,7 +74,7 @@ struct HookExecutionLogView: View {
         ScrollView {
             LazyVStack(spacing: theme.spacingSM) {
                 countHeader
-                ForEach(reversedLog) { entry in
+                ForEach(cachedReversedLog) { entry in
                     logRow(entry)
                 }
             }
@@ -94,7 +101,7 @@ struct HookExecutionLogView: View {
             .background(theme.accent.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
 
-            let successCount = viewModel.executionLog.filter(\.succeeded).count
+            let successCount = cachedSuccessCount
             VStack(spacing: 2) {
                 Text("\(successCount)")
                     .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))

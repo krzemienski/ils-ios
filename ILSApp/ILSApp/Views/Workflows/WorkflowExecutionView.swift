@@ -165,26 +165,26 @@ struct WorkflowExecutionView: View {
                 switch exec.status {
                 case .pending:
                     Image(systemName: "clock")
-                        .foregroundStyle(Color.gray)
+                        .foregroundStyle(theme.textTertiary)
                 case .running:
                     ProgressView()
                         .controlSize(.small)
                 case .paused:
                     Image(systemName: "pause.circle.fill")
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(theme.warning)
                 case .completed:
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(theme.success)
                 case .failed:
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(Color.red)
+                        .foregroundStyle(theme.error)
                 case .cancelled:
                     Image(systemName: "stop.circle.fill")
-                        .foregroundStyle(Color.gray)
+                        .foregroundStyle(theme.textTertiary)
                 }
             } else {
                 Image(systemName: "play.circle")
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(theme.textTertiary)
             }
         }
         .font(.system(size: 24, design: theme.fontDesign))
@@ -273,22 +273,22 @@ struct WorkflowExecutionView: View {
             switch status {
             case .idle:
                 Image(systemName: "circle")
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(theme.textTertiary)
             case .pending:
                 Image(systemName: "circle.dotted")
-                    .foregroundStyle(Color.orange)
+                    .foregroundStyle(theme.warning)
             case .running:
                 Image(systemName: "circle.fill")
                     .foregroundStyle(theme.accent)
             case .completed:
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(theme.success)
             case .failed:
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(Color.red)
+                    .foregroundStyle(theme.error)
             case .skipped:
                 Image(systemName: "arrow.uturn.forward.circle")
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(theme.textTertiary)
             }
         }
         .font(.system(size: 20, design: theme.fontDesign))
@@ -398,7 +398,7 @@ struct WorkflowExecutionView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(theme.spacingMD)
-                .background(Color.red)
+                .background(theme.error)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }
 
@@ -465,6 +465,9 @@ struct WorkflowExecutionView: View {
 
     private func startStreamingProgress() {
         isStreamingProgress = true
+
+        // Invalidate any existing timer before creating a new one to prevent re-entry
+        pollTimer?.invalidate()
 
         // Use polling approach (simpler than SSE for now)
         // Poll every 500ms while execution is active

@@ -20,6 +20,9 @@ struct ILSAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("colorScheme") private var colorSchemePreference: String = "dark"
     @State private var showLaunchScreen = true
+    /// MEM-001: Stored observer token for memory warning notification.
+    /// Uses @State so the SwiftUI struct can hold a reference-type value.
+    @State private var memoryWarningObserver: NSObjectProtocol?
 
     init() {
         #if os(iOS)
@@ -143,16 +146,14 @@ struct ILSAppApp: App {
                             )
                         }
 
-                        // MEM-001: Memory warning observer — app-lifetime singleton pattern.
-                        // Token intentionally not stored: @main struct lives for entire process,
-                        // and the closure captures appState by value (struct copy). No leak risk.
-                        NotificationCenter.default.addObserver(
+                        // MEM-001: Store observer token so it can be removed if needed.
+                        // CONC-006: Queue is .main — Task wrapper needed only because
+                        // handleMemoryWarning is async.
+                        memoryWarningObserver = NotificationCenter.default.addObserver(
                             forName: UIApplication.didReceiveMemoryWarningNotification,
                             object: nil,
                             queue: .main
                         ) { [appState] _ in
-                            // CONC-006: Queue is .main and MemoryManager methods are nonisolated or @MainActor.
-                            // Task wrapper is still needed because handleMemoryWarning is async.
                             Task { @MainActor in
                                 await MemoryManager.shared.handleMemoryWarning(
                                     connectionManager: appState.connectionManager

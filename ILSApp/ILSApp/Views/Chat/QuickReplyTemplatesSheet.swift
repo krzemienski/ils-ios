@@ -305,12 +305,14 @@ private struct QuickReplyTemplateRow: View {
                             .foregroundStyle(theme.textPrimary)
                         if template.isFavorite {
                             Image(systemName: "pin.fill")
-                                .font(.system(size: 10))
+                                // ACC-007: Use theme caption size for Dynamic Type compliance
+                                .font(.system(size: theme.fontCaption))
                                 .foregroundStyle(theme.accent)
                         }
                         if template.hasVariables {
                             Image(systemName: "curlybraces")
-                                .font(.system(size: 10))
+                                // ACC-007: Use theme caption size for Dynamic Type compliance
+                                .font(.system(size: theme.fontCaption))
                                 .foregroundStyle(theme.textTertiary)
                         }
                     }

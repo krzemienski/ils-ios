@@ -64,6 +64,8 @@ final class PermissionService {
     /// Starts polling `/permissions/pending` every 2 seconds.
     ///
     /// - Parameter apiClient: The API client used to fetch permission data.
+    ///
+    /// **Energy policy (ENRG-PERM):** Interval doubles in Low Power Mode.
     func startPolling(apiClient: APIClient) {
         guard pollingTask == nil else { return }
         isPolling = true
@@ -71,7 +73,10 @@ final class PermissionService {
             while !Task.isCancelled {
                 guard let self else { break }
                 await self.fetchPending(apiClient: apiClient)
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                let interval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
+                    ? 4_000_000_000  // 4s in LPM
+                    : 2_000_000_000  // 2s normal
+                try? await Task.sleep(nanoseconds: interval)
             }
         }
     }
@@ -218,18 +223,26 @@ final class PermissionService {
         }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        autoApproveRules = (try? decoder.decode([AutoApproveRule].self, from: data)) ?? []
+        do {
+            autoApproveRules = try decoder.decode([AutoApproveRule].self, from: data)
+        } catch {
+            AppLogger.shared.error("Failed to decode auto-approve rules: \(error.localizedDescription)", category: "permissions")
+            autoApproveRules = []
+        }
     }
 
     /// Persists current auto-approve rules to `UserDefaults`.
     ///
     /// Encodes rules as JSON and stores under `autoApproveRules` key.
-    /// On encode failure, silently skips persistence (rules remain in memory until app restart).
+    /// On encode failure, logs the error (rules remain in memory until app restart).
     private func saveAutoApproveRules() {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        if let data = try? encoder.encode(autoApproveRules) {
+        do {
+            let data = try encoder.encode(autoApproveRules)
             UserDefaults.standard.set(data, forKey: PermissionServiceKeys.autoApproveRules)
+        } catch {
+            AppLogger.shared.error("Failed to encode auto-approve rules: \(error.localizedDescription)", category: "permissions")
         }
     }
 

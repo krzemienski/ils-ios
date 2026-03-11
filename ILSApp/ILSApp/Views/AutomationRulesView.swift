@@ -406,8 +406,8 @@ struct AutomationRulesView: View {
         case .sessionComplete: return theme.success
         case .errorOccurred: return theme.error
         case .idleTimeout: return theme.warning
-        case .costThreshold: return Color.purple
-        case .contextNearLimit: return Color.orange
+        case .costThreshold: return theme.info
+        case .contextNearLimit: return theme.warning
         }
     }
 
@@ -415,10 +415,10 @@ struct AutomationRulesView: View {
         switch action {
         case .notify: return theme.accent
         case .pause: return theme.warning
-        case .fork: return Color.purple
+        case .fork: return theme.info
         case .export: return theme.success
-        case .sendMessage: return Color.blue
-        case .switchModel: return Color.orange
+        case .sendMessage: return theme.accent
+        case .switchModel: return theme.warning
         }
     }
 

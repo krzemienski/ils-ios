@@ -1083,11 +1083,15 @@ struct SessionsController: RouteCollection {
     ///
     /// - Parameter req: Vapor Request (no query params required)
     /// - Returns: APIResponse with ModelStatsResponse
-    // TODO: PERF-005 — Use field projection to exclude large text columns (e.g. transcript)
-    // in list queries (.all()) for better performance with large datasets.
+    // PERF-005: Field projection — only fetch columns needed for aggregation (model, totalCostUSD).
+    // Avoids loading large text fields (name, claudeSessionId, etc.) that aren't used here.
     @Sendable
     func modelStats(req: Request) async throws -> APIResponse<ModelStatsResponse> {
-        let sessions = try await SessionModel.query(on: req.db).all()
+        let sessions = try await SessionModel.query(on: req.db)
+            .field(\.$id)
+            .field(\.$model)
+            .field(\.$totalCostUSD)
+            .all()
 
         let total = sessions.count
 
@@ -1203,7 +1207,11 @@ struct SessionsController: RouteCollection {
     func integrityCheck(req: Request) async throws -> APIResponse<[IntegrityCheckResult]> {
         let fix = req.query[String.self, at: "fix"] == "true"
 
-        let sessions = try await SessionModel.query(on: req.db).all()
+        // PERF-005: Field projection — only fetch id and messageCount for integrity comparison.
+        let sessions = try await SessionModel.query(on: req.db)
+            .field(\.$id)
+            .field(\.$messageCount)
+            .all()
         var results: [IntegrityCheckResult] = []
         results.reserveCapacity(sessions.count)
 

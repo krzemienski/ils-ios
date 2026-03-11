@@ -1063,9 +1063,6 @@
     "ago" : {
 
     },
-    "AI is responding" : {
-
-    },
     "AI Model" : {
 
     },
@@ -1300,7 +1297,7 @@
     "Assistant Bubble" : {
 
     },
-    "Audio waveform" : {
+    "Audio waveform animation" : {
 
     },
     "Author (optional)" : {
@@ -1891,6 +1888,9 @@
 
     },
     "Code block, %@" : {
+
+    },
+    "Code block%@" : {
 
     },
     "Code copied to clipboard" : {
@@ -3227,15 +3227,6 @@
     "Filters results to messages from sessions in the specified project." : {
 
     },
-    "Find and install community MCP servers with search" : {
-
-    },
-    "Find and install community plugins with search" : {
-
-    },
-    "Find and install community skills with search" : {
-
-    },
     "Find any message across all your sessions" : {
 
     },
@@ -3752,6 +3743,9 @@
     "Live" : {
 
     },
+    "Live metrics active" : {
+
+    },
     "Load earlier messages" : {
 
     },
@@ -3884,6 +3878,9 @@
 
     },
     "Logs" : {
+
+    },
+    "Long press for options" : {
 
     },
     "Low" : {
@@ -4036,6 +4033,9 @@
 
     },
     "Metric" : {
+
+    },
+    "Metrics offline" : {
 
     },
     "Middle Center" : {
@@ -5716,6 +5716,9 @@
 
     },
     "Send Message to Session" : {
+
+    },
+    "Send message, empty" : {
 
     },
     "Send Test Notification" : {

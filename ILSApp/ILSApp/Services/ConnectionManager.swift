@@ -44,7 +44,7 @@ class ConnectionManager {
     init() {
         // Try to load full URL first (supports https:// Cloudflare URLs)
         let url: String
-        if let savedURL = UserDefaults.standard.string(forKey: "serverURL"), !savedURL.isEmpty {
+        if let savedURL = KeychainService.loadSync(key: "serverURL"), !savedURL.isEmpty {
             url = savedURL
         } else {
             let host = UserDefaults.standard.string(forKey: "serverHost") ?? ConnectionDefaults.host
@@ -62,7 +62,7 @@ class ConnectionManager {
     /// Update the server URL, persist to UserDefaults, recreate clients.
     func updateServerURL(_ url: String) {
         serverURL = url
-        UserDefaults.standard.set(url, forKey: "serverURL")
+        KeychainService.saveSync(key: "serverURL", value: url)
         UserDefaults(suiteName: "group.com.ils.app")?.set(url, forKey: "widget_server_url")
         apiClient = APIClient(baseURL: url)
         sseClient = SSEClient(baseURL: url)

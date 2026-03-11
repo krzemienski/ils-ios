@@ -172,14 +172,10 @@ struct OfflineCacheSettingsView: View {
     // MARK: - Private Helpers
 
     private var formattedCacheSize: String {
-        let mb = Double(cacheSizeBytes) / 1_048_576
-        if mb < 0.1 {
-            return "< 0.1 MB"
-        } else if mb < 10 {
-            return String(format: "%.1f MB", mb)
-        } else {
-            return String(format: "%.0f MB", mb)
-        }
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: cacheSizeBytes)
     }
 
     private func performClearCache() async {

@@ -45,6 +45,7 @@ struct AudioWaveformView: View {
             }
         }
         .frame(width: size.width, height: size.height)
+        .accessibilityElement(children: .ignore)
         .onAppear { startAnimating() }
         .onDisappear { phase = 0 }
         .accessibilityLabel("Audio waveform animation")

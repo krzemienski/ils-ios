@@ -19,7 +19,7 @@ class PollingManager {
     /// If this ownership invariant ever changes (e.g., PollingManager stored elsewhere),
     /// switch to `weak` with guard-let. The `unowned` avoids atomic weak-reference
     /// overhead on every health poll cycle (~60s). (Also: CONC-05 verified 2026-02-24.)
-    unowned let connectionManager: ConnectionManager
+    weak var connectionManager: ConnectionManager?
 
     /// ENRG-002: Idle detection — reduces polling frequency when the app is in foreground
     /// but the user hasn't interacted for >5 minutes. Cuts unnecessary health checks in half.
@@ -80,12 +80,11 @@ class PollingManager {
     func checkConnection() {
         // NET-MED-2: Skip network requests when device has no connectivity.
         guard NetworkMonitor.shared.isConnected else {
-            connectionManager.isConnected = false
+            connectionManager?.isConnected = false
             return
         }
         Task { [weak self] in
-            guard let self else { return }
-            let cm = self.connectionManager
+            guard let self, let cm = self.connectionManager else { return }
             do {
                 AppLogger.shared.info("Checking connection to: \(cm.serverURL)", category: "app")
                 let response = try await cm.apiClient.healthCheck()
@@ -121,8 +120,7 @@ class PollingManager {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: delay)
                 guard !Task.isCancelled else { break }
-                guard let self else { break }
-                let cm = self.connectionManager
+                guard let self, let cm = self.connectionManager else { break }
                 do {
                     AppLogger.shared.info("Retry attempt to: \(cm.serverURL)", category: "app")
                     let response = try await cm.apiClient.healthCheck()
@@ -158,8 +156,7 @@ class PollingManager {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: healthInterval)
                 guard !Task.isCancelled else { break }
-                guard let self else { break }
-                let cm = self.connectionManager
+                guard let self, let cm = self.connectionManager else { break }
                 do {
                     _ = try await cm.apiClient.healthCheck()
                 } catch {

@@ -176,7 +176,8 @@ struct SessionFileBrowserView: View {
 
     private func languageBadge(_ language: String) -> some View {
         Text(language)
-            .font(.system(size: 10, weight: .medium, design: theme.fontDesign))
+            // ACC-007: Use theme caption size for Dynamic Type compliance
+            .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
             .foregroundStyle(theme.entitySystem)
             .padding(.horizontal, theme.spacingXS)
             .padding(.vertical, 2)

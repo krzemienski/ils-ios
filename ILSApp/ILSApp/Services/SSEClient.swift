@@ -39,6 +39,9 @@ class SSEClient {
     // NET-RES-1: Cancellable handle to the current backoff sleep task so network
     // restoration can skip remaining wait and trigger an immediate retry.
     private var backoffSleepTask: Task<Void, Never>?
+    // CONC-001: Generation counter incremented on each connect. Captured by watchdog
+    // so a stale watchdog from a previous stream cannot cancel the current one.
+    private var streamGeneration: UInt64 = 0
     // NET-RES-1: Observer for network restoration to cancel backoff and reconnect.
     // nonisolated(unsafe): Accessed in deinit (nonisolated) for safety-net cleanup.
     // Only mutated on MainActor; deinit is the sole nonisolated access point.
@@ -197,6 +200,11 @@ class SSEClient {
             connectionState = .connected
             reconnectAttempts = 0
 
+            // CONC-001: Increment generation so any stale watchdog from a prior
+            // connection detects the mismatch and exits without cancelling this stream.
+            streamGeneration &+= 1
+            let currentGeneration = streamGeneration
+
             // Track last received data or heartbeat for stale connection detection
             let lastActivity = LastActivityTracker()
 
@@ -208,11 +216,15 @@ class SSEClient {
             // NET-MED-2: Cancels the parent streamTask instead of throwing inside a
             // detached task (thrown errors were silently dropped, leaving stale streams).
             let parentTask = self.streamTask
-            // CONC-001: parentTask capture is safe — this watchdog is cancelled via
-            // defer when performStream exits (streamTask cancellation cascades here).
-            let heartbeatWatchdog = Task.detached { [watchdogTimeout] in
+            // CONC-001: Watchdog checks generation before cancelling to avoid
+            // killing a newer stream after reconnect.
+            let heartbeatWatchdog = Task.detached { [watchdogTimeout, weak self] in
                 while !Task.isCancelled {
                     try await Task.sleep(nanoseconds: 15_000_000_000) // Check every 15s
+                    // CONC-001: If generation has advanced, this watchdog is stale — exit.
+                    if await self?.streamGeneration != currentGeneration {
+                        return
+                    }
                     if lastActivity.secondsSinceLastActivity() > watchdogTimeout {
                         AppLogger.shared.warning("SSE heartbeat timeout — no activity in \(Int(watchdogTimeout))s", category: "sse")
                         parentTask?.cancel()
