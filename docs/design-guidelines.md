@@ -1,6 +1,6 @@
 # ILS Design System & Guidelines
 
-**Version:** 1.1.1 | **Last Updated:** 2026-03-10
+**Version:** 1.2.0 | **Last Updated:** 2026-03-10
 
 ---
 
@@ -49,35 +49,36 @@ let error: Color             // Errors
 let info: Color              // Information
 ```
 
-**Entity Colors** (for data visualization):
+**Entity Colors** (for data visualization, flat on `ThemeSnapshot`):
 ```swift
-struct EntityColors {
-    let session: Color
-    let project: Color
-    let skill: Color
-    let plugin: Color
-    let workflow: Color
-    let checkpoint: Color
-}
+theme.entitySession   // Color for session items
+theme.entityProject   // Color for project items
+theme.entitySkill     // Color for skill items
+theme.entityMCP       // Color for MCP server items
+theme.entityPlugin    // Color for plugin items
+theme.entitySystem    // Color for system/metrics items
 ```
 
 ### Built-In Themes (13 Total)
 
-| Theme | Primary Color | Style | Use Case |
-|-------|---------------|-------|----------|
-| **ILS Theme** | Hot Orange | System-adaptive | Default, professional |
-| **Obsidian** | Deep Blue | Dark first | Code editors, dark rooms |
-| **Neon Noir** | Cyan + Purple | Neon accents | Gaming, high contrast |
-| **Ember** | Warm Red | Sunset vibes | Creative work |
-| **Forest** | Green | Natural tones | Outdoor, calm |
-| **Midnight** | Dark Blue | Minimal | Night mode |
-| **Aurora** | Purple + Pink | Gradient heavy | Modern, vibrant |
-| **Cyberpunk** | Neon + Dark | Extreme contrast | Sci-fi aesthetic |
-| **Minimal Light** | Neutral | Light background | Accessibility |
-| **High Contrast** | B/W + Red | Maximum contrast | Accessibility |
-| **Accessible** | Blue + Yellow | WCAG AAA | Certified accessible |
-| **Classic** | Gray + Blue | Traditional | Apple design |
-| **Custom** | User-defined | Any | Personal preference |
+Files: `ILSApp/ILSApp/Theme/Themes/`
+
+| Theme | File | Style |
+|-------|------|-------|
+| **ILS (Default)** | `ILSTheme.swift` | Hot orange accent, system-adaptive |
+| **Obsidian** | `ObsidianTheme.swift` | Deep blue, dark first |
+| **Neon Noir** | `NeonNoirTheme.swift` | Cyan + purple neon accents |
+| **Ember** | `EmberTheme.swift` | Warm red, sunset palette |
+| **Midnight** | `MidnightTheme.swift` | Dark blue, minimal |
+| **Cyberpunk** | `CyberpunkTheme.swift` | Neon on dark, extreme contrast |
+| **Electric Grid** | `ElectricGridTheme.swift` | Electric blue grid aesthetic |
+| **Ghost Protocol** | `GhostProtocolTheme.swift` | Muted green, stealth ops |
+| **Carbon** | `CarbonTheme.swift` | Carbon black with orange |
+| **Crimson** | `CrimsonTheme.swift` | Deep red, bold |
+| **Graphite** | `GraphiteTheme.swift` | Neutral gray, professional |
+| **Paper** | `PaperTheme.swift` | Light cream, readability |
+| **Snow** | `SnowTheme.swift` | Clean white, minimal light |
+| **Slate** | `SlateTheme.swift` | Cool slate, balanced |
 
 ### Dark Mode Support
 
@@ -102,26 +103,16 @@ private var effectiveColor: Color {
 
 ### Font Definitions
 
+`ThemeSnapshot` stores font sizes as `CGFloat` and a `Font.Design` for the typeface. Apply via `.font(.system(size:design:))`:
+
 ```swift
 struct ThemeSnapshot {
-    // Headings
-    let fontTitle: UIFont      // 28pt, bold
-    let fontTitle2: UIFont     // 22pt, semibold
-    let fontTitle3: UIFont     // 20pt, semibold
-
-    // Body
-    let fontBody: UIFont       // 17pt, regular
-    let fontBodyBold: UIFont   // 17pt, semibold
-    let fontBodyMono: UIFont   // 17pt, monospace
-
-    // Small
-    let fontSubheadline: UIFont  // 15pt, regular
-    let fontCaption: UIFont      // 12pt, regular
-    let fontCaption2: UIFont     // 11pt, regular
-
-    // Code
-    let fontCode: UIFont       // Monospace, 13pt
-    let fontCodeSmall: UIFont  // Monospace, 11pt
+    let fontCaption: CGFloat   // ~12pt
+    let fontBody: CGFloat      // ~17pt
+    let fontTitle3: CGFloat    // ~20pt
+    let fontTitle2: CGFloat    // ~22pt
+    let fontTitle1: CGFloat    // ~28pt
+    let fontDesign: Font.Design // .default | .monospaced | .serif
 }
 ```
 
@@ -130,36 +121,39 @@ struct ThemeSnapshot {
 ```swift
 // Headings
 Text("Session Name")
-    .font(theme.fontTitle2)
+    .font(.system(size: theme.fontTitle2, weight: .semibold, design: theme.fontDesign))
     .foregroundColor(theme.textPrimary)
 
 // Body text
 Text("Message content")
-    .font(theme.fontBody)
+    .font(.system(size: theme.fontBody, design: theme.fontDesign))
     .foregroundColor(theme.textPrimary)
 
 // Captions
 Text("2h ago")
-    .font(theme.fontCaption)
+    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
     .foregroundColor(theme.textTertiary)
 
-// Code
+// Code / monospace (always use monospaced design regardless of theme)
 Text("print('hello')")
-    .font(theme.fontCode)
+    .font(.system(size: theme.fontBody, design: .monospaced))
     .foregroundColor(theme.success)
 ```
 
 ### Dynamic Type Support
 
+Theme font sizes scale relative to the user's Dynamic Type setting via `@ScaledMetric` inside `ThemeSnapshot`. No extra modifier needed — just use the theme properties:
+
 ```swift
-// All text automatically scales with user's dynamic type setting
+// Correct — scales automatically with Dynamic Type
 Text("Hello")
-    .font(theme.fontBody)
-    // Dynamic Type: this scales to user's accessibility setting
-    .dynamicTypeSize(.xSmall ... .accessibility3)  // Supported range
+    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+
+// Wrong — fixed size, no Dynamic Type scaling
+Text("Hello").font(.system(size: 17))
 ```
 
-**Rule:** Never use fixed font sizes. Always use theme font properties.
+**Rule:** Never use hardcoded point sizes. Always use theme font properties (`theme.fontBody`, `theme.fontCaption`, etc.).
 
 ---
 
@@ -641,6 +635,34 @@ WindowGroup("Chat", for: Session.ID.self) { sessionId in
 
 ---
 
+## Screen Inventory
+
+All screens route via `SidebarRootView.ActiveScreen`. Key screen directories under `ILSApp/ILSApp/Views/`:
+
+| Screen | Directory | Key Files |
+|--------|-----------|-----------|
+| Home | `Home/` | `HomeView.swift` |
+| Sessions | `Sessions/` | `UnifiedSessionsView.swift`, `SessionInfoView.swift`, `SessionForkTreeView.swift` |
+| Chat | `Chat/` | `ChatView.swift` |
+| Browser (Skills/MCP/Plugins) | `Browser/` | `BrowserView.swift`, `SkillDetailView.swift`, `MCPServerDetailView.swift` |
+| Agent Teams | `Teams/` | `AgentTeamsListView.swift`, `TeamDashboardView.swift`, `TeamMessagesView.swift` |
+| Workflows | `Workflows/` | `WorkflowsListView.swift`, `WorkflowBuilderView.swift`, `WorkflowExecutionView.swift` |
+| Audit Trail | `Audit/` | `AuditTrailView.swift`, `AuditActionDetailSheet.swift` |
+| System Monitor | `System/` | System metrics views |
+| Settings | `Settings/` | `SettingsView.swift` |
+| Themes | `Themes/` | `ThemeEditorView.swift` |
+| Hooks | `Hooks/` | Hooks list + config view |
+| Activity Feed | `ActivityFeed/` | Timeline of session events |
+| Agent Queue | `AgentQueue/` | Job queue status view |
+| Analytics | `Analytics/` | `AnalyticsView.swift`, `UsageDashboardView.swift` |
+| Permissions | `Permissions/` | Permission history + approval |
+| Terminal | `Terminal/` | WebSocket terminal view |
+| Documentation | `Documentation/` | In-app docs browser |
+| Fleet (Host Profiles) | `HostProfiles/` | Multi-backend connection management |
+| Backends | `Backends/` | Backend connection profiles |
+
+---
+
 ## Design Best Practices
 
 ### Do's
@@ -687,7 +709,12 @@ Before shipping any screen:
 
 ## Reference
 
-- **Color Reference:** `ILSApp/ILSApp/Theme/ThemeSnapshot.swift`
-- **Built-In Themes:** `ILSApp/ILSApp/Theme/ILSTheme.swift` + theme variants
-- **Theme Editor:** `Views/Themes/ThemeEditorView.swift`
-- **Component Examples:** See individual View files (ChatView, SessionsView, etc.)
+- **ThemeSnapshot struct:** `ILSApp/ILSApp/Theme/ThemeSnapshot.swift`
+- **Default theme:** `ILSApp/ILSApp/Theme/ILSTheme.swift`
+- **Built-in theme variants:** `ILSApp/ILSApp/Theme/Themes/` (13 files)
+- **Custom theme adapter:** `ILSApp/ILSApp/Theme/CustomThemeAdapter.swift`
+- **Density manager:** `ILSApp/ILSApp/Theme/DensityManager.swift`
+- **Theme editor UI:** `ILSApp/ILSApp/Views/Themes/ThemeEditorView.swift`
+- **Entity type colors:** `ILSApp/ILSApp/Theme/EntityType.swift`
+- **Glass card component:** `ILSApp/ILSApp/Theme/GlassCard.swift`
+- **Cyberpunk effects:** `ILSApp/ILSApp/Theme/CyberpunkEffects.swift`

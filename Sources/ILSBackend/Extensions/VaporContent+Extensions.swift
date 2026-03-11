@@ -380,3 +380,12 @@ extension QualityTrendPoint: Content {}
 extension QualityTrendResponse: Content {}
 extension BestOfItem: Content {}
 extension FeedbackExportData: Content {}
+
+// MARK: - Audit Action Types
+extension AuditAction: Content {}
+extension AuditActionType: Content {}
+extension RollbackStatus: Content {}
+extension AuditActionListResponse: Content {}
+extension RollbackResponse: Content {}
+extension RollbackResultItem: Content {}
+extension LogAuditActionRequest: Content {}
