@@ -128,12 +128,15 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateConfigProfiles())
     // v6.2 — Process monitoring
     app.migrations.add(CreateProcessHistory())
-    // v6.3 — Interactive permission policy engine
+    // v6.3 — AI response quality feedback & audit trail
+    app.migrations.add(CreateResponseFeedback())
+    app.migrations.add(AddMessageContentToFeedback())
+    // v6.4 — Interactive permission policy engine
     app.migrations.add(CreatePermissionPolicies())
     app.migrations.add(CreatePermissionPolicySettings())
-    // v6.4 — Permission policy tracking (matched_policy_id on permissions)
+    // v6.5 — Permission policy tracking (matched_policy_id on permissions)
     app.migrations.add(AddPolicyIdToPermissions())
-    // v6.5 — AI action audit trail & one-tap rollback
+    // v6.6 — AI action audit trail & one-tap rollback
     app.migrations.add(CreateAuditActions())
 
     // Run migrations

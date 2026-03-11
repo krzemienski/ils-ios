@@ -36,6 +36,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: PermissionsController(executor: executor))
     try api.register(collection: AutomationRulesController())
     try api.register(collection: PermissionPoliciesController())
+    try api.register(collection: FeedbackController())
     try api.register(collection: AuditController())
     let workflowExecutionEngine = WorkflowExecutionEngine()
     let workflowScheduler = WorkflowScheduler(executionEngine: workflowExecutionEngine)
