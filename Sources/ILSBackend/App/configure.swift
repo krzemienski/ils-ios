@@ -128,7 +128,9 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateConfigProfiles())
     // v6.2 — Process monitoring
     app.migrations.add(CreateProcessHistory())
-    // v6.3 — AI action audit trail & one-tap rollback
+    // v6.3 — AI response quality feedback & audit trail
+    app.migrations.add(CreateResponseFeedback())
+    app.migrations.add(AddMessageContentToFeedback())
     app.migrations.add(CreateAuditActions())
 
     // Run migrations

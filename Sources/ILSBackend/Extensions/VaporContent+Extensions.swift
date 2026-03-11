@@ -373,6 +373,14 @@ extension CreateConfigProfileRequest: Content {}
 extension UpdateConfigProfileRequest: Content {}
 extension ConfigProfileListResponse: Content {}
 
+// MARK: - Feedback DTOs
+extension SubmitFeedbackRequest: Content {}
+extension FeedbackResponse: Content {}
+extension QualityTrendPoint: Content {}
+extension QualityTrendResponse: Content {}
+extension BestOfItem: Content {}
+extension FeedbackExportData: Content {}
+
 // MARK: - Audit Action Types
 extension AuditAction: Content {}
 extension AuditActionType: Content {}

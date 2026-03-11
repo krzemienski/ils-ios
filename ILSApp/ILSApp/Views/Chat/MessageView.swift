@@ -25,6 +25,13 @@ import ILSShared
 // TODO: SUIL-003 — Audit GeometryReader usage for infinite layout loop risk in LazyVStack
 struct MessageView: View {
     let message: ChatMessage
+    /// Optional session identifier forwarded to feedback submission.
+    var sessionId: String?
+    /// Optional project identifier forwarded to feedback submission.
+    var projectId: String?
+    /// Shared view-model for submitting thumbs-up / thumbs-down ratings.
+    var feedbackViewModel: FeedbackViewModel?
+
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     // Date formatters centralized in DateFormatters.swift
@@ -96,6 +103,21 @@ struct MessageView: View {
                 }
 
                 if !message.isUser { Spacer() }
+            }
+
+            // Feedback rating buttons — only for non-empty assistant messages
+            if !message.isUser && !message.text.isEmpty, let vm = feedbackViewModel {
+                HStack {
+                    FeedbackRatingView(
+                        messageId: message.id.uuidString,
+                        sessionId: sessionId ?? "",
+                        projectId: projectId,
+                        model: nil,
+                        messageContent: message.text,
+                        feedbackViewModel: vm
+                    )
+                    Spacer()
+                }
             }
         }
     }
