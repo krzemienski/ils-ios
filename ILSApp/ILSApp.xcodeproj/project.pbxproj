@@ -34,6 +34,13 @@
 		062146CB422A72CF6170ED7D /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B7AA21B4A73C7E651752C /* StatCard.swift */; };
 		065E73168130CDA0A827F1AA /* TeamTaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6736A1D406EEE97A39A92D25 /* TeamTaskListView.swift */; };
 		06A4F286C8FDB8AF2889783B /* SkillUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */; };
+		BB3333333333333333333333 /* BestOfCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1111111111111111111111 /* BestOfCollectionView.swift */; };
+		BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1111111111111111111111 /* BestOfCollectionView.swift */; };
+		BB5555555555555555555555 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
+		BB6666666666666666666666 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
+		CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* FeedbackViewModel.swift */; };
+		CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* FeedbackRatingView.swift */; };
+		CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* FeedbackDetailSheet.swift */; };
 		06AC7AF758977C86BA9CE168 /* SessionCheckpointsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448A55AEFBD34AD89EA6C69C /* SessionCheckpointsViewModel.swift */; };
 		06B6449360F3E99EBCF8D389 /* SettingsAboutSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */; };
 		072B3898C2136EBC57F128B8 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862B584915489231984E2FC9 /* PlaybackView.swift */; };
@@ -730,6 +737,9 @@
 		CED5F4971A9A51C8099F6DBA /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA40A7EA5F64411CCBDE070 /* Color+Hex.swift */; };
 		CEF8B73B33712B4C21EDA99C /* TeamsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E65F9892954F605C2737A7D /* TeamsViewModel.swift */; };
 		CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */; };
+		AA4444444444444444444444 /* FeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* FeedbackViewModel.swift */; };
+		AA5555555555555555555555 /* FeedbackRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* FeedbackRatingView.swift */; };
+		AA6666666666666666666666 /* FeedbackDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* FeedbackDetailSheet.swift */; };
 		CFA933B178ACE659C88C7FF3 /* EditTemplateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD7181D7C81A6B183DC067B /* EditTemplateView.swift */; };
 		CFF328C124A2D884610B6001 /* MacSessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AEDE538F4F2DD5D2A28505 /* MacSessionsListView.swift */; };
 		D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28BA8681764816EC21CCA1E /* AccentButton.swift */; };
@@ -1000,6 +1010,9 @@
 		1CE4B529CF03E444571B2BDE /* SettingsConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsConfigSection.swift; sourceTree = "<group>"; };
 		1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* FeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackViewModel.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* FeedbackRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackRatingView.swift; sourceTree = "<group>"; };
+		AA3333333333333333333333 /* FeedbackDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackDetailSheet.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
 		1D5B26088CC66E3B8BA9091B /* BackendLifecycleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendLifecycleManager.swift; sourceTree = "<group>"; };
 		1E3D82FB04D5C391C90E4E89 /* ILSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSTheme.swift; sourceTree = "<group>"; };
@@ -1126,6 +1139,8 @@
 		634B53732914E58E3AAD3092 /* SessionWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionWidget.swift; sourceTree = "<group>"; };
 		635870E31142AD3C94B01A4D /* RecentSessionsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSessionsWidget.swift; sourceTree = "<group>"; };
 		63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillUsageView.swift; sourceTree = "<group>"; };
+		BB1111111111111111111111 /* BestOfCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestOfCollectionView.swift; sourceTree = "<group>"; };
+		BB2222222222222222222222 /* QualityTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityTrendView.swift; sourceTree = "<group>"; };
 		64417034D7BE8F3619B3BC06 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		6467EED7EF5D1DC029D1DD90 /* FileBrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserViewModel.swift; sourceTree = "<group>"; };
 		64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPreferencesView.swift; sourceTree = "<group>"; };
@@ -2233,10 +2248,11 @@
 				BAEB0566A2007404F394E113 /* AnalyticsViewModel.swift */,
 				8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */,
-				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */
+				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */,
 				9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */,
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
+				AA1111111111111111111111 /* FeedbackViewModel.swift */,
 				8AE3E60652AFE81FAB1A7E84 /* CheckpointViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				0D9C2128D00ABE45432812A0 /* CrossSessionSearchViewModel.swift */,
@@ -2367,7 +2383,9 @@
 			children = (
 				E1BB6F19485FCADE48E487AD /* ActivityTimelineView.swift */,
 				54029482C937B8B3439FA46C /* AnalyticsView.swift */,
+				BB1111111111111111111111 /* BestOfCollectionView.swift */,
 				4F0049EC9CA50AF245D41572 /* FileTypeBreakdownView.swift */,
+				BB2222222222222222222222 /* QualityTrendView.swift */,
 				450F8C2FED413E76C3A84102 /* SessionMetricsView.swift */,
 				63DF5BF6C7E0CA49AC396389 /* SkillUsageView.swift */,
 			);
@@ -2447,6 +2465,8 @@
 				170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */,
 				38F9042913547966CFD44581 /* MessageSearchResultRow.swift */,
 				1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */,
+				AA2222222222222222222222 /* FeedbackRatingView.swift */,
+				AA3333333333333333333333 /* FeedbackDetailSheet.swift */,
 				4A8504158EF2C6631DC10A0D /* PastePreviewSheet.swift */,
 				5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */,
 				DE2FFEC3ADBABF4B3E732A97 /* PostCompactionRecoverySheet.swift */,
@@ -2881,6 +2901,7 @@
 				74BA5081078FE49059C74318 /* FeatureTourView.swift in Sources */,
 				3EB1FAC74CB695A1E3F24E5B /* FileBrowserView.swift in Sources */,
 				BD794553406B0E1E893D5D10 /* FileBrowserViewModel.swift in Sources */,
+				BB3333333333333333333333 /* BestOfCollectionView.swift in Sources */,
 				B8EF23D8BD5471CC0C489CC4 /* FileTypeBreakdownView.swift in Sources */,
 				E76EADFF826D42334DAD8CA8 /* FirstSessionWizardView.swift in Sources */,
 				3016192D4A0440C44A46A458 /* FuzzyMatcher.swift in Sources */,
@@ -2952,6 +2973,9 @@
 				8725CDCA540E3B4B264349A8 /* MessageQueueService.swift in Sources */,
 				E60C222F2D2BF4497246352C /* MessageSearchResultRow.swift in Sources */,
 				CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */,
+				AA4444444444444444444444 /* FeedbackViewModel.swift in Sources */,
+				AA5555555555555555555555 /* FeedbackRatingView.swift in Sources */,
+				AA6666666666666666666666 /* FeedbackDetailSheet.swift in Sources */,
 				4F5736F79DB3678F90F5A525 /* MetricChart.swift in Sources */,
 				2CCFD53061E151D34D7E15AA /* MetricsWebSocketClient.swift in Sources */,
 				0225E7F25803E1514F00780E /* MidnightTheme.swift in Sources */,
@@ -3003,6 +3027,7 @@
 				A0F31276553A5D9099641F8F /* QRScannerView.swift in Sources */,
 				A95BE43B506E999D700AE8F1 /* QueryExplanationView.swift in Sources */,
 				6878174BBA5AB5BB65A157A3 /* QueryLearningService.swift in Sources */,
+				BB5555555555555555555555 /* QualityTrendView.swift in Sources */,
 				0C9253AE203CF71C88E5C728 /* QueueTaskRow.swift in Sources */,
 				3CE34A9C8114A2D3FDC797AD /* QueuedMessageBadge.swift in Sources */,
 				27FA8BC88E40B9DC8A519AC0 /* QuickActionsWidget.swift in Sources */,
@@ -3295,8 +3320,12 @@
 				E1D98FB794A1C58450A03369 /* FeatureGate.swift in Sources */,
 				6BFA87146F9663D99F2E85A9 /* FeatureGateView.swift in Sources */,
 				8EA2C38C0611C440B5ADDA17 /* FeatureTourView.swift in Sources */,
+				CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */,
+				CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */,
+				CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */,
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
+				BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */,
 				F8D26D2827281902B4A21F59 /* FileTypeBreakdownView.swift in Sources */,
 				36BE0FCD94772659E31074A0 /* FirstSessionWizardView.swift in Sources */,
 				1C96CC761FDDA31A22D7728F /* FuzzyMatcher.swift in Sources */,
@@ -3429,6 +3458,7 @@
 				CBECCB545A583BA5A03EE3DC /* QRScannerView.swift in Sources */,
 				0EF4A8D7979E422EDF397269 /* QueryExplanationView.swift in Sources */,
 				4C16C8CFEF41AB176097B2D5 /* QueryLearningService.swift in Sources */,
+				BB6666666666666666666666 /* QualityTrendView.swift in Sources */,
 				3C1C2B7BB259C2570B440525 /* QueueTaskRow.swift in Sources */,
 				0CDA69045020D57CEA33A6CF /* QueuedMessageBadge.swift in Sources */,
 				A08C714C60346A4D9B8CE576 /* QuickActionsWidget.swift in Sources */,
