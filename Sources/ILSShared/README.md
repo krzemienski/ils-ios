@@ -4,13 +4,13 @@ Shared Swift package containing models and DTOs used by both the iOS/macOS apps 
 
 ## Purpose
 
-ILSShared provides the type-safe contract between client and server. All API request/response types, domain models, and streaming message types are defined here to ensure consistency across the codebase.
+ILSShared is the type-safe contract between client and server. All API request/response types, domain models, and streaming message types are defined here to ensure consistency across the codebase.
 
 ## Structure
 
 ```
 ILSShared/
-├── Models/                  # Domain models (14 files)
+├── Models/                  # Domain models
 │   ├── Session.swift        # ChatSession (Codable, Hashable, Identifiable)
 │   ├── Message.swift        # Chat messages with role and content
 │   ├── Project.swift        # Claude Code project metadata
@@ -22,29 +22,28 @@ ILSShared/
 │   ├── CLIMessage.swift     # Raw Claude CLI output format
 │   ├── ContentBlocks.swift  # Text, ToolUse, ToolResult, Thinking blocks
 │   ├── ClaudeConfig.swift   # Settings file structure
-│   ├── ServerConnection.swift  # Connection configuration
-│   ├── SetupProgress.swift  # Onboarding state
-│   └── FleetHost.swift      # Remote host info
-└── DTOs/                    # Transfer objects (12 files)
-    ├── ResponseDTOs.swift       # APIResponse<T> wrapper
-    ├── PaginatedResponse.swift  # PaginatedResponse<T>
-    ├── Requests.swift           # CreateSessionRequest, ChatRequest, etc.
-    ├── SystemDTOs.swift         # SystemMetrics, ProcessInfo
-    ├── TeamDTOs.swift           # TeamInfo, TeamMember, TeamTask
-    ├── TunnelDTOs.swift         # TunnelStatus, TunnelConfig
-    ├── SearchResult.swift       # GitHubSearchResult
-    ├── ConnectionResponse.swift # Connection status
-    ├── SetupDTOs.swift          # Setup flow types
-    ├── FleetDTOs.swift          # Fleet management types
-    ├── SSHDTOs.swift            # SSH connection types
-    └── RemoteMetricsDTOs.swift  # Remote system metrics
+│   ├── ServerConnection.swift
+│   ├── SetupProgress.swift
+│   └── FleetHost.swift
+├── DTOs/                    # Transfer objects
+│   ├── ResponseDTOs.swift       # APIResponse<T> wrapper
+│   ├── PaginatedResponse.swift  # PaginatedResponse<T>
+│   ├── Requests.swift           # CreateSessionRequest, ChatRequest, etc.
+│   ├── SystemDTOs.swift         # SystemMetrics, ProcessInfo
+│   ├── TeamDTOs.swift           # TeamInfo, TeamMember, TeamTask
+│   ├── TunnelDTOs.swift         # TunnelStatus, TunnelConfig
+│   ├── FleetDTOs.swift          # Fleet management types
+│   ├── SSHDTOs.swift            # SSH connection types
+│   ├── RemoteMetricsDTOs.swift  # Remote system metrics
+│   └── ...
+└── Utilities/               # Shared utility types
 ```
 
 ## Key Types
 
-### APIResponse\<T\>
+### `APIResponse<T>`
 
-Standard response wrapper for all API endpoints:
+Standard envelope for all API endpoints:
 
 ```swift
 struct APIResponse<T: Codable>: Codable {
@@ -54,9 +53,7 @@ struct APIResponse<T: Codable>: Codable {
 }
 ```
 
-### PaginatedResponse\<T\>
-
-Paginated list wrapper:
+### `PaginatedResponse<T>`
 
 ```swift
 struct PaginatedResponse<T: Codable>: Codable {
@@ -66,35 +63,37 @@ struct PaginatedResponse<T: Codable>: Codable {
 }
 ```
 
-### ChatSession
+### `ChatSession`
 
-Core session model (conforms to `Codable`, `Identifiable`, `Hashable`):
+Core session model (`Codable`, `Identifiable`, `Hashable`):
 
-- `id: UUID` - Unique identifier
-- `claudeSessionId: String?` - Claude CLI session reference
-- `name: String?` - Display name
-- `projectId: UUID?` - Associated project
-- `model: String` - Claude model (sonnet, opus, haiku)
-- `status: String` - active, completed, etc.
-- `source: String` - "ils" (DB-managed) or "external" (filesystem)
-- `totalCostUSD: Double` - Accumulated cost
+- `id: UUID`
+- `claudeSessionId: String?` — Claude CLI session reference
+- `name: String?`
+- `projectId: UUID?`
+- `model: String` — sonnet, opus, haiku
+- `status: String` — active, completed, etc.
+- `source: String` — "ils" (DB) or "external" (filesystem)
+- `totalCostUSD: Double`
 
-### ContentBlock
+`Hashable` conformance enables `navigationDestination(item:)` in SwiftUI.
+
+### `ContentBlock`
 
 Chat message content discriminated by type:
-- `.text` - Human-readable text
-- `.toolUse` - Tool invocation with name and input
-- `.toolResult` - Tool execution result
-- `.thinking` - Extended thinking content
+- `.text` — human-readable text
+- `.toolUse` — tool invocation with name and input
+- `.toolResult` — tool execution result
+- `.thinking` — extended thinking content
 
-### StreamMessage
+### `StreamMessage`
 
 SSE stream event with type discriminator:
-- `system` - Session initialization
-- `assistant` - Response content blocks
-- `result` - Final result with usage stats
-- `error` - Error information
-- `permission` - Permission request
+- `system` — session initialization
+- `assistant` — response content blocks
+- `result` — final result with usage stats
+- `error` — error information
+- `permission` — permission request from Claude
 
 ## Usage
 
@@ -106,7 +105,6 @@ import ILSShared
 let response: APIResponse<PaginatedResponse<ChatSession>> = try await apiClient.get("/sessions")
 if response.success, let data = response.data {
     self.sessions = data.items
-    self.totalCount = data.total
 }
 ```
 
@@ -117,19 +115,18 @@ import ILSShared
 
 func index(req: Request) async throws -> APIResponse<PaginatedResponse<ChatSession>> {
     let sessions = try await SessionModel.query(on: req.db).all()
-    let dtos = sessions.map { $0.toDTO() }
-    return APIResponse(success: true, data: PaginatedResponse(items: dtos, total: dtos.count), error: nil)
+    return APIResponse(success: true, data: PaginatedResponse(items: sessions.map { $0.toDTO() }, total: sessions.count), error: nil)
 }
 ```
 
-## Dependencies
-
-- **Splash** 0.16+ - Syntax highlighting for code blocks
-
 ## Design Decisions
 
-- **Codable everywhere** - All types conform to `Codable` for JSON serialization
-- **Identifiable** - All list types conform to `Identifiable` for SwiftUI `ForEach`
-- **Hashable sessions** - `ChatSession` conforms to `Hashable` for `navigationDestination(item:)`
-- **camelCase JSON** - API uses camelCase (not snake_case) via default Swift encoder
-- **Optional fields** - Fields that may be absent use optionals (not defaults)
+- **Codable everywhere** — all types conform to `Codable` for JSON serialization
+- **Identifiable** — all list types conform for SwiftUI `ForEach`
+- **camelCase JSON** — uses default Swift encoder (not snake_case)
+- **Optional fields** — absent fields use optionals, not defaults
+- **`Hashable` sessions** — required for `navigationDestination(item:)`
+
+## Dependencies
+
+- **Splash** 0.16+ — syntax highlighting for code blocks (used by iOS app via this package)

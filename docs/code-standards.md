@@ -1,6 +1,6 @@
 # ILS Swift Code Standards & Conventions
 
-**Version:** 1.1.1 | **Last Updated:** 2026-03-10 | **Applies to:** iOS, macOS, and Backend targets
+**Version:** 1.2.0 | **Last Updated:** 2026-03-10 | **Applies to:** iOS, macOS, and Backend targets
 
 ---
 
@@ -138,23 +138,31 @@ let first = array.first
 
 ### @Observable ViewModels
 
+All ViewModels extend `BaseViewModel` and are `@Observable @MainActor`:
+
 ```swift
+// BaseViewModel provides: isLoading, error, cancellable task tracking
+class BaseViewModel { }
+
 @Observable
 @MainActor
-final class ChatViewModel {
+final class ChatViewModel: BaseViewModel {
     var messages: [ChatMessage] = []
     var isStreaming = false
 
-    // Don't make closure properties observable (infinite loop potential)
-    nonisolated(unsafe) var task: Task<Void, Never>?
+    // Task properties stored on @MainActor class must be nonisolated(unsafe)
+    nonisolated(unsafe) var streamTask: Task<Void, Never>?
 
     deinit {
-        task?.cancel()
+        streamTask?.cancel()
     }
 }
 ```
 
-**Rule:** All ViewModels are `@Observable @MainActor` — never `@EnvironmentObject` or `ObservableObject`.
+**Rules:**
+- All ViewModels are `@Observable @MainActor` — never `@EnvironmentObject` or `ObservableObject`
+- Never store `Task` as a plain `var` on `@Observable @MainActor` class — use `nonisolated(unsafe)`
+- Always cancel tasks in `deinit`
 
 ### View Composition
 
@@ -353,15 +361,19 @@ APIClient.shared.cacheTTL(for: "/sessions", ttl: 300)  // 5 minutes
 @Environment(\.theme) private var theme: ThemeSnapshot
 
 // Apply colors
-Color(theme.bgPrimary)      // Background
-Color(theme.textPrimary)    // Text
-Color(theme.accent)         // Interactive elements
-Color(theme.success)        // Success states
+theme.bgPrimary      // Background
+theme.textPrimary    // Text
+theme.accent         // Interactive elements
+theme.success        // Success states
 
-// Apply typography
-Text("Hello").font(theme.fontBody)      // Body text
-Text("Section").font(theme.fontTitle)   // Headings
-Text("Meta").font(theme.fontCaption)    // Small text
+// Apply typography (fontBody etc. are CGFloat point sizes)
+Text("Hello")
+    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+Text("Section")
+    .font(.system(size: theme.fontTitle2, weight: .semibold, design: theme.fontDesign))
+Text("Meta")
+    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+    .foregroundColor(theme.textTertiary)
 ```
 
 ### Theme Snapshot Struct
@@ -372,26 +384,43 @@ struct ThemeSnapshot: Sendable {
     let bgPrimary: Color
     let bgSecondary: Color
     let bgTertiary: Color
+    let bgSidebar: Color
 
     // Text
     let textPrimary: Color
     let textSecondary: Color
+    let textTertiary: Color
+    let textOnAccent: Color
+
+    // Interactive
+    let accent: Color
+    let accentSecondary: Color
+    let accentGradient: LinearGradient
 
     // Semantic
     let success: Color
     let warning: Color
     let error: Color
-    let info: Color
 
-    // Typography (all UIFont)
-    let fontBody: UIFont
-    let fontTitle: UIFont
-    let fontCaption: UIFont
-    // ... more font properties
+    // Entity colors (data visualization)
+    let entitySession: Color
+    let entityProject: Color
+    let entitySkill: Color
+    let entityMCP: Color
+    let entityPlugin: Color
+    let entitySystem: Color
+
+    // Typography (CGFloat point sizes — Dynamic Type scaled at runtime)
+    let fontCaption: CGFloat   // ~12pt
+    let fontBody: CGFloat      // ~17pt
+    let fontTitle3: CGFloat    // ~20pt
+    let fontTitle2: CGFloat    // ~22pt
+    let fontTitle1: CGFloat    // ~28pt
+    let fontDesign: Font.Design // .default | .monospaced | .serif
 }
 ```
 
-**Rule:** Never use `UIColor` directly. Always go through theme.
+**Rule:** Never use `UIColor` or hardcoded font sizes directly. Always go through theme.
 
 ---
 
