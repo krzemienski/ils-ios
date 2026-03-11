@@ -2233,7 +2233,7 @@
 				BAEB0566A2007404F394E113 /* AnalyticsViewModel.swift */,
 				8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */,
-				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */
+				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */,
 				9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */,
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
