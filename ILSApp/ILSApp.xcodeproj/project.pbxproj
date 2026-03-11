@@ -118,6 +118,10 @@
 		1FC0FC8AE58CF5C296EB554B /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54029482C937B8B3439FA46C /* AnalyticsView.swift */; };
 		1FCCF55B38DB46CCFA12CCDF /* TemplateRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E730B10A6F7C59269648EE32 /* TemplateRow.swift */; };
 		1FCDA853824C5CC0896B74E1 /* SessionCheckpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB21906489F9396858EEBC0E /* SessionCheckpointsView.swift */; };
+		86469FC92E0A499B94B87F3E /* AuditActionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 197BEA7E2D374477B9B6B2C1 /* AuditActionRowView.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* AuditTrailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* AuditTrailView.swift */; };
+		E5F6A7B8C9D0E1F2A3B4C5D6 /* AuditActionDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* AuditActionDetailSheet.swift */; };
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* AuditTrailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */; };
 		202259C2CC0CB1C0043DDD20 /* BackendConnectionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */; };
 		20D5B8AEAA0858094505C289 /* DashboardWidgetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7676389F7ABFFD8D2674AAB /* DashboardWidgetViewModel.swift */; };
 		20FB190430C47A5FD65C6EA7 /* SessionExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C762E18BD102C1442B83A33F /* SessionExportService.swift */; };
@@ -560,6 +564,10 @@
 		A08C714C60346A4D9B8CE576 /* QuickActionsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017DBC734020FFEDA06034E8 /* QuickActionsWidget.swift */; };
 		A0F31276553A5D9099641F8F /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9E95B075B57F98624FA8BA /* QRScannerView.swift */; };
 		A154E5D4BF2B0E80683778B9 /* SessionCheckpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB21906489F9396858EEBC0E /* SessionCheckpointsView.swift */; };
+		33C6530E9EE64D4CB8B5DC74 /* AuditActionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 197BEA7E2D374477B9B6B2C1 /* AuditActionRowView.swift */; };
+		A7B8C9D0E1F2A3B4C5D6E7F8 /* AuditTrailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* AuditTrailView.swift */; };
+		B8C9D0E1F2A3B4C5D6E7F8A9 /* AuditActionDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* AuditActionDetailSheet.swift */; };
+		C9D0E1F2A3B4C5D6E7F8A9B0 /* AuditTrailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */; };
 		A1822D4435CC369EEB9D0A34 /* QuickReplyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3025F061D84D74E99FEB57BD /* QuickReplyTemplatesSheet.swift */; };
 		A1E0E50C051530AA59828947 /* EmberTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FA08AF75B109E531A23DCAD /* EmberTheme.swift */; };
 		A1F9E2E0EF131BF1E1A1D895 /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5A9419F84B3B51971710F8 /* LiveActivityManager.swift */; };
@@ -1251,6 +1259,10 @@
 		AA4D98A0CF55C5C4EE360081 /* PermissionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryView.swift; sourceTree = "<group>"; };
 		AB18E987E5534E0CFE144AD0 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
 		AB21906489F9396858EEBC0E /* SessionCheckpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCheckpointsView.swift; sourceTree = "<group>"; };
+		197BEA7E2D374477B9B6B2C1 /* AuditActionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditActionRowView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* AuditTrailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditTrailView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* AuditActionDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditActionDetailSheet.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditTrailViewModel.swift; sourceTree = "<group>"; };
 		ABCFB7F500C5E6AC8A4AFBE1 /* HostProfilesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostProfilesViewModel.swift; sourceTree = "<group>"; };
 		ACA5AD5A936F2F60ECA2D2BB /* RelatedSessionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelatedSessionsPanel.swift; sourceTree = "<group>"; };
 		AE209472FC7E083C3A386CF1 /* WorkflowScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkflowScheduleView.swift; sourceTree = "<group>"; };
@@ -1804,6 +1816,16 @@
 			path = state;
 			sourceTree = "<group>";
 		};
+		D575F0090F5D4D9CBE5BE6C3 /* Audit */ = {
+			isa = PBXGroup;
+			children = (
+				197BEA7E2D374477B9B6B2C1 /* AuditActionRowView.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* AuditTrailView.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* AuditActionDetailSheet.swift */,
+			);
+			path = Audit;
+			sourceTree = "<group>";
+		};
 		6F49257F38D17C70764B897D /* Sessions */ = {
 			isa = PBXGroup;
 			children = (
@@ -2076,6 +2098,7 @@
 				086A9D03E407265136521914 /* ActivityFeed */,
 				04F27CF033CB397727F1FB90 /* AgentQueue */,
 				EDE0E11CEBBB676A756C506C /* Analytics */,
+				D575F0090F5D4D9CBE5BE6C3 /* Audit */,
 				3A60142E78A7377E13B746DA /* Backends */,
 				CD4F39D34F7245733BAEB99C /* Browser */,
 				F72E9973C33AEEC20A17FC27 /* Chat */,
@@ -2213,7 +2236,8 @@
 				3755F5EBB98CB332B0BA29DC /* AgentQueueViewModel.swift */,
 				BAEB0566A2007404F394E113 /* AnalyticsViewModel.swift */,
 				8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */,
-				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */,
+				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */
 				9B2A8330F796D7506CEF66A0 /* BackendConnectionsViewModel.swift */,
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
@@ -3010,6 +3034,10 @@
 				47C604CF499F29E3DB4DADC9 /* ServerStatusWidget.swift in Sources */,
 				FC2868CD5692C2A57C5C86FF /* SessionBackupService.swift in Sources */,
 				ECA2D87A0ED0E8E2BAF9DB18 /* SessionBookmarksManager.swift in Sources */,
+				33C6530E9EE64D4CB8B5DC74 /* AuditActionRowView.swift in Sources */,
+				A7B8C9D0E1F2A3B4C5D6E7F8 /* AuditTrailView.swift in Sources */,
+				B8C9D0E1F2A3B4C5D6E7F8A9 /* AuditActionDetailSheet.swift in Sources */,
+				C9D0E1F2A3B4C5D6E7F8A9B0 /* AuditTrailViewModel.swift in Sources */,
 				A154E5D4BF2B0E80683778B9 /* SessionCheckpointsView.swift in Sources */,
 				EA7612A15BA3BDA0EEE48B80 /* SessionCheckpointsViewModel.swift in Sources */,
 				7B13009CCE8F808697211BC7 /* SessionComparisonViewModel.swift in Sources */,
@@ -3433,6 +3461,10 @@
 				BC4369EBF23D06689240F5E3 /* ServerStatusWidget.swift in Sources */,
 				1788A635E73F3C33A8792140 /* SessionBackupService.swift in Sources */,
 				AA74DAB3473952670BCBBBD8 /* SessionBookmarksManager.swift in Sources */,
+				86469FC92E0A499B94B87F3E /* AuditActionRowView.swift in Sources */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* AuditTrailView.swift in Sources */,
+				E5F6A7B8C9D0E1F2A3B4C5D6 /* AuditActionDetailSheet.swift in Sources */,
+				F6A7B8C9D0E1F2A3B4C5D6E7 /* AuditTrailViewModel.swift in Sources */,
 				1FCDA853824C5CC0896B74E1 /* SessionCheckpointsView.swift in Sources */,
 				06AC7AF758977C86BA9CE168 /* SessionCheckpointsViewModel.swift in Sources */,
 				2456EF5FC5C5C28B2FADEEE3 /* SessionComparisonViewModel.swift in Sources */,

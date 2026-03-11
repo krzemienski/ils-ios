@@ -630,17 +630,36 @@ struct SettingsView: View {
                 .textCase(.uppercase)
                 .kerning(1)
 
-            NavigationLink(destination: AutoApproveRulesView()) {
-                HStack {
-                    Label("Auto-Approve Rules", systemImage: "checkmark.shield")
-                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+            VStack(spacing: 0) {
+                NavigationLink(destination: AutoApproveRulesView()) {
+                    HStack {
+                        Label("Auto-Approve Rules", systemImage: "checkmark.shield")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
                 }
-                .padding(theme.spacingMD)
+                .accessibilityLabel("Auto-approve rules")
+
+                Divider().background(theme.borderSubtle)
+
+                NavigationLink(destination: AuditTrailView()) {
+                    HStack {
+                        Label("AI Action Audit Trail", systemImage: "list.bullet.clipboard")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .accessibilityLabel("AI action audit trail")
             }
             .modifier(GlassCard())
         }

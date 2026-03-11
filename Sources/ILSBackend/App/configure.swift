@@ -133,6 +133,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreatePermissionPolicySettings())
     // v6.4 — Permission policy tracking (matched_policy_id on permissions)
     app.migrations.add(AddPolicyIdToPermissions())
+    // v6.5 — AI action audit trail & one-tap rollback
+    app.migrations.add(CreateAuditActions())
 
     // Run migrations
     try await app.autoMigrate()

@@ -384,3 +384,12 @@ extension ReorderPermissionPoliciesRequest: Content {}
 extension PermissionPolicySettings: Content {}
 extension PermissionPolicySettingsResponse: Content {}
 extension UpdatePermissionPolicySettingsRequest: Content {}
+
+// MARK: - Audit Action Types
+extension AuditAction: Content {}
+extension AuditActionType: Content {}
+extension RollbackStatus: Content {}
+extension AuditActionListResponse: Content {}
+extension RollbackResponse: Content {}
+extension RollbackResultItem: Content {}
+extension LogAuditActionRequest: Content {}
