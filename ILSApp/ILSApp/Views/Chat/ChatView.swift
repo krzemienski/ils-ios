@@ -592,11 +592,9 @@ struct ChatView: View {
             },
             sessionProjectId: session.projectId?.uuidString
         )
-        .simultaneousGesture(
-            DragGesture().onChanged { _ in
-                isInputFocused = false
-            }
-        )
+        // Keyboard dismissal handled by .scrollDismissesKeyboard(.interactively)
+        // on ChatMessageList's ScrollView — no DragGesture needed here, which
+        // previously blocked the sidebar edge-swipe gesture.
         .simultaneousGesture(
             sessionSwipeGesture,
             isEnabled: horizontalSizeClass == .compact && onSessionSwitch != nil
