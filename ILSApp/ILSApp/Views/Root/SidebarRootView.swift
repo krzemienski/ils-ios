@@ -2,6 +2,8 @@ import SwiftUI
 import ILSShared
 
 // MARK: - Active Screen
+// TODO: ARCH-004 — Extract ActiveScreen enum to its own file (e.g. ActiveScreen.swift) in a
+// future refactor. It has grown beyond a simple navigation detail and is imported by many views.
 // NAV-MED-1/2: ActiveScreen enum routing is the intentional navigation architecture.
 // iOS uses a sheet-based sidebar (not NavigationSplitView) which requires manual
 // screen routing via @State. NavigationStack+navigationDestination is used for
@@ -91,6 +93,15 @@ enum ActiveScreen: Hashable {
     }
 }
 
+// MARK: - Scene Storage Keys
+
+/// Centralized SceneStorage key constants for SidebarRootView.
+/// STOR-006: All SceneStorage keys defined here to prevent typo-driven key drift.
+private enum SceneStorageKeys {
+    static let activeScreen = "activeScreenKey"
+    static let lastChatSessionId = "lastChatSessionId"
+}
+
 // MARK: - Sidebar Root View
 
 /// Root container view providing adaptive navigation for the ILS iOS/macOS app.
@@ -130,10 +141,10 @@ struct SidebarRootView: View {
 
     /// Persisted string key identifying the active screen, used to restore navigation state
     /// across app launches. Excludes `.chat` (which requires an async session fetch).
-    @SceneStorage("activeScreenKey") private var activeScreenKey: String = "home"
+    @SceneStorage(SceneStorageKeys.activeScreen) private var activeScreenKey: String = "home"
     /// UUID string of the last open chat session. When `activeScreenKey` is `"chat"` on launch,
     /// this value is used to look up and restore the corresponding ``ChatSession``.
-    @SceneStorage("lastChatSessionId") private var lastChatSessionId: String = ""
+    @SceneStorage(SceneStorageKeys.lastChatSessionId) private var lastChatSessionId: String = ""
     /// Whether the sidebar overlay panel is currently visible. Only meaningful on iPhone;
     /// on iPad the sidebar is always present inside the NavigationSplitView.
     @State private var isSidebarOpen: Bool = false
@@ -171,6 +182,9 @@ struct SidebarRootView: View {
     @State private var navigationPath = NavigationPath()
     /// Multi-session split view model, owned by this root view and shared with split view screens.
     @State private var multiSessionVM = MultiSessionViewModel()
+    /// NAV-001/UX-001: True while a persisted chat session is being restored asynchronously.
+    /// Prevents a flash of HomeView before the sessions load and the chat is navigated to.
+    @State private var isRestoringSession = false
 
     private var isRegularWidth: Bool {
         horizontalSizeClass == .regular
@@ -197,6 +211,7 @@ struct SidebarRootView: View {
             }
         }
         .onChange(of: appState.navigationIntent) { _, intent in
+            // NAV-002: Log unrecognised deep link routes so they surface in diagnostics.
             guard let screen = intent else { return }
 
             // Consume browser segment intent BEFORE setting activeScreen so that
@@ -239,6 +254,11 @@ struct SidebarRootView: View {
             if let restored = ActiveScreen.fromStorageKey(activeScreenKey) {
                 activeScreen = restored
             }
+            // NAV-001/UX-001: If restoring to a chat session, mark as restoring so the
+            // main content shows a loading indicator rather than a Home flash.
+            if activeScreenKey == "chat", !lastChatSessionId.isEmpty {
+                isRestoringSession = true
+            }
             // Non-chat screens are restored above; chat requires async session fetch
         }
         .task {
@@ -263,6 +283,8 @@ struct SidebarRootView: View {
                     lastChatSessionId = ""
                 }
             }
+            // NAV-001/UX-001: Session restore complete (or not needed) — clear loading state.
+            isRestoringSession = false
         }
         .onChange(of: appState.serverURL) { _, _ in
             sessionsVM.configure(client: appState.apiClient)
@@ -358,6 +380,13 @@ struct SidebarRootView: View {
     @ViewBuilder
     private func mainContent(showHamburger: Bool) -> some View {
         NavigationStack(path: $navigationPath) {
+            // NAV-001/UX-001: Show a loading indicator while a persisted chat session is
+            // being looked up after launch. This prevents a Home flash before navigation.
+            if isRestoringSession {
+                ProgressView("Restoring session…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(theme.bgPrimary)
+            } else {
             Group {
                 switch activeScreen {
                 case .home:
@@ -462,6 +491,7 @@ struct SidebarRootView: View {
                     #endif
                 }
             }
+            } // end else (isRestoringSession)
         }
         .environment(multiSessionVM)
         .environment(sessionsVM)

@@ -491,7 +491,9 @@ class ChatViewModel {
         guard !pendingStreamMessages.isEmpty else { return }
 
         let messagesToProcess = pendingStreamMessages
-        pendingStreamMessages.removeAll()
+        // PERF-004: keepingCapacity avoids freeing and re-allocating the buffer between
+        // flush cycles during an active stream, reducing allocator pressure.
+        pendingStreamMessages.removeAll(keepingCapacity: true)
 
         processStreamMessages(messagesToProcess)
     }

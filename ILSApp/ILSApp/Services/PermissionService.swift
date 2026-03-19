@@ -74,8 +74,8 @@ final class PermissionService {
                 guard let self else { break }
                 await self.fetchPending(apiClient: apiClient)
                 let interval: UInt64 = LowPowerModeMonitor.shared.isLowPowerModeEnabled
-                    ? 4_000_000_000  // 4s in LPM
-                    : 2_000_000_000  // 2s normal
+                    ? 10_000_000_000  // 10s in LPM (ENERGY-001)
+                    : 5_000_000_000   // 5s normal (ENERGY-001)
                 try? await Task.sleep(nanoseconds: interval)
             }
         }

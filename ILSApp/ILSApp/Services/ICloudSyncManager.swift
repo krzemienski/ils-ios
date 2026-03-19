@@ -83,6 +83,11 @@ final class ICloudSyncManager {
     /// MEM pattern: follows SyncCoordinator observer lifecycle.
     private nonisolated let externalChangeObserver: NSObjectProtocol
 
+    /// ICLOUD-003: Stored handle to the in-flight CloudKit sync task so it can be
+    /// cancelled if syncCustomThemes is called again before the previous run completes,
+    /// or when the manager is torn down.
+    private var cloudKitSyncTask: Task<Void, Never>?
+
     // MARK: - Init / Deinit
 
     private init() {
@@ -324,6 +329,9 @@ final class ICloudSyncManager {
         // notification), skip to prevent a potential sync loop.
         guard syncStatus != .syncing else { return }
         syncStatus = .syncing
+        // ICLOUD-006: Ensure syncStatus is reset to .idle if we return early or
+        // encounter an unhandled reason code, so the guard above doesn't permanently lock.
+        defer { if syncStatus == .syncing { syncStatus = .idle } }
 
         let reasonCode = notification.userInfo?[NSUbiquitousKeyValueStoreChangeReasonKey] as? Int ?? -1
         let changedKeys = notification.userInfo?[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] ?? []
@@ -354,6 +362,9 @@ final class ICloudSyncManager {
                 "iCloud account changed — preferences may have been reset",
                 category: "icloud"
             )
+            // ICLOUD-002: Notify the app that the iCloud account changed so UI can
+            // prompt the user to review settings that may have been reset.
+            NotificationCenter.default.post(name: .iCloudAccountChanged, object: nil)
         default:
             reason = "unknown(\(reasonCode))"
         }
@@ -403,6 +414,12 @@ extension ICloudSyncManager {
         return d
     }()
 
+    /// Cancel any in-flight CloudKit sync. Call before dealloc or when sync is disabled.
+    func cancelCloudKitSync() {
+        cloudKitSyncTask?.cancel()
+        cloudKitSyncTask = nil
+    }
+
     private var themeDatabase: CKDatabase {
         CKContainer(identifier: ThemeCloudKitConfig.containerIdentifier).privateCloudDatabase
     }
@@ -417,6 +434,21 @@ extension ICloudSyncManager {
     /// ICLD-001: CloudKit network I/O is performed on a detached task to avoid
     /// blocking @MainActor. Results are dispatched back for state updates.
     func syncCustomThemes(themes: [CustomTheme], apiClient: APIClient) async {
+        guard isSyncEnabled else { return }
+
+        // ICLOUD-003: Cancel any previous in-flight sync and store the new task handle
+        // so it can be cancelled if needed (e.g. rapid successive calls, or cleanup).
+        cloudKitSyncTask?.cancel()
+        let syncTask = Task<Void, Never> { [weak self] in
+            guard let self else { return }
+            await self.performCustomThemeSync(themes: themes, apiClient: apiClient)
+        }
+        cloudKitSyncTask = syncTask
+        await syncTask.value
+    }
+
+    /// Performs the actual CloudKit sync work, separated so the task handle can wrap it.
+    private func performCustomThemeSync(themes: [CustomTheme], apiClient: APIClient) async {
         guard isSyncEnabled else { return }
 
         // Push local themes to CloudKit off the main actor
@@ -574,4 +606,6 @@ extension Notification.Name {
     static let iCloudPreferencesDidChange = Notification.Name("iCloudPreferencesDidChange")
     /// ICLD-004: Posted when iCloud KV store quota is exceeded.
     static let iCloudQuotaExceeded = Notification.Name("iCloudQuotaExceeded")
+    /// ICLOUD-002: Posted when the iCloud account changes (sign-in, sign-out, or switch).
+    static let iCloudAccountChanged = Notification.Name("iCloudAccountChanged")
 }

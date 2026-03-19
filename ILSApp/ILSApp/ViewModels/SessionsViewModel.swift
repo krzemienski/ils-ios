@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 // CONC-21: @preconcurrency suppresses Sendable warnings for ILSShared types (PaginatedResponse,
 // ChatSession) defined before strict concurrency. These types are safe across actor boundaries.
 @preconcurrency import ILSShared
@@ -60,10 +61,14 @@ class SessionsViewModel: BaseViewModel {
     private let pageSize = 50
     private var projectPages: [String: Int] = [:]
 
-    @ObservationIgnored nonisolated(unsafe) private var searchTask: Task<Void, Never>?
+    // CON-001/MEM-003: OSAllocatedUnfairLock provides safe cross-isolation Task storage
+    // without data races. Tasks are @MainActor but deinit is nonisolated, so direct access
+    // from deinit is unsafe — the lock makes it well-defined.
+    @ObservationIgnored private let searchTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
     /// Task that listens for network restoration to trigger an auto-refresh.
-    @ObservationIgnored nonisolated(unsafe) private var networkObserverTask: Task<Void, Never>?
+    // CON-001/MEM-003: Same rationale as searchTaskLock above.
+    @ObservationIgnored private let networkObserverTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
     /// Precomputed lowercase search strings keyed by session, rebuilt when sessions change
     private var searchCache: [(session: ChatSession, searchText: String)] = []
@@ -97,6 +102,10 @@ class SessionsViewModel: BaseViewModel {
     /// `nlSearchEnabled` changes, so grouped-session caches can detect staleness.
     private var nlFilterVersion: Int = 0
 
+    // PERF-005: Cache last NL parse result to skip re-parsing identical debounced queries.
+    private var lastNLQuery: String?
+    private var lastNLResult: ParsedQuery?
+
     /// The NL filter version at which groupedSessions cache was last built.
     private var cachedGroupedNLVersion: Int = -1
 
@@ -104,8 +113,8 @@ class SessionsViewModel: BaseViewModel {
     private var cachedGroupedByTimeNLVersion: Int = -1
 
     deinit {
-        searchTask?.cancel()
-        networkObserverTask?.cancel()
+        searchTaskLock.withLock { $0?.cancel() }
+        networkObserverTaskLock.withLock { $0?.cancel() }
     }
 
     /// Configure the view model with an API client and start observing network changes.
@@ -118,11 +127,13 @@ class SessionsViewModel: BaseViewModel {
     /// Subscribe to `networkDidBecomeAvailable` and auto-refresh sessions when connectivity returns.
     /// Uses `[weak self]` so the Task doesn't prevent deallocation.
     private func setupNetworkObserver() {
-        networkObserverTask?.cancel()
-        networkObserverTask = Task { [weak self] in
-            for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
-                guard let self else { return }
-                await self.loadSessions(refresh: true)
+        networkObserverTaskLock.withLock { $0?.cancel(); $0 = nil }
+        networkObserverTaskLock.withLock {
+            $0 = Task { [weak self] in
+                for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
+                    guard let self else { return }
+                    await self.loadSessions(refresh: true)
+                }
             }
         }
     }
@@ -131,26 +142,28 @@ class SessionsViewModel: BaseViewModel {
     /// Call this from `.onChange(of: searchText)` in the view instead of filtering on every keystroke.
     /// When `nlSearchEnabled` is true, also triggers `parseNLQuery` after the debounce delay.
     func scheduleSearchDebounce() {
-        searchTask?.cancel()
+        searchTaskLock.withLock { $0?.cancel(); $0 = nil }
         let text = searchText
         guard !text.isEmpty else {
             debouncedSearchText = ""
             clearNLQuery()
             return
         }
-        searchTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            guard let self, !Task.isCancelled else { return }
-            debouncedSearchText = text
-            if nlSearchEnabled {
-                await parseNLQuery(text)
+        searchTaskLock.withLock {
+            $0 = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard let self, !Task.isCancelled else { return }
+                self.debouncedSearchText = text
+                if self.nlSearchEnabled {
+                    await self.parseNLQuery(text)
+                }
             }
         }
     }
 
     /// Clear search text and debounced text immediately.
     func clearSearch() {
-        searchTask?.cancel()
+        searchTaskLock.withLock { $0?.cancel(); $0 = nil }
         searchText = ""
         debouncedSearchText = ""
         clearNLQuery()
@@ -158,15 +171,24 @@ class SessionsViewModel: BaseViewModel {
 
     /// Parse the given text as a natural-language session query and store the result in `parsedQuery`.
     /// Uses `projectGroups` as the known-projects context for fuzzy project-name matching.
+    /// PERF-005: Returns cached result immediately when the query text is unchanged.
     func parseNLQuery(_ text: String) async {
+        if text == lastNLQuery, let cached = lastNLResult {
+            parsedQuery = cached
+            return
+        }
         let knownProjects = projectGroups.map(\.name)
         let result = NLSessionQueryParser.shared.parse(text, knownProjects: knownProjects)
+        lastNLQuery = text
+        lastNLResult = result
         parsedQuery = result
         nlFilterVersion += 1
     }
 
     /// Clear the current NL parsed query, reverting to plain text search.
     func clearNLQuery() {
+        lastNLQuery = nil
+        lastNLResult = nil
         parsedQuery = nil
         nlFilterVersion += 1
     }

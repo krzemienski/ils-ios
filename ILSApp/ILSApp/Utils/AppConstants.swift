@@ -154,4 +154,18 @@ enum AppConstants {
 
     /// UserDefaults key for whether plugin caching is enabled.
     static let offlineCachePluginsEnabledKey = "offline_cache_plugins_enabled"
+
+    // MARK: - Chat Draft Limits
+
+    /// Maximum number of chat drafts to retain in UserDefaults.
+    /// Older drafts beyond this cap should be pruned to prevent unbounded storage growth.
+    static let maxChatDrafts = 50
+
+    // MARK: - Permission Polling Intervals
+
+    /// Permission polling interval in nanoseconds under normal conditions (5 seconds).
+    static let permissionPollingInterval: UInt64 = 5_000_000_000
+
+    /// Permission polling interval in nanoseconds when Low Power Mode is active (10 seconds).
+    static let permissionPollingIntervalLPM: UInt64 = 10_000_000_000
 }

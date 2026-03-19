@@ -2,6 +2,28 @@ import Vapor
 import Fluent
 import ILSShared
 
+/// In-memory tracker for concurrent streaming sessions per client IP.
+///
+/// NET-007: Limits each IP to 1 active SSE stream at a time to prevent resource exhaustion.
+/// Thread-safe via Swift actor isolation.
+actor StreamingSessionTracker {
+    private var activeSessions: [String: Int] = [:]
+
+    /// Attempt to register a new streaming session for `ip`.
+    /// Returns `true` if allowed (count was 0), `false` if already streaming.
+    func tryAcquire(ip: String) -> Bool {
+        let current = activeSessions[ip] ?? 0
+        guard current == 0 else { return false }
+        activeSessions[ip] = 1
+        return true
+    }
+
+    /// Release the streaming slot for `ip` when the stream ends.
+    func release(ip: String) {
+        activeSessions[ip] = nil
+    }
+}
+
 /// Controller for chat operations including streaming responses and WebSocket connections.
 ///
 /// Routes:
@@ -9,8 +31,16 @@ import ILSShared
 /// - `WS /chat/ws/:sessionId`: WebSocket connection for bidirectional chat
 /// - `POST /chat/permission/:requestId`: Submit permission decisions
 /// - `POST /chat/cancel/:sessionId`: Cancel active chat execution
+///
+/// NET-007: Per-IP rate limiting (10 req/min) is enforced by `RateLimitMiddleware` registered
+/// in `configure.swift`. Concurrent stream limiting (1 active stream per IP) is enforced here
+/// via `StreamingSessionTracker` because `RateLimitMiddleware` cannot track long-lived SSE
+/// connections — it operates at request-start time, not connection-lifetime.
 struct ChatController: RouteCollection {
     let executor = ClaudeExecutorService()
+    // NET-007: Shared across all requests handled by this controller instance.
+    // A new ChatController is created per app lifecycle so this is effectively app-scoped.
+    private let streamingTracker = StreamingSessionTracker()
 
     func boot(routes: RoutesBuilder) throws {
         let chat = routes.grouped("chat")
@@ -54,6 +84,44 @@ struct ChatController: RouteCollection {
             throw Abort(.serviceUnavailable, reason: "Claude CLI is not available. Please ensure 'claude' is installed and in PATH.")
         }
 
+        // NET-007: Limit to 1 concurrent streaming session per client IP.
+        // X-Forwarded-For is preferred when behind a reverse proxy (same logic as RateLimitMiddleware).
+        let clientIP: String
+        if let xff = req.headers.first(name: .xForwardedFor) {
+            clientIP = xff.split(separator: ",").first
+                .map { String($0).trimmingCharacters(in: .whitespaces) }
+                ?? req.peerAddress?.ipAddress
+                ?? "unknown"
+        } else {
+            clientIP = req.peerAddress?.ipAddress ?? req.remoteAddress?.ipAddress ?? "unknown"
+        }
+
+        let streamAllowed = await streamingTracker.tryAcquire(ip: clientIP)
+        guard streamAllowed else {
+            throw Abort(.tooManyRequests, reason: "A streaming session is already active for this client. Wait for it to complete before starting a new one.")
+        }
+
+        // NET-007: Release the concurrent-stream slot on any early exit (DB errors, validation
+        // failures, etc.) that occur between acquisition and stream-wrapper creation.
+        do {
+            return try await buildStreamResponse(
+                req: req,
+                input: input,
+                clientIP: clientIP
+            )
+        } catch {
+            await streamingTracker.release(ip: clientIP)
+            throw error
+        }
+    }
+
+    /// Builds the SSE response after a streaming slot has been acquired for `clientIP`.
+    /// Separated from `stream()` so `streamingTracker.release` can be called on any early throw.
+    private func buildStreamResponse(
+        req: Request,
+        input: ChatStreamRequest,
+        clientIP: String
+    ) async throws -> Response {
         // Get or create session — if a sessionId is provided but doesn't exist in DB
         // (e.g. client-generated UUID for "New Session"), create it on the fly.
         // If client provides options.resume (claudeSessionId), store it on the session.
@@ -168,13 +236,34 @@ struct ChatController: RouteCollection {
         req.logger.debug("[STREAM] Calling executor.execute()")
 
         // Execute Claude CLI
-        let stream = executor.execute(
+        let rawStream = executor.execute(
             prompt: prompt,
             workingDirectory: projectPath,
             options: options
         )
 
         req.logger.debug("[STREAM] executor.execute() returned stream, creating SSE response")
+
+        // NET-007: Wrap the raw stream so the concurrent-session slot is released
+        // automatically when the stream finishes (whether normally, via error, or
+        // via client disconnect). This is required because StreamingService runs the
+        // stream body asynchronously inside Vapor's response writer — we cannot use
+        // defer in this function to release the slot.
+        let tracker = streamingTracker
+        let stream = AsyncThrowingStream<StreamMessage, Error> { continuation in
+            let task = Task {
+                do {
+                    for try await event in rawStream {
+                        continuation.yield(event)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                await tracker.release(ip: clientIP)
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
 
         // Look up any registered Live Activity push token for this session.
         // The token is set by the iOS client after starting a Live Activity;

@@ -57,6 +57,13 @@ class ConnectionManager {
         self.sseClient = SSEClient(baseURL: url)
         self.serverURL = url
         self.isInitialized = true
+
+        // STOR-001: Clean up legacy UserDefaults keys after successful Keychain migration.
+        // These keys were used in older versions before the serverURL was moved to Keychain.
+        // Safe to remove unconditionally — if Keychain had no value, the URL was constructed
+        // from these keys above and we have already captured it in `url`.
+        UserDefaults.standard.removeObject(forKey: "serverHost")
+        UserDefaults.standard.removeObject(forKey: "serverPort")
     }
 
     /// Update the server URL, persist to UserDefaults, recreate clients.
