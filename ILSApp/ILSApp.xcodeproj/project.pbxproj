@@ -229,6 +229,9 @@
 		38C80E852BE5430A463DC16C /* PlatformCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9D6E2E7DF4C91CA6B6FC6D /* PlatformCompat.swift */; };
 		396DD19AD86005B5725BEAB3 /* DashboardWidgetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7676389F7ABFFD8D2674AAB /* DashboardWidgetViewModel.swift */; };
 		39A97C9C633FEC837FA287DE /* ListProjectsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20BF929C13E2F7A26E7799C /* ListProjectsIntent.swift */; };
+		39B1A2C8E4F5D7A1B3C9E601 /* ApprovePermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* ApprovePermissionIntent.swift */; };
+		39B1A2C8E4F5D7A1B3C9E602 /* DenyPermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* DenyPermissionIntent.swift */; };
+		39B1A2C8E4F5D7A1B3C9E603 /* SummarizeStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5E /* SummarizeStatusIntent.swift */; };
 		39D6C3CE128836EF1D2E2418 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */; };
 		39E04FA35C5D68812FE9F06F /* MarkdownTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170EAF93A1E8A97D317696AC /* MarkdownTextView.swift */; };
 		3A23CEDF1A6B4C18D4C092D6 /* AddBackendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC6DE0534A6D3B660949D87 /* AddBackendView.swift */; };
@@ -358,6 +361,9 @@
 		614ADE90776981AC136C0148 /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
 		6150E5AB470EB569EDF36A87 /* DashboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E873B35BFB81E94D984D6501 /* DashboardLayout.swift */; };
 		6179C21CAAA83C0DAFE37F96 /* ListProjectsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F20BF929C13E2F7A26E7799C /* ListProjectsIntent.swift */; };
+		617AC21CAAA83C0DAFE37F01 /* ApprovePermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* ApprovePermissionIntent.swift */; };
+		617AC21CAAA83C0DAFE37F02 /* DenyPermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* DenyPermissionIntent.swift */; };
+		617AC21CAAA83C0DAFE37F03 /* SummarizeStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5E /* SummarizeStatusIntent.swift */; };
 		619698A9E38584266DDEA13B /* SplitViewLayoutPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9BFC1B2729224E76FB89EC /* SplitViewLayoutPicker.swift */; };
 		628238328AD8C5BBC73E21D4 /* XCUITestBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FDB1104B5B9E3B5D9FE637 /* XCUITestBase.swift */; };
 		6288CA8E4CB2C16EF82AB4DA /* ILSShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */; };
@@ -1460,6 +1466,9 @@
 		F0F7180FB7CF6802768BD600 /* TeamMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamMessagesView.swift; sourceTree = "<group>"; };
 		F115309A0A8397D27BCDFE8B /* UsageStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStatsWidget.swift; sourceTree = "<group>"; };
 		F20BF929C13E2F7A26E7799C /* ListProjectsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListProjectsIntent.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* ApprovePermissionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovePermissionIntent.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* DenyPermissionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DenyPermissionIntent.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5E /* SummarizeStatusIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizeStatusIntent.swift; sourceTree = "<group>"; };
 		F248F9EE757F68605D70ABDB /* SessionRecordingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecordingViewModel.swift; sourceTree = "<group>"; };
 		F2A62D7935983104927D75A0 /* SessionPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPickerView.swift; sourceTree = "<group>"; };
 		F2BE5AA737F3C33D53145AC7 /* ILSWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = ILSWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2131,8 +2140,10 @@
 		B28E52062E84098B69EE3AD1 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F60718293A4B5C /* ApprovePermissionIntent.swift */,
 				954E6D750513A449ED0100A2 /* CodingFocusFilter.swift */,
 				D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */,
+				A1B2C3D4E5F60718293A4B5D /* DenyPermissionIntent.swift */,
 				3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */,
 				0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */,
 				F20BF929C13E2F7A26E7799C /* ListProjectsIntent.swift */,
@@ -2141,6 +2152,7 @@
 				8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */,
 				EAB16073F4EF7ED850213059 /* SessionEntity.swift */,
 				DFB062D4AD1927E72C26655E /* SessionSnippetView.swift */,
+				A1B2C3D4E5F60718293A4B5E /* SummarizeStatusIntent.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -3028,6 +3040,9 @@
 				3423C63A93C7E29E52196FCD /* LargeSessionWidget.swift in Sources */,
 				7666DDC50F812E38DC02D4F7 /* LaunchScreenView.swift in Sources */,
 				39A97C9C633FEC837FA287DE /* ListProjectsIntent.swift in Sources */,
+				39B1A2C8E4F5D7A1B3C9E601 /* ApprovePermissionIntent.swift in Sources */,
+				39B1A2C8E4F5D7A1B3C9E602 /* DenyPermissionIntent.swift in Sources */,
+				39B1A2C8E4F5D7A1B3C9E603 /* SummarizeStatusIntent.swift in Sources */,
 				7F7B4AAA80C057B1ECC5F901 /* ListSessionsIntent.swift in Sources */,
 				A1F9E2E0EF131BF1E1A1D895 /* LiveActivityManager.swift in Sources */,
 				46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */,
@@ -3469,6 +3484,9 @@
 				1D33BC6A88F0C7C226592126 /* LargeSessionWidget.swift in Sources */,
 				4A25CC33FA5ED049DB704652 /* LaunchScreenView.swift in Sources */,
 				6179C21CAAA83C0DAFE37F96 /* ListProjectsIntent.swift in Sources */,
+				617AC21CAAA83C0DAFE37F01 /* ApprovePermissionIntent.swift in Sources */,
+				617AC21CAAA83C0DAFE37F02 /* DenyPermissionIntent.swift in Sources */,
+				617AC21CAAA83C0DAFE37F03 /* SummarizeStatusIntent.swift in Sources */,
 				D34174BD4675718EC5366C2E /* ListSessionsIntent.swift in Sources */,
 				7C2036063B09FDDE967F5730 /* LiveActivityManager.swift in Sources */,
 				8DC8290512BF30B7D1574021 /* LocalDatabase.swift in Sources */,

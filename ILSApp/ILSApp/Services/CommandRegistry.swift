@@ -11,6 +11,7 @@ enum CommandCategory: String, CaseIterable {
     case settings
     case mcp
     case teams
+    case voiceCommands
 
     /// Human-readable section title shown in the palette.
     var displayName: String {
@@ -21,6 +22,7 @@ enum CommandCategory: String, CaseIterable {
         case .settings: return "Settings"
         case .mcp: return "MCP"
         case .teams: return "Teams"
+        case .voiceCommands: return "Voice Commands"
         }
     }
 
@@ -33,6 +35,7 @@ enum CommandCategory: String, CaseIterable {
         case .settings: return "gearshape.fill"
         case .mcp: return "server.rack"
         case .teams: return "person.3.fill"
+        case .voiceCommands: return "waveform.badge.mic"
         }
     }
 }
@@ -255,6 +258,43 @@ class CommandRegistry {
                 icon: "trash",
                 defaultShortcutDisplay: "⌘⌫",
                 action: .postNotification(Notification.Name("ILSDeleteSession"))
+            ),
+            // Voice Commands
+            GlobalCommand(
+                id: "approve-permission",
+                title: "Approve Permission",
+                subtitle: "Approve the pending permission request",
+                category: .voiceCommands,
+                icon: "shield.lefthalf.filled.badge.checkmark",
+                defaultShortcutDisplay: nil,
+                action: .postNotification(Notification.Name("ILSApprovePermission"))
+            ),
+            GlobalCommand(
+                id: "deny-permission",
+                title: "Deny Permission",
+                subtitle: "Deny the pending permission request",
+                category: .voiceCommands,
+                icon: "shield.slash",
+                defaultShortcutDisplay: nil,
+                action: .postNotification(Notification.Name("ILSDenyPermission"))
+            ),
+            GlobalCommand(
+                id: "summarize-status",
+                title: "Summarize Status",
+                subtitle: "Get a summary of active sessions and system status",
+                category: .voiceCommands,
+                icon: "chart.bar.doc.horizontal",
+                defaultShortcutDisplay: nil,
+                action: .custom("summarize-status")
+            ),
+            GlobalCommand(
+                id: "voice-command-mode",
+                title: "Voice Command Mode",
+                subtitle: "Toggle voice command recognition mode",
+                category: .voiceCommands,
+                icon: "waveform.badge.mic",
+                defaultShortcutDisplay: nil,
+                action: .custom("voice-command-mode")
             ),
         ]
     }
