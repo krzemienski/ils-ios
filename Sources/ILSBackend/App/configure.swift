@@ -183,6 +183,9 @@ func configure(_ app: Application) async throws {
     // Run migrations
     try await app.autoMigrate()
 
+    // Configure the PermissionStore with a database handle for audit trail logging.
+    await PermissionStore.shared.configure(database: app.db)
+
     #if DEBUG
     // DB-03: Validate existing data satisfies FK constraints after migration.
     // PRAGMA foreign_key_check returns rows for any FK violations found in the database.

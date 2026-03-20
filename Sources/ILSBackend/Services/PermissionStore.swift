@@ -28,6 +28,10 @@ actor PermissionStore {
     /// Structured logger for PermissionStore operations.
     private static let logger = Logger(label: "ils.permission-store")
 
+    /// Optional Fluent database handle for persisting audit trail entries.
+    /// Set via `configure(database:)` during server startup.
+    private var database: (any Database)?
+
     /// Maximum number of resolved records retained in memory.
     private let resolvedCapacity = 500
 
@@ -39,6 +43,17 @@ actor PermissionStore {
     private var resolvedRecords: [PermissionRecord] = []
 
     // MARK: - Public API
+
+    /// Configure the database handle for audit trail persistence.
+    ///
+    /// Call this once during server startup (from `configure.swift`) so that
+    /// policy-driven auto-approve and auto-deny decisions are logged to the
+    /// `AuditActionModel` table.
+    ///
+    /// - Parameter database: Fluent `Database` handle to use for audit writes.
+    func configure(database: any Database) {
+        self.database = database
+    }
 
     /// Create and store a new pending permission request, evaluating it against configured policies.
     ///
@@ -120,6 +135,7 @@ actor PermissionStore {
             resolvedRecords.append(record)
 
             Self.logger.info("Permission auto-approved by approval policy: \(requestId) tool=\(toolName) policy=\(policyIdString ?? "none")")
+            await logAuditEntry(record: record, evaluation: approvalEval)
             return record
 
         case .autoDeny:
@@ -150,6 +166,7 @@ actor PermissionStore {
             resolvedRecords.append(record)
 
             Self.logger.info("Permission auto-denied by approval policy: \(requestId) tool=\(toolName) reason=\(reasonCodeString ?? "none")")
+            await logAuditEntry(record: record, evaluation: approvalEval)
             return record
 
         case .alwaysAsk, .requireConfirmation:
@@ -297,6 +314,65 @@ actor PermissionStore {
     }
 
     // MARK: - Private Helpers
+
+    /// Log a policy-driven permission decision to the audit trail.
+    ///
+    /// Creates an `AuditActionModel` entry with `actionType = .permissionDecision` so that
+    /// deterministic auto-approve and auto-deny actions appear in the activity history alongside
+    /// manual user decisions.
+    ///
+    /// Failures are logged but do not propagate — audit logging must never block the permission flow.
+    ///
+    /// - Parameters:
+    ///   - record: The resolved `PermissionRecord` (auto-approved or denied).
+    ///   - evaluation: The `PolicyEvaluationResult` that drove the decision.
+    private func logAuditEntry(record: PermissionRecord, evaluation: ILSShared.PolicyEvaluationResult) async {
+        guard let db = database else {
+            Self.logger.debug("Audit logging skipped — no database configured")
+            return
+        }
+
+        let statusLabel = record.status == .autoApproved ? "auto-approved" : "denied"
+        let description = "Permission \(statusLabel) by policy for tool '\(record.toolName)'"
+
+        // Encode policy context as JSON metadata for queryability.
+        var metadataDict: [String: String] = [
+            "requestId": record.requestId,
+            "policyAction": evaluation.action.rawValue,
+            "explanation": evaluation.explanation,
+            "riskLevel": record.riskLevel.rawValue
+        ]
+        if let policyId = evaluation.policyId {
+            metadataDict["policyId"] = policyId.uuidString
+        }
+        if let reasonCode = evaluation.reasonCode {
+            metadataDict["reasonCode"] = reasonCode.rawValue
+        }
+
+        let metadataJSON: String?
+        if let data = try? JSONEncoder().encode(metadataDict) {
+            metadataJSON = String(data: data, encoding: .utf8)
+        } else {
+            metadataJSON = nil
+        }
+
+        let auditModel = AuditActionModel(
+            sessionId: record.sessionId,
+            sessionName: record.sessionName,
+            actionType: .permissionDecision,
+            description: description,
+            toolName: record.toolName,
+            metadata: metadataJSON,
+            isRollbackable: false
+        )
+
+        do {
+            try await auditModel.save(on: db)
+            Self.logger.debug("Audit entry logged for permission \(statusLabel): \(record.requestId)")
+        } catch {
+            Self.logger.warning("Failed to log audit entry for permission \(record.requestId): \(error)")
+        }
+    }
 
     /// Infer a risk level from a tool name using lightweight pattern matching.
     private static func inferRiskLevel(from toolName: String) -> PermissionRiskLevel {
