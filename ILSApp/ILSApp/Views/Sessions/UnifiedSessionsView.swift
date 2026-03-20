@@ -17,8 +17,7 @@ import ILSShared
 /// - ``searchBar`` - Themed search field filtering all backends simultaneously
 /// - ``backendErrorBanner`` - Compact warning bar listing unreachable backends
 /// - ``timeGroup(label:sessions:)`` - Section header and rows for a time period
-/// - ``unifiedSessionRow(_:)`` - Session row with status dot, metadata, and backend pill
-/// - ``backendPill(_:)`` - Color-tinted backend source label
+/// - ``UnifiedSessionRowView`` - Session row with status dot, metadata, and backend pill
 /// - ``loadingView`` - Shimmer skeleton shown while sessions are loading
 /// - ``emptyView`` - Empty state with CTA to add a backend when none are configured
 ///
@@ -163,7 +162,8 @@ struct UnifiedSessionsView: View {
     private func timeGroup(label: String, sessions: [TaggedSession]) -> some View {
         Section {
             ForEach(sessions) { tagged in
-                unifiedSessionRow(tagged)
+                UnifiedSessionRowView(tagged: tagged, onSelected: onSessionSelected)
+                    .equatable()
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
@@ -182,76 +182,6 @@ struct UnifiedSessionsView: View {
             .padding(.vertical, theme.spacingXS)
             .background(theme.bgPrimary)
         }
-    }
-
-    // MARK: - Unified Session Row
-
-    /// Session row combining a status dot, name/project/time metadata, and a backend color pill.
-    @ViewBuilder
-    private func unifiedSessionRow(_ tagged: TaggedSession) -> some View {
-        let session = tagged.session
-        Button {
-            HapticManager.selection()
-            onSessionSelected?(tagged)
-        } label: {
-            HStack(spacing: theme.spacingSM) {
-                // Status indicator dot
-                Circle()
-                    .fill(statusColor(for: session.status))
-                    .frame(width: 6, height: 6)
-
-                // Session metadata
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(session.displayName)
-                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(theme.textPrimary)
-                        .lineLimit(1)
-
-                    if let projectName = session.projectName, !projectName.isEmpty {
-                        Text(projectName)
-                            .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
-                            .foregroundStyle(theme.textSecondary)
-                            .lineLimit(1)
-                    }
-
-                    Text(DateFormatters.relativeDateTime.localizedString(
-                        for: session.lastActiveAt,
-                        relativeTo: Date()
-                    ))
-                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(theme.textTertiary)
-                }
-
-                Spacer()
-
-                // Backend source pill
-                backendPill(tagged)
-            }
-            .padding(.horizontal, theme.spacingSM)
-            .padding(.vertical, theme.spacingXS + 2)
-            .background(Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
-        }
-        .accessibilityLabel("\(session.displayName), from \(tagged.backendName)")
-        .accessibilityHint("Opens this chat session")
-        .accessibilityAddTraits(.isButton)
-    }
-
-    // MARK: - Backend Pill
-
-    /// Small rounded-rectangle badge showing the originating backend with its assigned color tint.
-    ///
-    /// Background uses the backend color at 20% opacity; foreground text uses full backend color.
-    /// Backend name is capped at 10 characters to prevent overflow in narrow rows.
-    private func backendPill(_ tagged: TaggedSession) -> some View {
-        let pillColor = Color(hex: tagged.backendColorHex)
-        return Text(String(tagged.backendName.prefix(10)))
-            .font(.system(size: theme.fontCaption - 2, weight: .medium, design: theme.fontDesign))
-            .foregroundStyle(pillColor)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(pillColor.opacity(0.2))
-            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall / 2))
     }
 
     // MARK: - Loading State
@@ -317,16 +247,6 @@ struct UnifiedSessionsView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func statusColor(for status: SessionStatus) -> Color {
-        switch status {
-        case .active:    return theme.entitySession
-        case .completed: return theme.success
-        case .cancelled: return theme.warning
-        case .error:     return theme.error
-        }
-    }
 }
 
 // MARK: - Preview
