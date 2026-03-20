@@ -79,7 +79,7 @@ struct ConflictResolutionSheet: View {
                 .foregroundStyle(theme.warning)
 
             Text("Sync Conflict Detected")
-                .font(.system(size: theme.fontTitle, weight: .bold, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle3, weight: .bold, design: theme.fontDesign))
                 .foregroundStyle(theme.textPrimary)
 
             Text("This session was modified both locally and on the server. Choose which version to keep.")

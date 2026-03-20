@@ -63,7 +63,7 @@ actor CacheService {
             }
 
             // Update sync metadata for freshly cached sessions
-            updateSyncMetadataAfterCache(sessionsToSave)
+            await updateSyncMetadataAfterCache(sessionsToSave)
 
             // MEM-005: Proactively enforce the hard size limit after every write so
             // the cache never silently grows beyond the 500 MB bound between cleanup cycles.
@@ -306,14 +306,14 @@ actor CacheService {
 
         // Increment the local version to flag that local data has diverged
         do {
-            if var metadata = try db.getSessionSyncMetadata(sessionId: sessionIdString) {
+            if var metadata = try await db.getSessionSyncMetadata(sessionId: sessionIdString) {
                 metadata.markPending()
-                try db.updateSessionVersions(
+                try await db.updateSessionVersions(
                     sessionId: sessionIdString,
                     localVersion: metadata.localVersion,
                     serverVersion: metadata.serverVersion
                 )
-                try db.updateSessionSyncStatus(
+                try await db.updateSessionSyncStatus(
                     sessionId: sessionIdString,
                     status: .pending,
                     failureReason: nil
@@ -344,7 +344,7 @@ actor CacheService {
 
         // Pull sync metadata from the database
         do {
-            let sessionsWithMeta = try db.fetchSessionsWithSyncStatus()
+            let sessionsWithMeta = try await db.fetchSessionsWithSyncStatus()
             for entry in sessionsWithMeta {
                 result[entry.session.id] = entry.syncMetadata.syncStatus
             }
@@ -400,7 +400,7 @@ actor CacheService {
         // Check all locally cached sessions with pending changes
         let sessionsWithMeta: [(session: ChatSession, syncMetadata: SyncMetadata)]
         do {
-            sessionsWithMeta = try db.fetchSessionsWithSyncStatus()
+            sessionsWithMeta = try await db.fetchSessionsWithSyncStatus()
         } catch {
             AppLogger.shared.error(
                 "Reconcile on reconnect failed — could not fetch local sessions: \(error.localizedDescription)",
@@ -427,7 +427,7 @@ actor CacheService {
             case .noConflict:
                 // Server version is compatible — update sync metadata to synced
                 do {
-                    try db.updateSessionSyncStatus(
+                    try await db.updateSessionSyncStatus(
                         sessionId: entry.session.id.uuidString,
                         status: .synced,
                         failureReason: nil
@@ -443,8 +443,8 @@ actor CacheService {
                 // Apply the auto-resolved version
                 autoResolved += 1
                 do {
-                    try db.saveSessions([resolved])
-                    try db.updateSessionSyncStatus(
+                    try await db.saveSessions([resolved])
+                    try await db.updateSessionSyncStatus(
                         sessionId: entry.session.id.uuidString,
                         status: .synced,
                         failureReason: nil
@@ -507,7 +507,7 @@ actor CacheService {
         // Fetch all local sessions once before the loop for O(1) lookups
         let allLocalSessions: [ChatSession]
         do {
-            allLocalSessions = try db.fetchSessions(newerThan: nil, isOffline: true)
+            allLocalSessions = try await db.fetchSessions(newerThan: nil, isOffline: true)
         } catch {
             return conflictedIds
         }
@@ -519,7 +519,7 @@ actor CacheService {
             // Check if this session has pending local changes
             let metadata: SyncMetadata?
             do {
-                metadata = try db.getSessionSyncMetadata(sessionId: sessionId)
+                metadata = try await db.getSessionSyncMetadata(sessionId: sessionId)
             } catch {
                 continue
             }
@@ -542,8 +542,8 @@ actor CacheService {
             case .autoResolved(let resolved):
                 // Apply auto-resolved version directly
                 do {
-                    try db.saveSessions([resolved])
-                    try db.updateSessionSyncStatus(
+                    try await db.saveSessions([resolved])
+                    try await db.updateSessionSyncStatus(
                         sessionId: sessionId,
                         status: .synced,
                         failureReason: nil
@@ -574,14 +574,14 @@ actor CacheService {
     /// For sessions without pending local changes, marks them as synced with
     /// the current timestamp. Sessions with pending changes are left untouched
     /// to preserve their dirty state.
-    private func updateSyncMetadataAfterCache(_ sessions: [ChatSession]) {
+    private func updateSyncMetadataAfterCache(_ sessions: [ChatSession]) async {
         for session in sessions {
             let sessionId = session.id.uuidString
             do {
-                let metadata = try db.getSessionSyncMetadata(sessionId: sessionId)
+                let metadata = try await db.getSessionSyncMetadata(sessionId: sessionId)
                 // Only update metadata for sessions that don't have pending local changes
                 if metadata == nil || !metadata!.hasLocalChanges {
-                    try db.updateSessionSyncStatus(
+                    try await db.updateSessionSyncStatus(
                         sessionId: sessionId,
                         status: .synced,
                         failureReason: nil

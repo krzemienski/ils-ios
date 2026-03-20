@@ -68,11 +68,11 @@ actor ConflictResolver {
     ///   - localSession: The locally cached version of the session.
     ///   - serverSession: The latest version from the server.
     /// - Returns: A `ConflictResult` indicating whether a conflict exists and how it was handled.
-    func detectConflict(localSession: ChatSession, serverSession: ChatSession) -> ConflictResult {
+    func detectConflict(localSession: ChatSession, serverSession: ChatSession) async -> ConflictResult {
         // Fetch sync metadata to compare versions
         let metadata: SyncMetadata?
         do {
-            metadata = try db.getSessionSyncMetadata(sessionId: localSession.id.uuidString)
+            metadata = try await db.getSessionSyncMetadata(sessionId: localSession.id.uuidString)
         } catch {
             AppLogger.shared.warning(
                 "Failed to read sync metadata for session \(localSession.id): \(error.localizedDescription)",
@@ -137,12 +137,12 @@ actor ConflictResolver {
                 "Resolving conflict for \(sessionId): keeping local version",
                 category: "sync"
             )
-            clearConflictState(sessionId: sessionId)
+            await clearConflictState(sessionId: sessionId)
             return
 
         case .keepServer:
             // Accept the server version — retrieve from conflict data
-            guard let serverSession = loadConflictData(sessionId: sessionId) else {
+            guard let serverSession = await loadConflictData(sessionId: sessionId) else {
                 AppLogger.shared.error(
                     "Cannot resolve conflict for \(sessionId): no stored server data",
                     category: "sync"
@@ -157,7 +157,7 @@ actor ConflictResolver {
 
         // Persist the resolved session to the cache
         do {
-            try db.saveSessions([resolvedSession])
+            try await db.saveSessions([resolvedSession])
             AppLogger.shared.info(
                 "Resolved conflict for \(sessionId): saved merged/server version",
                 category: "sync"
@@ -169,7 +169,7 @@ actor ConflictResolver {
             )
         }
 
-        clearConflictState(sessionId: sessionId)
+        await clearConflictState(sessionId: sessionId)
     }
 
     // MARK: - Private Helpers
@@ -210,7 +210,7 @@ actor ConflictResolver {
     ///
     /// Called when a conflict is detected so the server version is available
     /// for later resolution without re-fetching from the network.
-    func storeConflictData(sessionId: UUID, serverSession: ChatSession) {
+    func storeConflictData(sessionId: UUID, serverSession: ChatSession) async {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
 
@@ -218,7 +218,7 @@ actor ConflictResolver {
             let data = try encoder.encode(serverSession)
 
             // Retrieve current metadata to get the server version
-            guard var metadata = try db.getSessionSyncMetadata(sessionId: sessionId.uuidString) else {
+            guard var metadata = try await db.getSessionSyncMetadata(sessionId: sessionId.uuidString) else {
                 AppLogger.shared.warning(
                     "No sync metadata found for session \(sessionId) — cannot store conflict data",
                     category: "sync"
@@ -232,7 +232,7 @@ actor ConflictResolver {
             )
 
             // Persist the conflict status and server snapshot
-            try db.updateSessionSyncStatus(
+            try await db.updateSessionSyncStatus(
                 sessionId: sessionId.uuidString,
                 status: .conflict,
                 failureReason: nil,
@@ -247,12 +247,12 @@ actor ConflictResolver {
     }
 
     /// Load the stored server session from conflict metadata.
-    private func loadConflictData(sessionId: UUID) -> ChatSession? {
+    private func loadConflictData(sessionId: UUID) async -> ChatSession? {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
         do {
-            guard let metadata = try db.getSessionSyncMetadata(sessionId: sessionId.uuidString),
+            guard let metadata = try await db.getSessionSyncMetadata(sessionId: sessionId.uuidString),
                   let data = metadata.conflictData else { return nil }
             return try decoder.decode(ChatSession.self, from: data)
         } catch {
@@ -265,9 +265,9 @@ actor ConflictResolver {
     }
 
     /// Clear conflict state and mark the session as synced.
-    private func clearConflictState(sessionId: UUID) {
+    private func clearConflictState(sessionId: UUID) async {
         do {
-            try db.updateSessionSyncStatus(
+            try await db.updateSessionSyncStatus(
                 sessionId: sessionId.uuidString,
                 status: .synced,
                 failureReason: nil

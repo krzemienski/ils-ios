@@ -101,8 +101,6 @@ actor SyncCoordinator {
 
     private init() {
         queue = Self.loadQueue()
-        // Rebuild sync status map from loaded queue
-        rebuildSyncStatusMap()
         notificationObserver = NotificationCenter.default.addObserver(
             forName: .networkDidBecomeAvailable,
             object: nil,
@@ -112,6 +110,8 @@ actor SyncCoordinator {
                 await SyncCoordinator.shared.drainQueue()
             }
         }
+        // Rebuild sync status map from loaded queue (must be after all stored properties init)
+        rebuildSyncStatusMap()
     }
 
     deinit {
@@ -148,7 +148,7 @@ actor SyncCoordinator {
     ///   - entityId: The unique ID of the entity being changed.
     ///   - changeType: The kind of mutation: "create", "update", or "delete".
     ///   - changeData: Optional JSON-encoded payload describing the change.
-    func trackChange(entityType: String, entityId: String, changeType: String, changeData: Data?) {
+    func trackChange(entityType: String, entityId: String, changeType: String, changeData: Data?) async {
         let change = PendingChange(
             id: UUID().uuidString,
             entityType: entityType,
@@ -160,7 +160,7 @@ actor SyncCoordinator {
         )
 
         do {
-            try LocalDatabase.shared.savePendingChange(change)
+            try await LocalDatabase.shared.savePendingChange(change)
             AppLogger.shared.info(
                 "Tracked \(changeType) change for \(entityType)/\(entityId)",
                 category: "sync"
@@ -271,12 +271,12 @@ actor SyncCoordinator {
 
         // Also reset pending_changes status for the session
         do {
-            let allChanges = try LocalDatabase.shared.fetchAllPendingChanges()
+            let allChanges = try await LocalDatabase.shared.fetchAllPendingChanges()
             let sessionChanges = allChanges.filter { change in
                 change.entityType == "session" && change.entityId == sessionId
             }
             for change in sessionChanges where change.status == "failed" {
-                try LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "pending")
+                try await LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "pending")
             }
         } catch {
             AppLogger.shared.error(
@@ -385,7 +385,7 @@ actor SyncCoordinator {
     /// Sync pending changes from the database for a specific session.
     private func syncPendingChanges(for sessionId: String) async {
         do {
-            let allChanges = try LocalDatabase.shared.fetchAllPendingChanges()
+            let allChanges = try await LocalDatabase.shared.fetchAllPendingChanges()
             let sessionChanges = allChanges.filter { change in
                 (change.entityType == "session" && change.entityId == sessionId) ||
                 change.entityId.hasPrefix("\(sessionId):")
@@ -399,13 +399,13 @@ actor SyncCoordinator {
             var allSucceeded = true
             for change in sessionChanges where change.status == "pending" {
                 // Mark as syncing
-                try LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "syncing")
+                try await LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "syncing")
 
                 let success = await executePendingChange(change)
                 if success {
-                    try LocalDatabase.shared.deletePendingChange(id: change.id)
+                    try await LocalDatabase.shared.deletePendingChange(id: change.id)
                 } else {
-                    try LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "failed")
+                    try await LocalDatabase.shared.updatePendingChangeStatus(id: change.id, status: "failed")
                     allSucceeded = false
                 }
             }
