@@ -514,10 +514,10 @@ struct SessionsController: RouteCollection {
     }
 
     /// Get messages for a session with pagination.
-    /// - Parameter req: Vapor Request with id parameter and optional limit/offset query params
+    /// - Parameter req: Vapor Request with id parameter and optional page/limit query params
     /// - Returns: APIResponse with paginated list of Message objects
     @Sendable
-    func messages(req: Request) async throws -> APIResponse<ListResponse<Message>> {
+    func messages(req: Request) async throws -> APIResponse<PaginatedResponse<Message>> {
         guard let id = req.parameters.get("id", as: UUID.self) else {
             throw Abort(.badRequest, reason: "Invalid session ID")
         }
@@ -528,8 +528,9 @@ struct SessionsController: RouteCollection {
         }
 
         // Get pagination parameters
-        let limit = req.query[Int.self, at: "limit"] ?? 100
-        let offset = req.query[Int.self, at: "offset"] ?? 0
+        let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 100, 1), 1000)
+        let offset = (page - 1) * limit
 
         // Query messages for this session
         let query = MessageModel.query(on: req.db)
@@ -550,7 +551,13 @@ struct SessionsController: RouteCollection {
 
         return APIResponse(
             success: true,
-            data: ListResponse(items: messages, total: total)
+            data: PaginatedResponse(
+                items: messages,
+                total: total,
+                hasMore: offset + messages.count < total,
+                page: page,
+                limit: limit
+            )
         )
     }
 
