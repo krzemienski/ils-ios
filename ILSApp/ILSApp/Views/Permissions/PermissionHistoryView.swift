@@ -18,13 +18,20 @@ struct PermissionHistoryView: View {
     @State private var searchText: String = ""
     @State private var selectedRecord: PermissionRecord? = nil
     @State private var isLoading: Bool = false
+    @State private var filterPolicyAutoResolved: Bool = false
 
     private var service: PermissionService { appState.permissionService }
 
     private var filteredHistory: [PermissionRecord] {
-        guard !searchText.isEmpty else { return service.permissionHistory }
+        var records = service.permissionHistory
+
+        if filterPolicyAutoResolved {
+            records = records.filter { $0.matchedPolicyId != nil }
+        }
+
+        guard !searchText.isEmpty else { return records }
         let query = searchText.lowercased()
-        return service.permissionHistory.filter {
+        return records.filter {
             $0.toolName.lowercased().contains(query)
                 || ($0.sessionName?.lowercased().contains(query) ?? false)
                 || ($0.projectName?.lowercased().contains(query) ?? false)
@@ -76,9 +83,11 @@ struct PermissionHistoryView: View {
         .task {
             await viewModel.loadHistory()
             await loadServiceHistory()
+            await viewModel.loadPolicyNames(apiClient: appState.apiClient)
         }
         .sheet(item: $selectedRecord) { record in
-            PermissionHistoryDetailSheet(record: record)
+            let policyName = record.matchedPolicyId.flatMap { viewModel.policyNames[$0] }
+            PermissionHistoryDetailSheet(record: record, matchedPolicyName: policyName)
         }
         .alert("Clear Permission History", isPresented: $viewModel.showClearConfirmation) {
             Button("Clear All", role: .destructive) {
@@ -156,7 +165,9 @@ struct PermissionHistoryView: View {
 
     private var historySection: some View {
         VStack(spacing: theme.spacingXS) {
-            if filteredHistory.isEmpty && !searchText.isEmpty {
+            filterChipsRow
+
+            if filteredHistory.isEmpty && (!searchText.isEmpty || filterPolicyAutoResolved) {
                 noResultsState
             } else {
                 ForEach(filteredHistory) { record in
@@ -164,6 +175,51 @@ struct PermissionHistoryView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Filter Chips
+
+    private var filterChipsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: theme.spacingXS) {
+                filterChip(
+                    label: "Policy Auto-Resolved",
+                    icon: "bolt.shield",
+                    isActive: filterPolicyAutoResolved
+                ) {
+                    filterPolicyAutoResolved.toggle()
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+        .frame(height: 34)
+    }
+
+    private func filterChip(
+        label: String,
+        icon: String,
+        isActive: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                Text(label)
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+            }
+            .foregroundStyle(isActive ? theme.accent : theme.textSecondary)
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, theme.spacingXS)
+            .background(isActive ? theme.accent.opacity(0.12) : theme.bgSecondary)
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(isActive ? theme.accent.opacity(0.4) : theme.border, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(label) filter, \(isActive ? "active" : "inactive")")
     }
 
     // MARK: - History Row (PermissionRecord — from service)
@@ -186,7 +242,17 @@ struct PermissionHistoryView: View {
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
-                if let session = record.sessionName {
+                if let policyId = record.matchedPolicyId,
+                   let policyName = viewModel.policyNames[policyId] {
+                    HStack(spacing: 3) {
+                        Image(systemName: "bolt.shield")
+                            .font(.system(size: 9, design: theme.fontDesign))
+                        Text(policyName)
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(theme.accent)
+                } else if let session = record.sessionName {
                     Text(session)
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
@@ -373,6 +439,8 @@ struct PermissionHistoryView: View {
 struct PermissionHistoryDetailSheet: View {
 
     let record: PermissionRecord
+    /// Display name of the policy that matched this record, if any.
+    var matchedPolicyName: String? = nil
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
@@ -502,6 +570,11 @@ struct PermissionHistoryDetailSheet: View {
                     Divider().background(theme.bgTertiary)
                     metaRow("Scope", value: "Session-wide")
                 }
+
+                if let policyId = record.matchedPolicyId {
+                    Divider().background(theme.bgTertiary)
+                    metaRow("Matched Policy", value: matchedPolicyDisplay(policyId))
+                }
             }
             .padding(theme.spacingSM)
             .modifier(GlassCard())
@@ -606,6 +679,10 @@ struct PermissionHistoryDetailSheet: View {
         if name.contains("glob") { return "Search for files" }
         if name.contains("grep") { return "Search file contents" }
         return "Use a tool"
+    }
+
+    private func matchedPolicyDisplay(_ policyId: UUID) -> String {
+        matchedPolicyName ?? policyId.uuidString
     }
 
     private func resolvedByLabel(_ resolvedBy: String) -> String {

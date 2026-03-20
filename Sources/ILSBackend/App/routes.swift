@@ -44,6 +44,7 @@ func routes(_ app: Application) throws {
     try elevated.register(collection: PermissionsController(executor: executor))
     try elevated.register(collection: AutomationRulesController())
     try elevated.register(collection: AgentQueueController(queueService: AgentQueueService(db: app.db, executor: ClaudeExecutorService())))
+    try elevated.register(collection: PermissionPoliciesController())
 
     // Admin-protected routes (require X-Admin-Token when ILS_ADMIN_KEY is set)
     let admin = api.grouped(AdminMiddleware())

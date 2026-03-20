@@ -168,6 +168,12 @@ func configure(_ app: Application) async throws {
     // v6.3 — AI response quality feedback & audit trail
     app.migrations.add(CreateResponseFeedback())
     app.migrations.add(AddMessageContentToFeedback())
+    // v6.4 — Interactive permission policy engine
+    app.migrations.add(CreatePermissionPolicies())
+    app.migrations.add(CreatePermissionPolicySettings())
+    // v6.5 — Permission policy tracking (matched_policy_id on permissions)
+    app.migrations.add(AddPolicyIdToPermissions())
+    // v6.6 — AI action audit trail & one-tap rollback
     app.migrations.add(CreateAuditActions())
     // v6.4 — Session interruption reason for auto-recovery/resume
     app.migrations.add(AddInterruptionReasonToSessions())

@@ -66,6 +66,8 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
     public let denyReason: String?
     /// Whether approval applies for the entire session (not just once).
     public let isSessionApproval: Bool
+    /// ID of the permission policy that automatically resolved this request, if any.
+    public let matchedPolicyId: UUID?
 
     public init(
         id: String,
@@ -81,7 +83,8 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
         resolvedAt: Date? = nil,
         resolvedBy: String? = nil,
         denyReason: String? = nil,
-        isSessionApproval: Bool = false
+        isSessionApproval: Bool = false,
+        matchedPolicyId: UUID? = nil
     ) {
         precondition(!id.isEmpty, "PermissionRecord id must not be empty")
         precondition(!requestId.isEmpty, "PermissionRecord requestId must not be empty")
@@ -101,5 +104,6 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
         self.resolvedBy = resolvedBy
         self.denyReason = denyReason
         self.isSessionApproval = isSessionApproval
+        self.matchedPolicyId = matchedPolicyId
     }
 }

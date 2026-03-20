@@ -61,6 +61,10 @@ final class PermissionModel: Model, Content, @unchecked Sendable {
     @Field(key: "is_session_approval")
     var isSessionApproval: Bool
 
+    /// ID of the permission policy that automatically resolved this request, if any.
+    @OptionalField(key: "matched_policy_id")
+    var matchedPolicyId: String?
+
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
@@ -80,7 +84,8 @@ final class PermissionModel: Model, Content, @unchecked Sendable {
         resolvedAt: Date? = nil,
         resolvedBy: String? = nil,
         denyReason: String? = nil,
-        isSessionApproval: Bool = false
+        isSessionApproval: Bool = false,
+        matchedPolicyId: String? = nil
     ) {
         self.id = id
         self.requestId = requestId
@@ -96,6 +101,7 @@ final class PermissionModel: Model, Content, @unchecked Sendable {
         self.resolvedBy = resolvedBy
         self.denyReason = denyReason
         self.isSessionApproval = isSessionApproval
+        self.matchedPolicyId = matchedPolicyId
     }
 
     /// Convert to shared PermissionRecord type.
@@ -117,7 +123,8 @@ final class PermissionModel: Model, Content, @unchecked Sendable {
             resolvedAt: resolvedAt,
             resolvedBy: resolvedBy,
             denyReason: denyReason,
-            isSessionApproval: isSessionApproval
+            isSessionApproval: isSessionApproval,
+            matchedPolicyId: matchedPolicyId.flatMap { UUID(uuidString: $0) }
         )
     }
 
@@ -140,7 +147,8 @@ final class PermissionModel: Model, Content, @unchecked Sendable {
             resolvedAt: record.resolvedAt,
             resolvedBy: record.resolvedBy,
             denyReason: record.denyReason,
-            isSessionApproval: record.isSessionApproval
+            isSessionApproval: record.isSessionApproval,
+            matchedPolicyId: record.matchedPolicyId?.uuidString
         )
     }
 }

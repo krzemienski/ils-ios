@@ -1,4 +1,5 @@
 import Foundation
+import Fluent
 import ILSShared
 import Logging
 
@@ -39,13 +40,17 @@ actor PermissionStore {
 
     // MARK: - Public API
 
-    /// Create and store a new pending permission request.
+    /// Create and store a new pending permission request, optionally evaluating policies.
     ///
     /// Infers the risk level from the tool name using a simple heuristic:
     /// - `bash` / `computer` → `.critical`
     /// - write/edit/create/delete/move/rename → `.high`
     /// - read/glob/grep/search/ls/find → `.low`
     /// - everything else → `.medium`
+    ///
+    /// When `db` is supplied, the policy engine is evaluated immediately. If a matching
+    /// policy is found, the record is auto-resolved (approved or denied) and persisted to
+    /// the database with the `matched_policy_id` field set.
     ///
     /// - Parameters:
     ///   - requestId: Unique identifier emitted by Claude (e.g. the tool-use block ID).
@@ -54,7 +59,9 @@ actor PermissionStore {
     ///   - toolInput: Arbitrary tool input parameters as `AnyCodable`.
     ///   - sessionName: Human-readable session name for display, if available.
     ///   - projectName: Project name associated with the session, if available.
-    /// - Returns: The newly created `PermissionRecord` with `status = .pending`.
+    ///   - db: Optional database connection for policy evaluation and auto-resolution persistence.
+    /// - Returns: The newly created `PermissionRecord` (status may be `.autoApproved` or
+    ///   `.denied` if a policy matched, otherwise `.pending`).
     @discardableResult
     func addPending(
         requestId: String,
@@ -62,8 +69,9 @@ actor PermissionStore {
         toolName: String,
         toolInput: AnyCodable,
         sessionName: String?,
-        projectName: String?
-    ) -> PermissionRecord {
+        projectName: String?,
+        db: Database? = nil
+    ) async -> PermissionRecord {
         let record = PermissionRecord(
             id: UUID().uuidString,
             requestId: requestId,
@@ -78,10 +86,40 @@ actor PermissionStore {
         )
         pendingRequests[requestId] = record
         Self.logger.info("Permission pending: \(requestId) tool=\(toolName) session=\(sessionId)")
+
+        // Evaluate configured policies immediately when a database connection is available.
+        // If a policy matches, auto-resolve the record without requiring user interaction.
+        if let database = db {
+            if let (action, matchedPolicy) = try? await PolicyEvaluationService.shared.evaluate(
+                request: record,
+                db: database
+            ) {
+                // Auto-resolve when: a named policy matched, OR default-deny triggered (deny + no policy).
+                if matchedPolicy != nil || action == .deny {
+                    let autoStatus: PermissionStatus = action == .allow ? .autoApproved : .denied
+                    let reason: String? = matchedPolicy == nil ? "Default deny mode active" : nil
+                    if let resolved = resolve(
+                        requestId: requestId,
+                        status: autoStatus,
+                        reason: reason,
+                        matchedPolicyId: matchedPolicy?.id
+                    ) {
+                        // Persist the auto-resolved record to the database for audit trail.
+                        let model = PermissionModel.from(resolved)
+                        try? await model.save(on: database)
+                        Self.logger.info(
+                            "Permission auto-resolved: \(requestId) status=\(autoStatus.rawValue) policy=\(matchedPolicy?.name ?? "default-deny")"
+                        )
+                        return resolved
+                    }
+                }
+            }
+        }
+
         return record
     }
 
-    /// Resolve a pending permission request with a user decision.
+    /// Resolve a pending permission request with a user or policy decision.
     ///
     /// Moves the record from `pendingRequests` to `resolvedRecords`, updating its status,
     /// `resolvedAt` timestamp, and optional deny reason. If the `resolvedRecords` buffer
@@ -91,12 +129,14 @@ actor PermissionStore {
     ///   - requestId: The `requestId` of the pending record to resolve.
     ///   - status: Final status — `.approved`, `.denied`, `.autoApproved`, or `.expired`.
     ///   - reason: Optional denial reason or resolution note.
+    ///   - matchedPolicyId: UUID of the policy that triggered this resolution, if auto-resolved.
     /// - Returns: The updated `PermissionRecord`, or `nil` if `requestId` was not found.
     @discardableResult
     func resolve(
         requestId: String,
         status: PermissionStatus,
-        reason: String?
+        reason: String?,
+        matchedPolicyId: UUID? = nil
     ) -> PermissionRecord? {
         guard let existing = pendingRequests.removeValue(forKey: requestId) else {
             Self.logger.warning("Resolve called for unknown requestId: \(requestId)")
@@ -124,7 +164,8 @@ actor PermissionStore {
             resolvedAt: Date(),
             resolvedBy: resolvedBy,
             denyReason: reason,
-            isSessionApproval: existing.isSessionApproval
+            isSessionApproval: existing.isSessionApproval,
+            matchedPolicyId: matchedPolicyId
         )
 
         // Evict oldest entry if at capacity (FIFO)

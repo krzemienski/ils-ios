@@ -373,6 +373,18 @@ extension CreateConfigProfileRequest: Content {}
 extension UpdateConfigProfileRequest: Content {}
 extension ConfigProfileListResponse: Content {}
 
+// MARK: - Permission Policy Types
+extension PermissionPolicy: Content {}
+extension PermissionPolicyAction: Content {}
+extension PermissionPolicyResponse: Content {}
+extension ListPermissionPoliciesResponse: Content {}
+extension CreatePermissionPolicyRequest: Content {}
+extension UpdatePermissionPolicyRequest: Content {}
+extension ReorderPermissionPoliciesRequest: Content {}
+extension PermissionPolicySettings: Content {}
+extension PermissionPolicySettingsResponse: Content {}
+extension UpdatePermissionPolicySettingsRequest: Content {}
+
 // MARK: - Feedback DTOs
 extension SubmitFeedbackRequest: Content {}
 extension FeedbackResponse: Content {}
