@@ -39,6 +39,12 @@ struct SidebarSessionRow: View {
     /// When non-empty and the session is not active, any case-insensitive occurrence of
     /// this string within ``sessionDisplayName`` is rendered in `theme.accent`.
     var searchText: String = ""
+    /// Sync status for this session. When not `.synced`, a ``SessionSyncBadge`` is shown.
+    var syncStatus: SyncStatus = .synced
+    /// Called when the user taps "Retry" on a failed sync badge.
+    var onRetrySync: (() -> Void)? = nil
+    /// Called when the user taps a conflict sync badge to present resolution UI.
+    var onConflictTap: (() -> Void)? = nil
     /// Called when the user taps the row; fired after a selection haptic.
     let onTap: () -> Void
 
@@ -102,12 +108,25 @@ struct SidebarSessionRow: View {
                 }
 
                 Spacer()
+
+                // Sync status badge — hidden when synced to avoid visual noise
+                if syncStatus != .synced {
+                    SessionSyncBadge(
+                        status: syncStatus,
+                        onRetry: syncStatus == .failed ? onRetrySync : nil
+                    )
+                    .onTapGesture {
+                        if syncStatus == .conflict {
+                            onConflictTap?()
+                        }
+                    }
+                }
             }
             .padding(.horizontal, theme.spacingSM)
             .padding(.vertical, theme.spacingXS + 2)
         }
         .buttonStyle(RowButtonStyle(isActive: isActive, theme: theme))
-        .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? "")\(session.model.isEmpty ? "" : ", \(session.model.capitalized)"), \(relativeTime)")
+        .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? "")\(session.model.isEmpty ? "" : ", \(session.model.capitalized)"), \(relativeTime)\(syncStatus != .synced ? ", \(syncStatus.displayName)" : "")")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
     }
