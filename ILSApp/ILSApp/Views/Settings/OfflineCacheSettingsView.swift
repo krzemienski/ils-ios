@@ -16,6 +16,9 @@ struct OfflineCacheSettingsView: View {
     @State private var cacheSizeBytes: Int64 = 0
     @State private var isClearingCache: Bool = false
     @State private var showClearConfirmation: Bool = false
+    @State private var troubledSessions: [(session: ChatSession, syncMetadata: SyncMetadata)] = []
+    @State private var selectedConflictSession: (local: ChatSession, server: ChatSession, fields: [ConflictField])? = nil
+    @State private var showConflictSheet: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
@@ -24,6 +27,8 @@ struct OfflineCacheSettingsView: View {
             storageSection
 
             cacheTypesSection
+
+            syncStatusSection
 
             capacitySection
 
@@ -35,6 +40,21 @@ struct OfflineCacheSettingsView: View {
         }
         .task {
             cacheSizeBytes = await CacheService.shared.cacheStorageBytes()
+            refreshTroubledSessions()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .syncStatusDidChange)) { _ in
+            refreshTroubledSessions()
+        }
+        .sheet(isPresented: $showConflictSheet) {
+            if let conflict = selectedConflictSession {
+                NavigationStack {
+                    ConflictResolutionSheet(
+                        localSession: conflict.local,
+                        serverSession: conflict.server,
+                        conflictFields: conflict.fields
+                    )
+                }
+            }
         }
     }
 
@@ -169,6 +189,93 @@ struct OfflineCacheSettingsView: View {
         }
     }
 
+    // MARK: - Sync Status Section
+
+    private var syncStatusSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Sync Status")
+
+            SyncStatusOverview()
+
+            VStack(spacing: 0) {
+                Toggle(isOn: $settings.autoResolveConflicts) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Auto-resolve Conflicts")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Text("Use last-write-wins by timestamp")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
+                    }
+                }
+                .tint(theme.accent)
+                .padding(theme.spacingMD)
+                .accessibilityLabel("Auto-resolve sync conflicts")
+            }
+            .modifier(GlassCard())
+
+            if !troubledSessions.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(Array(troubledSessions.enumerated()), id: \.element.session.id) { index, entry in
+                        if index > 0 {
+                            Divider().background(theme.bgTertiary)
+                        }
+                        troubledSessionRow(session: entry.session, metadata: entry.syncMetadata)
+                    }
+                }
+                .modifier(GlassCard())
+            }
+        }
+        .disabled(!settings.isCacheEnabled)
+        .opacity(settings.isCacheEnabled ? 1 : 0.5)
+    }
+
+    @ViewBuilder
+    private func troubledSessionRow(session: ChatSession, metadata: SyncMetadata) -> some View {
+        HStack(spacing: theme.spacingSM) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(session.name ?? "Untitled Session")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.textPrimary)
+                    .lineLimit(1)
+                Text(metadata.syncStatus.displayName)
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(metadata.syncStatus == .conflict ? theme.warning : theme.error)
+            }
+
+            Spacer()
+
+            if metadata.syncStatus == .conflict {
+                Button {
+                    presentConflictSheet(for: session, metadata: metadata)
+                } label: {
+                    Text("Resolve")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.accent)
+                        .padding(.horizontal, theme.spacingSM)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(Capsule().fill(theme.accent.opacity(0.12)))
+                }
+                .accessibilityLabel("Resolve conflict for \(session.name ?? "session")")
+            } else if metadata.syncStatus == .failed {
+                Button {
+                    Task {
+                        await SyncCoordinator.shared.retryFailed(sessionId: session.id.uuidString)
+                    }
+                } label: {
+                    Text("Retry")
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                        .foregroundStyle(theme.error)
+                        .padding(.horizontal, theme.spacingSM)
+                        .padding(.vertical, theme.spacingXS)
+                        .background(Capsule().fill(theme.error.opacity(0.12)))
+                }
+                .accessibilityLabel("Retry sync for \(session.name ?? "session")")
+            }
+        }
+        .padding(theme.spacingMD)
+    }
+
     // MARK: - Private Helpers
 
     private var formattedCacheSize: String {
@@ -183,6 +290,34 @@ struct OfflineCacheSettingsView: View {
         await CacheService.shared.clearAll()
         cacheSizeBytes = await CacheService.shared.cacheStorageBytes()
         isClearingCache = false
+    }
+
+    private func refreshTroubledSessions() {
+        do {
+            let allSessions = try LocalDatabase.shared.fetchSessionsWithSyncStatus()
+            troubledSessions = allSessions.filter { entry in
+                entry.syncMetadata.syncStatus == .conflict || entry.syncMetadata.syncStatus == .failed
+            }
+        } catch {
+            troubledSessions = []
+        }
+    }
+
+    private func presentConflictSheet(for session: ChatSession, metadata: SyncMetadata) {
+        // Decode the server session from conflict data
+        guard let conflictData = metadata.conflictData else { return }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let serverSession = try? decoder.decode(ChatSession.self, from: conflictData) else { return }
+
+        // Detect conflicting fields
+        var fields: [ConflictField] = []
+        if session.name != serverSession.name { fields.append(.name) }
+        if session.status != serverSession.status { fields.append(.status) }
+        if session.messageCount != serverSession.messageCount { fields.append(.messageCount) }
+
+        selectedConflictSession = (local: session, server: serverSession, fields: fields)
+        showConflictSheet = true
     }
 
     @ViewBuilder

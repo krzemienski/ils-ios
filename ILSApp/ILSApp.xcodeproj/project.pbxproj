@@ -469,6 +469,12 @@
 		834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */; };
 		746D8573C0F9F4F62B0690A8 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E778C243AE9F2BD0B6E73F23 /* ConflictResolver.swift */; };
 		3923035E667F09C9880ED8F2 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E778C243AE9F2BD0B6E73F23 /* ConflictResolver.swift */; };
+		E944FDED29C0EF7E7DEA56C3 /* SessionSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C83EE761A58108EF49BBB9 /* SessionSyncBadge.swift */; };
+		37943DB61541152E33447C45 /* SessionSyncBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1C83EE761A58108EF49BBB9 /* SessionSyncBadge.swift */; };
+		E6BE72FE132D225D582120D9 /* SyncStatusOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22F7D41D65A864F24794290D /* SyncStatusOverview.swift */; };
+		E43E94203F4975FE603D0AA4 /* SyncStatusOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22F7D41D65A864F24794290D /* SyncStatusOverview.swift */; };
+		FD0DB65C150AA6F5ECE0991A /* ConflictResolutionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A3708567AA6CEE8591FD23 /* ConflictResolutionSheet.swift */; };
+		33BB5E5524392C3F2AEFDA40 /* ConflictResolutionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A3708567AA6CEE8591FD23 /* ConflictResolutionSheet.swift */; };
 		8388292832A6A2D84263617A /* EntityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0024C81115458B0BBD8350 /* EntityBadge.swift */; };
 		845EF2DE72C08B442585E6D9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59D339E49103B78DA87082F /* AppState.swift */; };
 		84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */; };
@@ -1320,6 +1326,9 @@
 		C28D64369CB35AEA4B5FDB37 /* HookTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookTemplate.swift; sourceTree = "<group>"; };
 		C2A4DFFEAEB0A4643A6CB8DB /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
 		E778C243AE9F2BD0B6E73F23 /* ConflictResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolver.swift; sourceTree = "<group>"; };
+		E1C83EE761A58108EF49BBB9 /* SessionSyncBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSyncBadge.swift; sourceTree = "<group>"; };
+		22F7D41D65A864F24794290D /* SyncStatusOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatusOverview.swift; sourceTree = "<group>"; };
+		78A3708567AA6CEE8591FD23 /* ConflictResolutionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictResolutionSheet.swift; sourceTree = "<group>"; };
 		C37028F77B30A94BA47159F4 /* ILSCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSCommands.swift; sourceTree = "<group>"; };
 		C4F4DC1C08A6A64A6EBE6E5F /* UnifiedSessionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSessionsViewModel.swift; sourceTree = "<group>"; };
 		C52FFD26C242D9641EFF5D8D /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
@@ -1628,6 +1637,8 @@
 				8C01CFB5EC3C84F313D4CC9F /* InfoTooltipButton.swift */,
 				D75ECADC2C6860C7274E4736 /* OfflineIndicator.swift */,
 				0BAC855B02609FF5D891AC48 /* QueuedMessageBadge.swift */,
+				E1C83EE761A58108EF49BBB9 /* SessionSyncBadge.swift */,
+				22F7D41D65A864F24794290D /* SyncStatusOverview.swift */,
 				B94DFC97113C0E69DEC2120C /* TunnelStatusCard.swift */,
 			);
 			path = Components;
@@ -1779,6 +1790,7 @@
 			isa = PBXGroup;
 			children = (
 				E45286C1C9773FE7BBB9D215 /* ConfigEditorView.swift */,
+				78A3708567AA6CEE8591FD23 /* ConflictResolutionSheet.swift */,
 				52B8C71B0B04586A8B4E3FE4 /* DensityPickerView.swift */,
 				D01014133D6D4910097B2C57 /* ICloudSyncSettingsView.swift */,
 				6B2634781444A812858E741C /* KeyboardShortcutsView.swift */,
@@ -2843,9 +2855,12 @@
 				9C30563A1ED1E15628E54487 /* BrowserView.swift in Sources */,
 				84A0C3EB7D957139BF54D41B /* CacheService.swift in Sources */,
 				746D8573C0F9F4F62B0690A8 /* ConflictResolver.swift in Sources */,
+				FD0DB65C150AA6F5ECE0991A /* ConflictResolutionSheet.swift in Sources */,
 				0912B960A92DAE37D291E97E /* CacheStats.swift in Sources */,
 				B2D4E6F8A0C1D3E5F7B9A1C3 /* SyncStatus.swift in Sources */,
 				6FF2FE7DC2E16FC1CCC1DADB /* CacheStatusView.swift in Sources */,
+				E944FDED29C0EF7E7DEA56C3 /* SessionSyncBadge.swift in Sources */,
+				E6BE72FE132D225D582120D9 /* SyncStatusOverview.swift in Sources */,
 				6010F25359C148A4CF2D04E3 /* CarbonTheme.swift in Sources */,
 				50DD63730F1AC7ACDE6E9A86 /* ChatInputBar.swift in Sources */,
 				55A05EF9235C2548B1C8ED3A /* ChatMessage.swift in Sources */,
@@ -3265,9 +3280,12 @@
 				5DE7376D1DBA7BEDF01E37C6 /* BrowserView.swift in Sources */,
 				834A2D8B4FE2267C537917D3 /* CacheService.swift in Sources */,
 				3923035E667F09C9880ED8F2 /* ConflictResolver.swift in Sources */,
+				33BB5E5524392C3F2AEFDA40 /* ConflictResolutionSheet.swift in Sources */,
 				38008B40A9648F37B146ACF6 /* CacheStats.swift in Sources */,
 				C3E5F7A9B1D3E5F7A9B1C3D5 /* SyncStatus.swift in Sources */,
 				A900CBB8D93C6496CEA025EE /* CacheStatusView.swift in Sources */,
+				37943DB61541152E33447C45 /* SessionSyncBadge.swift in Sources */,
+				E43E94203F4975FE603D0AA4 /* SyncStatusOverview.swift in Sources */,
 				DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */,
 				3ECD0B190A2B788BC969453C /* ChatInputBar.swift in Sources */,
 				16676D91D0619FADFC06C480 /* ChatMessage.swift in Sources */,
