@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0BFEDBF93BCE8885C121F795 /* ApprovalPoliciesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA50ED598FD45F96322DA44 /* ApprovalPoliciesView.swift */; };
+		08B819FE038B0F01197EB734 /* ApprovalPoliciesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA50ED598FD45F96322DA44 /* ApprovalPoliciesView.swift */; };
+		57B26BDF6F2655F98BEC78A1 /* ApprovalPolicyEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C036E37727ED0349680BAB /* ApprovalPolicyEditorSheet.swift */; };
+		354D444A1AE021C6650DAC08 /* ApprovalPolicyEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C036E37727ED0349680BAB /* ApprovalPolicyEditorSheet.swift */; };
+		ACAD76E932417A8367D7B6DE /* PolicyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EFF10168F3FB222354E980 /* PolicyTemplatesSheet.swift */; };
+		401549F145DDEDBA040E58BA /* PolicyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EFF10168F3FB222354E980 /* PolicyTemplatesSheet.swift */; };
+		5CEFFAD63CA93F5E12264F08 /* ApprovalPoliciesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */; };
+		E9BD7535156B948074A7C6AA /* ApprovalPoliciesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		004CC3EB7825943F0E092DBF /* MCPInstallWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381C5FB293E2E626743D4314 /* MCPInstallWizardView.swift */; };
 		00BC25404E69511F65542A08 /* GrammarDefinitions+Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D954D79FCDF96AF972E8CB2 /* GrammarDefinitions+Data.swift */; };
@@ -1183,6 +1191,10 @@
 		50D6387A6286F7071339E0FB /* EnergyProfilingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyProfilingTests.swift; sourceTree = "<group>"; };
 		5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6789012345678 /* StepPreviewSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepPreviewSection.swift; sourceTree = "<group>"; };
+		5BA50ED598FD45F96322DA44 /* ApprovalPoliciesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalPoliciesView.swift; sourceTree = "<group>"; };
+		A1C036E37727ED0349680BAB /* ApprovalPolicyEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalPolicyEditorSheet.swift; sourceTree = "<group>"; };
+		E6EFF10168F3FB222354E980 /* PolicyTemplatesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolicyTemplatesSheet.swift; sourceTree = "<group>"; };
+		8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalPoliciesViewModel.swift; sourceTree = "<group>"; };
 		51712830C9EE6A1C89DDD126 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		51D5049476821865BC65876F /* CarbonTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbonTheme.swift; sourceTree = "<group>"; };
 		5264936CB2EEF18D3167704B /* LogViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewerView.swift; sourceTree = "<group>"; };
@@ -2290,11 +2302,14 @@
 		B83ACDEEB4B6C1EF3FDEDFC0 /* Permissions */ = {
 			isa = PBXGroup;
 			children = (
+				5BA50ED598FD45F96322DA44 /* ApprovalPoliciesView.swift */,
+				A1C036E37727ED0349680BAB /* ApprovalPolicyEditorSheet.swift */,
 				9EB2C99B839CE6D54416828F /* AutoApproveRuleEditorSheet.swift */,
 				98CA4BCDDDA15ABD37B28FE5 /* AutoApproveRulesView.swift */,
 				0843F6C4AF5DBE48A1194A2E /* BatchPermissionView.swift */,
 				AA4D98A0CF55C5C4EE360081 /* PermissionHistoryView.swift */,
 				842921C5E115DF4EDC1DB53C /* PermissionInboxView.swift */,
+				E6EFF10168F3FB222354E980 /* PolicyTemplatesSheet.swift */,
 			);
 			path = Permissions;
 			sourceTree = "<group>";
@@ -2396,6 +2411,7 @@
 				60C842E584DF35A0CF053C28 /* ActivityFeedViewModel.swift */,
 				3755F5EBB98CB332B0BA29DC /* AgentQueueViewModel.swift */,
 				BAEB0566A2007404F394E113 /* AnalyticsViewModel.swift */,
+				8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */,
 				8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* AuditTrailViewModel.swift */,
 				16ABF31201240A220ECFCABE /* AutomationRulesViewModel.swift */,
@@ -3000,6 +3016,10 @@
 				E6267C7B476E8E41D172B62C /* AttachmentPickerSheet.swift in Sources */,
 				6923CFB55BF04B9CD17D2F2E /* AttachmentPreviewStrip.swift in Sources */,
 				FE1ED93E092DD33D1C46A2AC /* AudioWaveformView.swift in Sources */,
+				0BFEDBF93BCE8885C121F795 /* ApprovalPoliciesView.swift in Sources */,
+				57B26BDF6F2655F98BEC78A1 /* ApprovalPolicyEditorSheet.swift in Sources */,
+				5CEFFAD63CA93F5E12264F08 /* ApprovalPoliciesViewModel.swift in Sources */,
+				ACAD76E932417A8367D7B6DE /* PolicyTemplatesSheet.swift in Sources */,
 				2AB0DDB18C1E9E1F23570E52 /* AutoApproveRule.swift in Sources */,
 				38848E1A627B155D3FCA6D70 /* AutoApproveRuleEditorSheet.swift in Sources */,
 				03925438B795F9391C8C5E10 /* AutoApproveRulesView.swift in Sources */,
@@ -3457,6 +3477,10 @@
 				57A9EDCA067C0D23ED604B50 /* AttachmentPickerSheet.swift in Sources */,
 				085A5D420B00EB190D9849CE /* AttachmentPreviewStrip.swift in Sources */,
 				EE14DEF34E1244AE4FBE0E74 /* AudioWaveformView.swift in Sources */,
+				08B819FE038B0F01197EB734 /* ApprovalPoliciesView.swift in Sources */,
+				354D444A1AE021C6650DAC08 /* ApprovalPolicyEditorSheet.swift in Sources */,
+				E9BD7535156B948074A7C6AA /* ApprovalPoliciesViewModel.swift in Sources */,
+				401549F145DDEDBA040E58BA /* PolicyTemplatesSheet.swift in Sources */,
 				30B1963F7ACD43EC4437BEAB /* AutoApproveRule.swift in Sources */,
 				05B3DB26673BF2D6D2FAC367 /* AutoApproveRuleEditorSheet.swift in Sources */,
 				A668D586ECBF7DE3770FE290 /* AutoApproveRulesView.swift in Sources */,
