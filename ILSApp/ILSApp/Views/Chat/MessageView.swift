@@ -23,7 +23,7 @@ import ILSShared
 /// - `ToolResultView` - Expandable card for each tool result in the message
 /// - `ThinkingView` - Expandable card for the extended thinking block, if present
 // TODO: SUIL-003 — Audit GeometryReader usage for infinite layout loop risk in LazyVStack
-struct MessageView: View {
+struct MessageView: View, Equatable {
     let message: ChatMessage
     /// Optional session identifier forwarded to feedback submission.
     var sessionId: String?
@@ -31,6 +31,11 @@ struct MessageView: View {
     var projectId: String?
     /// Shared view-model for submitting thumbs-up / thumbs-down ratings.
     var feedbackViewModel: FeedbackViewModel?
+
+    nonisolated static func == (lhs: MessageView, rhs: MessageView) -> Bool {
+        lhs.message.id == rhs.message.id &&
+        lhs.sessionId == rhs.sessionId
+    }
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
