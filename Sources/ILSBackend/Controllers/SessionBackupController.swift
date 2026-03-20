@@ -14,10 +14,46 @@ struct SessionBackupController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let sessions = routes.grouped("sessions")
 
+        sessions.get("recoverable", use: listRecoverableSessions)
         sessions.get(":id", "checkpoints", use: listCheckpoints)
         sessions.post(":id", "checkpoints", use: createCheckpoint)
         sessions.delete("checkpoints", ":checkpointId", use: deleteCheckpoint)
         sessions.post("checkpoints", ":checkpointId", "restore", use: restoreCheckpoint)
+    }
+
+    // MARK: - Recoverable Sessions
+
+    /// List sessions that terminated with an error and have at least one checkpoint,
+    /// ordered by lastActiveAt descending (most recently interrupted first).
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: APIResponse with list of ChatSession objects eligible for recovery
+    @Sendable
+    func listRecoverableSessions(req: Request) async throws -> APIResponse<ListResponse<ChatSession>> {
+        // Fetch all session IDs that have at least one checkpoint
+        let checkpointedSessionIds = try await SessionCheckpointModel.query(on: req.db)
+            .field(\.$session.$id)
+            .unique()
+            .all()
+            .compactMap { $0.$session.id }
+
+        guard !checkpointedSessionIds.isEmpty else {
+            return APIResponse(success: true, data: ListResponse(items: [], total: 0))
+        }
+
+        let errorStatus = SessionStatus.error.rawValue
+
+        let sessions = try await SessionModel.query(on: req.db)
+            .filter(\.$status == errorStatus)
+            .filter(\.$id ~~ checkpointedSessionIds)
+            .sort(\.$lastActiveAt, .descending)
+            .all()
+
+        let shared = sessions.map { $0.toShared(projectName: nil) }
+        return APIResponse(
+            success: true,
+            data: ListResponse(items: shared, total: shared.count)
+        )
     }
 
     // MARK: - Checkpoint CRUD

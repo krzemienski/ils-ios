@@ -48,6 +48,13 @@ class AppState {
     /// Full polling lifecycle (start/stop) is wired in ILSAppApp (phase-5).
     let permissionService = PermissionService()
 
+    /// Tracks sessions eligible for recovery (terminated with error status and at least one checkpoint).
+    /// Updated via `refreshRecoverableSessions()` whenever a backend connection is established.
+    let recoveryService = SessionRecoveryService.shared
+
+    /// Cached list of sessions eligible for recovery, mirrored from `SessionRecoveryService`.
+    var recoverableSessions: [ChatSession] = []
+
     // MARK: - Forwarding Properties
     // With @Observable, SwiftUI automatically tracks through property chains,
     // so no Combine forwarding is needed.
@@ -112,6 +119,7 @@ class AppState {
             guard let url = notification.userInfo?["url"] as? String else { return }
             Task { @MainActor [weak self] in
                 self?.updateServerURL(url)
+                self?.refreshRecoverableSessions()
             }
         }
     }
@@ -172,10 +180,23 @@ class AppState {
         pollingManager.stopRetryPolling()
         pollingManager.startHealthPolling()
         connectionQualityService.startPolling()
+        refreshRecoverableSessions()
     }
 
     func checkConnection() {
         pollingManager.checkConnection()
+    }
+
+    /// Refreshes the `recoverableSessions` list from `SessionRecoveryService`.
+    ///
+    /// Fetches only when the cache is stale or empty (throttled to once per 5 minutes).
+    /// Call after a successful backend connection is established.
+    func refreshRecoverableSessions() {
+        Task {
+            await recoveryService.refreshIfNeeded(client: apiClient)
+            let sessions = await recoveryService.recoverableSessions
+            recoverableSessions = sessions
+        }
     }
 
     /// Check for available Claude Code CLI updates from GitHub.

@@ -250,6 +250,8 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     public var encodedProjectPath: String?
     /// First user prompt in the session.
     public var firstPrompt: String?
+    /// Reason the session was interrupted, if applicable.
+    public var interruptionReason: String?
 
     /// Creates a new chat session.
     /// - Parameters:
@@ -269,6 +271,7 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
     ///   - lastActiveAt: Last activity timestamp.
     ///   - encodedProjectPath: URL-encoded project path.
     ///   - firstPrompt: First user prompt.
+    ///   - interruptionReason: Reason the session was interrupted, if applicable.
     public init(
         id: UUID = UUID(),
         claudeSessionId: String? = nil,
@@ -285,7 +288,8 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         createdAt: Date = Date(),
         lastActiveAt: Date = Date(),
         encodedProjectPath: String? = nil,
-        firstPrompt: String? = nil
+        firstPrompt: String? = nil,
+        interruptionReason: String? = nil
     ) {
         precondition(!model.isEmpty, "ChatSession model must not be empty")
         precondition(messageCount >= 0, "ChatSession messageCount must be non-negative")
@@ -305,6 +309,7 @@ public struct ChatSession: Codable, Identifiable, Sendable, Hashable {
         self.lastActiveAt = lastActiveAt
         self.encodedProjectPath = encodedProjectPath
         self.firstPrompt = firstPrompt
+        self.interruptionReason = interruptionReason
     }
 
     /// Pre-compiled regex for stripping markdown heading prefixes.
