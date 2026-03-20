@@ -177,8 +177,8 @@
       "unit": "percent",
       "warning_threshold": 8.0,
       "fail_threshold": 12.0,
-      "test_class": "EnergyPerformanceTests",
-      "test_method": "testIdleCPUUsage"
+      "test_class": "EnergyProfilingTests",
+      "test_method": "testIdleCPU"
     },
     "background_cpu_pct": {
       "description": "CPU usage percentage while app is backgrounded (background task execution) measured by XCTCPUMetric",
@@ -186,8 +186,8 @@
       "unit": "percent",
       "warning_threshold": 5.0,
       "fail_threshold": 8.0,
-      "test_class": "EnergyPerformanceTests",
-      "test_method": "testBackgroundCPUUsage"
+      "test_class": "EnergyProfilingTests",
+      "test_method": "testBackgroundPollCPU"
     },
     "chat_streaming_cpu_pct": {
       "description": "CPU usage percentage during active chat streaming response measured by XCTCPUMetric",
@@ -195,8 +195,8 @@
       "unit": "percent",
       "warning_threshold": 40.0,
       "fail_threshold": 55.0,
-      "test_class": "EnergyPerformanceTests",
-      "test_method": "testChatStreamingCPUUsage"
+      "test_class": "EnergyProfilingTests",
+      "test_method": "testChatStreamingCPU"
     },
     "crash_free_sessions_pct": {
       "description": "Percentage of sessions that complete without a crash (100 = no crashes observed)",
