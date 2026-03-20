@@ -1,5 +1,6 @@
 import Fluent
 import Vapor
+import ILSShared
 
 /// Fluent model for persisting approval policy rules that govern agent action authorization.
 final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
@@ -16,13 +17,13 @@ final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
     @OptionalField(key: "template_id")
     var templateId: String?
 
-    /// The type of action this policy governs (e.g., "always_ask", "allowlist", "path_scope", "high_risk").
+    /// The default action type for this policy (e.g., "always_ask", "auto_approve").
     @Field(key: "action_type")
     var actionType: String
 
-    /// JSON-encoded array of tool names this policy applies to (e.g., ["Bash", "Write"]).
-    @Field(key: "tool_names")
-    var toolNames: String
+    /// JSON-encoded array of full PolicyToolRule objects with per-rule actions and path patterns.
+    @Field(key: "tool_rules_json")
+    var toolRulesJSON: String
 
     /// JSON-encoded array of file path glob patterns for scope (e.g., ["src/**/*.swift", "*.config"]).
     @Field(key: "path_globs")
@@ -31,6 +32,14 @@ final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
     /// JSON-encoded array of risk levels this policy matches (e.g., ["high", "critical"]).
     @Field(key: "risk_levels")
     var riskLevels: String
+
+    /// Policy scope: "global", "project", or "path_based".
+    @Field(key: "scope")
+    var scope: String
+
+    /// Optional human-readable description of the policy.
+    @OptionalField(key: "description_text")
+    var descriptionText: String?
 
     /// Project identifier this policy is scoped to, or nil for global policies.
     @OptionalField(key: "project_id")
@@ -57,9 +66,11 @@ final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
         name: String,
         templateId: String? = nil,
         actionType: String,
-        toolNames: [String] = [],
+        toolRules: [PolicyToolRule] = [],
         pathGlobs: [String] = [],
         riskLevels: [String] = [],
+        scope: String = "global",
+        descriptionText: String? = nil,
         projectId: String? = nil,
         isEnabled: Bool = true,
         priority: Int = 100
@@ -68,9 +79,11 @@ final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
         self.name = name
         self.templateId = templateId
         self.actionType = actionType
-        self.toolNames = Self.encodeJSONArray(toolNames)
+        self.toolRulesJSON = Self.encodeToolRules(toolRules)
         self.pathGlobs = Self.encodeJSONArray(pathGlobs)
         self.riskLevels = Self.encodeJSONArray(riskLevels)
+        self.scope = scope
+        self.descriptionText = descriptionText
         self.projectId = projectId
         self.isEnabled = isEnabled
         self.priority = priority
@@ -90,9 +103,23 @@ final class ApprovalPolicyModel: Model, Content, @unchecked Sendable {
         return (try? JSONDecoder().decode([String].self, from: data)) ?? []
     }
 
-    /// Parsed tool names from the JSON-encoded field.
-    var parsedToolNames: [String] {
-        Self.decodeJSONArray(toolNames)
+    // MARK: - Tool Rules JSON Helpers
+
+    /// Encode a `[PolicyToolRule]` array to a JSON string for storage.
+    static func encodeToolRules(_ rules: [PolicyToolRule]) -> String {
+        let data = (try? JSONEncoder().encode(rules)) ?? Data()
+        return String(data: data, encoding: .utf8) ?? "[]"
+    }
+
+    /// Decode a JSON string back to a `[PolicyToolRule]` array.
+    static func decodeToolRules(_ json: String) -> [PolicyToolRule] {
+        let data = json.data(using: .utf8) ?? Data()
+        return (try? JSONDecoder().decode([PolicyToolRule].self, from: data)) ?? []
+    }
+
+    /// Parsed tool rules from the JSON-encoded field.
+    var parsedToolRules: [PolicyToolRule] {
+        Self.decodeToolRules(toolRulesJSON)
     }
 
     /// Parsed path globs from the JSON-encoded field.

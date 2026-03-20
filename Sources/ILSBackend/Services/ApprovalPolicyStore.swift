@@ -70,9 +70,11 @@ actor ApprovalPolicyStore {
             name: request.name,
             templateId: request.template.rawValue,
             actionType: request.defaultAction.rawValue,
-            toolNames: request.toolRules.map(\.toolPattern),
+            toolRules: request.toolRules,
             pathGlobs: request.pathPatterns ?? [],
             riskLevels: (request.confirmationRequiredRiskLevels ?? [.high, .critical]).map(\.rawValue),
+            scope: request.scope.rawValue,
+            descriptionText: request.description,
             projectId: request.projectName,
             isEnabled: request.isEnabled,
             priority: request.priority ?? 100
@@ -126,7 +128,7 @@ actor ApprovalPolicyStore {
         if let template = request.template { model.templateId = template.rawValue }
         if let defaultAction = request.defaultAction { model.actionType = defaultAction.rawValue }
         if let toolRules = request.toolRules {
-            model.toolNames = ApprovalPolicyModel.encodeJSONArray(toolRules.map(\.toolPattern))
+            model.toolRulesJSON = ApprovalPolicyModel.encodeToolRules(toolRules)
         }
         if let pathPatterns = request.pathPatterns {
             model.pathGlobs = ApprovalPolicyModel.encodeJSONArray(pathPatterns)
@@ -134,6 +136,8 @@ actor ApprovalPolicyStore {
         if let riskLevels = request.confirmationRequiredRiskLevels {
             model.riskLevels = ApprovalPolicyModel.encodeJSONArray(riskLevels.map(\.rawValue))
         }
+        if let scope = request.scope { model.scope = scope.rawValue }
+        if let description = request.description { model.descriptionText = description }
         if let projectName = request.projectName { model.projectId = projectName }
         if let isEnabled = request.isEnabled { model.isEnabled = isEnabled }
         if let priority = request.priority { model.priority = priority }
@@ -266,17 +270,15 @@ actor ApprovalPolicyStore {
 
     /// Convert a Fluent model to a shared `ApprovalPolicy` value type.
     private static func toShared(model: ApprovalPolicyModel, id: UUID) -> ApprovalPolicy {
-        let toolPatterns = model.parsedToolNames
-        let toolRules = toolPatterns.map { pattern in
-            PolicyToolRule(toolPattern: pattern, action: PolicyAction(rawValue: model.actionType) ?? .alwaysAsk)
-        }
+        let toolRules = model.parsedToolRules
         let riskLevels = model.parsedRiskLevels.compactMap { PermissionRiskLevel(rawValue: $0) }
 
         return ApprovalPolicy(
             id: id,
             name: model.name,
+            description: model.descriptionText,
             template: PolicyTemplate(rawValue: model.templateId ?? "custom") ?? .custom,
-            scope: model.projectId != nil ? .project : .global,
+            scope: PolicyScope(rawValue: model.scope) ?? .global,
             projectName: model.projectId,
             pathPatterns: model.parsedPathGlobs.isEmpty ? nil : model.parsedPathGlobs,
             defaultAction: PolicyAction(rawValue: model.actionType) ?? .alwaysAsk,

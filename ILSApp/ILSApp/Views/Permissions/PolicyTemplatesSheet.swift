@@ -340,15 +340,15 @@ struct PolicyTemplatesSheet: View {
         PolicyTemplateResponse(
             id: "balanced",
             name: "Balanced",
-            description: "Moderate safety: read-only tools auto-approved, write operations require confirmation, destructive actions always ask.",
+            description: "Moderate safety: read-only operations (Read, Glob, Grep) are auto-approved. Write operations and Bash commands require explicit approval.",
             template: .balanced,
-            defaultAction: .requireConfirmation,
+            defaultAction: .alwaysAsk,
             toolRules: [
                 PolicyToolRule(toolPattern: "Read", action: .autoApprove),
                 PolicyToolRule(toolPattern: "Glob", action: .autoApprove),
                 PolicyToolRule(toolPattern: "Grep", action: .autoApprove),
-                PolicyToolRule(toolPattern: "Write", action: .requireConfirmation),
-                PolicyToolRule(toolPattern: "Edit", action: .requireConfirmation),
+                PolicyToolRule(toolPattern: "Write", action: .alwaysAsk),
+                PolicyToolRule(toolPattern: "Edit", action: .alwaysAsk),
                 PolicyToolRule(toolPattern: "Bash", action: .alwaysAsk),
             ],
             confirmationRequiredRiskLevels: [.high, .critical]

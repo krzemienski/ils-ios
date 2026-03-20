@@ -186,6 +186,9 @@ func configure(_ app: Application) async throws {
     // Configure the PermissionStore with a database handle for audit trail logging.
     await PermissionStore.shared.configure(database: app.db)
 
+    // Load approval policies from database into memory for PolicyEvaluationService.
+    try await ApprovalPolicyStore.shared.loadPolicies(db: app.db)
+
     #if DEBUG
     // DB-03: Validate existing data satisfies FK constraints after migration.
     // PRAGMA foreign_key_check returns rows for any FK violations found in the database.
