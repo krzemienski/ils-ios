@@ -21,6 +21,14 @@ struct CachedSession: Codable, FetchableRecord, PersistableRecord, Identifiable 
     var lastActiveAt: Date
     var cachedAt: Date
 
+    // Sync metadata (v4)
+    var syncStatus: String
+    var localVersion: Int
+    var serverVersion: Int
+    var lastSyncedAt: Date?
+    var failureReason: String?
+    var conflictData: Data?
+
     init(from session: ChatSession) {
         self.id = session.id.uuidString
         self.name = session.name
@@ -34,6 +42,12 @@ struct CachedSession: Codable, FetchableRecord, PersistableRecord, Identifiable 
         self.createdAt = session.createdAt
         self.lastActiveAt = session.lastActiveAt
         self.cachedAt = Date()
+        self.syncStatus = "synced"
+        self.localVersion = 0
+        self.serverVersion = 0
+        self.lastSyncedAt = nil
+        self.failureReason = nil
+        self.conflictData = nil
     }
 
     func toChatSession() -> ChatSession? {
@@ -253,6 +267,23 @@ struct CachedContextSnapshot: Codable, FetchableRecord, PersistableRecord, Ident
     var snapshotText: String
     var triggeredAt: Date
     var cachedAt: Date
+}
+
+/// Pending change record for offline-first sync queue.
+///
+/// Tracks local mutations that have not yet been synced to the server.
+/// Each record represents a single create, update, or delete operation
+/// on a cached entity (e.g. session, message).
+struct PendingChange: Codable, FetchableRecord, PersistableRecord, Identifiable {
+    static let databaseTableName = "pending_changes"
+
+    let id: String // UUID as string
+    var entityType: String // e.g. "session", "message"
+    var entityId: String
+    var changeType: String // "create", "update", "delete"
+    var changeData: Data? // JSON-encoded change payload
+    var createdAt: Date
+    var status: String // "pending", "syncing", "failed"
 }
 
 /// Cached SSH server connection profile for GRDB persistence.
@@ -584,6 +615,34 @@ actor LocalDatabase {
                 index: "context_snapshots_sessionId",
                 on: "context_snapshots",
                 columns: ["sessionId"]
+            )
+        }
+
+        migrator.registerMigration("v4_add_sync_metadata") { db in
+            // Add sync metadata columns to cached_sessions
+            try db.alter(table: "cached_sessions") { t in
+                t.add(column: "syncStatus", .text).notNull().defaults(to: "synced")
+                t.add(column: "localVersion", .integer).notNull().defaults(to: 0)
+                t.add(column: "serverVersion", .integer).notNull().defaults(to: 0)
+                t.add(column: "lastSyncedAt", .datetime)
+                t.add(column: "failureReason", .text)
+                t.add(column: "conflictData", .blob)
+            }
+
+            // Create pending_changes table for offline sync queue
+            try db.create(table: "pending_changes") { t in
+                t.primaryKey("id", .text)
+                t.column("entityType", .text).notNull()
+                t.column("entityId", .text).notNull()
+                t.column("changeType", .text).notNull()
+                t.column("changeData", .blob)
+                t.column("createdAt", .datetime).notNull()
+                t.column("status", .text).notNull().defaults(to: "pending")
+            }
+            try db.create(
+                index: "pending_changes_entityType_entityId",
+                on: "pending_changes",
+                columns: ["entityType", "entityId"]
             )
         }
 
