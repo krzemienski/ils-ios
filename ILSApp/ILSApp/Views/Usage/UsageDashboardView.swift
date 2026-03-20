@@ -2,11 +2,25 @@ import SwiftUI
 import Charts
 import ILSShared
 
+/// Top-level tab options for the Usage screen.
+///
+/// Switches between the original rate-limit / message-trend dashboard and the
+/// token-consumption / cost-transparency dashboard.
+enum UsageScreenTab: String, CaseIterable, Identifiable {
+    case usage = "Usage"
+    case consumption = "Consumption"
+
+    var id: String { rawValue }
+}
+
 /// Usage and rate-limit monitoring dashboard.
 ///
 /// Presents Claude Code usage statistics for the selected time period, including a
 /// rate-limit consumption gauge, a daily-message-count bar chart, a per-project
 /// breakdown list, and an Export toolbar button that triggers a `ShareSheet`.
+///
+/// A top-level segmented ``Picker`` toggles between the original **Usage** tab and
+/// the new **Consumption** tab (``ConsumptionDashboardView``).
 ///
 /// ## Topics
 /// ### Sections
@@ -21,6 +35,8 @@ struct UsageDashboardView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
 
+    /// The active top-level tab (Usage vs Consumption).
+    @State private var selectedTab: UsageScreenTab = .usage
     @State private var viewModel = UsageDashboardViewModel()
     /// Controls presentation of the CSV ShareSheet after a successful export.
     @State private var showShareSheet = false
@@ -28,6 +44,58 @@ struct UsageDashboardView: View {
     @State private var showAlertSettings = false
 
     var body: some View {
+        VStack(spacing: 0) {
+            // Top-level tab switcher
+            Picker("Dashboard", selection: $selectedTab) {
+                ForEach(UsageScreenTab.allCases) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, theme.spacingMD)
+            .padding(.top, theme.spacingSM)
+            .padding(.bottom, theme.spacingXS)
+
+            switch selectedTab {
+            case .usage:
+                usageContent
+            case .consumption:
+                ConsumptionDashboardView()
+            }
+        }
+        .background(theme.bgPrimary)
+        .navigationTitle("Usage")
+        .inlineNavigationBarTitle()
+        .toolbar {
+            #if os(iOS)
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if selectedTab == .usage {
+                    alertSettingsButton
+                    exportToolbarButton
+                }
+            }
+            #else
+            ToolbarItemGroup(placement: .automatic) {
+                if selectedTab == .usage {
+                    alertSettingsButton
+                    exportToolbarButton
+                }
+            }
+            #endif
+        }
+        .sheet(isPresented: $showShareSheet) {
+            exportShareSheet
+        }
+        .sheet(isPresented: $showAlertSettings) {
+            AlertSettingsSheet(viewModel: viewModel)
+                .environment(\.theme, theme)
+        }
+    }
+
+    // MARK: - Usage Content
+
+    /// The original usage dashboard content, shown when the Usage tab is selected.
+    private var usageContent: some View {
         ScrollView {
             VStack(spacing: theme.spacingMD) {
                 periodPicker
@@ -38,29 +106,6 @@ struct UsageDashboardView: View {
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.bottom, theme.spacingLG)
-        }
-        .background(theme.bgPrimary)
-        .navigationTitle("Usage")
-        .inlineNavigationBarTitle()
-        .toolbar {
-            #if os(iOS)
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                alertSettingsButton
-                exportToolbarButton
-            }
-            #else
-            ToolbarItemGroup(placement: .automatic) {
-                alertSettingsButton
-                exportToolbarButton
-            }
-            #endif
-        }
-        .sheet(isPresented: $showShareSheet) {
-            exportShareSheet
-        }
-        .sheet(isPresented: $showAlertSettings) {
-            AlertSettingsSheet(viewModel: viewModel)
-                .environment(\.theme, theme)
         }
         .overlay {
             if viewModel.isLoading {
