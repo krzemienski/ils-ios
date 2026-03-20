@@ -47,7 +47,7 @@ struct HealthControllerTests {
             status: "healthy",
             uptime: 3600,
             version: "1.0.0",
-            checks: HealthChecks(database: "ok", filesystem: "ok"),
+            checks: HealthChecks(database: "ok", filesystem: "ok", claudeCLI: "ok"),
             disk: DiskInfo(totalGB: 500.0, freeGB: 200.0, usedPercent: 60.0)
         )
         let data = try JSONEncoder().encode(detail)
@@ -69,7 +69,7 @@ struct HealthControllerTests {
             status: "degraded",
             uptime: 60,
             version: "1.0.0",
-            checks: HealthChecks(database: "error", filesystem: "ok"),
+            checks: HealthChecks(database: "error", filesystem: "ok", claudeCLI: "ok"),
             disk: nil
         )
         let data = try JSONEncoder().encode(detail)

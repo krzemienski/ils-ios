@@ -132,6 +132,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(CreateResponseFeedback())
     app.migrations.add(AddMessageContentToFeedback())
     app.migrations.add(CreateAuditActions())
+    // v6.4 — Session interruption reason for auto-recovery/resume
+    app.migrations.add(AddInterruptionReasonToSessions())
 
     // Run migrations
     try await app.autoMigrate()
