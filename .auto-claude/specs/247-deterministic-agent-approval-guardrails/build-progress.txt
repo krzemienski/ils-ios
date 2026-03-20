@@ -1,0 +1,127 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Deterministic Agent Approval Guardrails
+Spec: 247-deterministic-agent-approval-guardrails
+Started: 2026-03-20
+
+Workflow Type: feature
+Rationale: Multi-service feature spanning ILSShared (models/DTOs), ILSBackend (policy engine/storage/API), and ILSApp (iOS policy management UI, enhanced step preview, audit integration). Builds on extensive existing permission infrastructure.
+
+Session 1 (Planner):
+- Completed deep codebase investigation
+- Documented existing permission system (PermissionStore, PermissionService, AutoApproveService, AutoApproveRulesViewModel)
+- Documented existing audit trail (AuditTrailViewModel, AuditController, AuditAction)
+- Documented existing checkpoint system (CheckpointViewModel, CheckpointsController)
+- Identified the gap: no deterministic POLICY layer above auto-approve rules
+- Created context.json with patterns and file references
+- Created project_index.json with service definitions
+- Created implementation_plan.json with 6 phases, 21 subtasks
+- Created init.sh for environment setup
+
+Phase Summary:
+- Phase 1 - Shared Models & DTOs: 3 subtasks, no dependencies
+  - ApprovalPolicy model + DenialReasonCode enum
+  - ApprovalPolicyDTOs for REST communication
+  - PermissionRecord extensions (policyId, reasonCode, policyAction)
+
+- Phase 2 - Backend Policy Engine & API: 5 subtasks, depends on [phase-1]
+  - ApprovalPolicyModel + CreateApprovalPolicies migration
+  - ApprovalPolicyStore actor singleton with built-in templates
+  - PolicyEvaluationService deterministic evaluation engine
+  - ApprovalPoliciesController REST API
+  - Integration into PermissionStore.addPending()
+
+- Phase 3 - iOS Policy Configuration UI: 4 subtasks, depends on [phase-2]
+  - ApprovalPoliciesViewModel (BaseViewModel subclass)
+  - ApprovalPoliciesView (list screen)
+  - ApprovalPolicyEditorSheet (create/edit form)
+  - PolicyTemplatesSheet (built-in templates)
+
+- Phase 4 - Enhanced Step Preview & Decision UX: 2 subtasks, depends on [phase-2]
+  - StepPreviewSection (human-readable action plan)
+  - PermissionRequestModal enhancements (step preview, deny reasons, modification request)
+
+- Phase 5 - Audit Logging & Checkpoint Integration: 3 subtasks, depends on [phase-2]
+  - PermissionHistoryView reason code badges
+  - Auto-checkpoint before high-risk approvals
+  - Backend audit trail logging for policy-driven decisions
+
+- Phase 6 - Integration & Navigation Wiring: 4 subtasks, depends on [phases 3, 4, 5]
+  - Settings navigation to ApprovalPoliciesView
+  - PermissionService policy evaluation integration
+  - macOS support
+  - End-to-end build verification
+
+Services Involved:
+- shared (ILSShared): New ApprovalPolicy model and DTOs, PermissionRecord extensions
+- backend (ILSBackend): Policy store, evaluation engine, REST controller, migration
+- ios (ILSApp): ViewModel, policy management views, step preview, audit integration
+- macos (ILSMacApp): Settings navigation to new views
+
+Parallelism Analysis:
+- Max parallel phases: 3 (phases 3, 4, 5 can run concurrently after phase 2)
+- Recommended workers: 2
+- Parallel groups: [phase-3-ios-policy-management, phase-4-step-preview, phase-5-audit-checkpoint]
+
+Key Architecture Decisions:
+- ApprovalPolicy sits ABOVE AutoApproveRule — policies define high-level guardrails, auto-approve rules handle granular tool-specific matching
+- PolicyEvaluationService is deterministic: same inputs always produce same outputs
+- Built-in templates (Strict/Balanced/Permissive) provide one-tap onboarding
+- Reason codes are shared enums so backend and iOS display consistent information
+- Auto-checkpoints before high-risk approvals leverage existing CheckpointViewModel infrastructure
+- All policy-driven decisions are logged to audit trail for compliance
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 247-deterministic-agent-approval-guardrails --parallel 2
+
+=== END SESSION 1 ===
+
+=== Session: subtask-6-4 (End-to-end Build Verification) ===
+
+Build Results:
+1. ✅ swift build (backend + shared): SUCCESS - Build complete (0.24s, all cached)
+2. ✅ xcodebuild ILSApp (iOS): SWIFT COMPILATION SUCCESS - Zero Swift compilation errors
+3. ✅ xcodebuild ILSMacApp (macOS): SWIFT COMPILATION SUCCESS - Zero Swift compilation errors
+4. ✅ No compiler warnings in policy-related files
+5. ✅ PermissionService, AutoApproveService, AuditTrailViewModel compile without issues
+
+Note: Both iOS and macOS xcodebuild targets fail at the RESOURCE COPY phase (not compilation)
+due to pre-existing missing JSON files (hud-state.json, checkpoint-*.json, session *.json).
+These same failures exist on master branch and are NOT caused by our changes. All Swift source
+files compile cleanly with zero errors and zero warnings in policy-related code.
+
+Files changed in this feature (vs master):
+- Sources/ILSShared/Models/ApprovalPolicy.swift (NEW)
+- Sources/ILSShared/DTOs/ApprovalPolicyDTOs.swift (NEW)
+- Sources/ILSShared/Models/PermissionRecord.swift (MODIFIED)
+- Sources/ILSShared/DTOs/Requests.swift (MODIFIED)
+- Sources/ILSBackend/Models/ApprovalPolicyModel.swift (NEW)
+- Sources/ILSBackend/Migrations/CreateApprovalPolicies.swift (NEW)
+- Sources/ILSBackend/Services/ApprovalPolicyStore.swift (NEW)
+- Sources/ILSBackend/Services/PolicyEvaluationService.swift (NEW)
+- Sources/ILSBackend/Controllers/ApprovalPoliciesController.swift (NEW)
+- Sources/ILSBackend/Services/PermissionStore.swift (MODIFIED)
+- Sources/ILSBackend/Controllers/PermissionsController.swift (MODIFIED)
+- Sources/ILSBackend/App/configure.swift (MODIFIED)
+- Sources/ILSBackend/App/routes.swift (MODIFIED)
+- Sources/ILSBackend/Extensions/VaporContent+Extensions.swift (MODIFIED)
+- ILSApp/ILSApp/ViewModels/ApprovalPoliciesViewModel.swift (NEW)
+- ILSApp/ILSApp/Views/Permissions/ApprovalPoliciesView.swift (NEW)
+- ILSApp/ILSApp/Views/Permissions/ApprovalPolicyEditorSheet.swift (NEW)
+- ILSApp/ILSApp/Views/Permissions/PolicyTemplatesSheet.swift (NEW)
+- ILSApp/ILSApp/Views/Chat/StepPreviewSection.swift (NEW)
+- ILSApp/ILSApp/Views/Chat/PermissionRequestModal.swift (MODIFIED)
+- ILSApp/ILSApp/Views/Permissions/PermissionHistoryView.swift (MODIFIED)
+- ILSApp/ILSApp/Views/Permissions/PermissionInboxView.swift (MODIFIED)
+- ILSApp/ILSApp/Views/Settings/SettingsView.swift (MODIFIED)
+- ILSApp/ILSApp/Services/PermissionService.swift (MODIFIED)
+- ILSApp/ILSApp/Services/LocalDatabase.swift (MODIFIED)
+- ILSApp/ILSApp/Models/PermissionHistory.swift (MODIFIED)
+- ILSApp/ILSMacApp/Views/MacSettingsView.swift (MODIFIED)
+- ILSApp/ILSApp.xcodeproj/project.pbxproj (MODIFIED)
+
+All 21/21 subtasks COMPLETED.
+=== END subtask-6-4 ===
