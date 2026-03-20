@@ -777,14 +777,18 @@ public struct PermissionDecision: Codable, Sendable {
     public let decision: String
     /// Optional human-readable explanation for the decision.
     public let reason: String?
+    /// Machine-readable code describing why this decision was made (e.g., "policy_auto_approve").
+    public let reasonCode: String?
 
     /// Creates a permission decision.
     /// - Parameters:
     ///   - decision: The client's decision (`"allow"` or `"deny"`).
     ///   - reason: Optional human-readable explanation for the decision.
-    public init(decision: String, reason: String? = nil) {
+    ///   - reasonCode: Optional machine-readable code for the decision reason.
+    public init(decision: String, reason: String? = nil, reasonCode: String? = nil) {
         self.decision = decision
         self.reason = reason
+        self.reasonCode = reasonCode
     }
 }
 

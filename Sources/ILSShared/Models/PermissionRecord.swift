@@ -66,6 +66,12 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
     public let denyReason: String?
     /// Whether approval applies for the entire session (not just once).
     public let isSessionApproval: Bool
+    /// Identifier of the approval policy that drove the decision, if any.
+    public let policyId: String?
+    /// Machine-readable code describing why this decision was made (e.g., "policy_auto_approve").
+    public let reasonCode: String?
+    /// Action taken by the matching approval policy (e.g., "allow", "deny", "ask").
+    public let policyAction: String?
     /// ID of the permission policy that automatically resolved this request, if any.
     public let matchedPolicyId: UUID?
 
@@ -84,6 +90,9 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
         resolvedBy: String? = nil,
         denyReason: String? = nil,
         isSessionApproval: Bool = false,
+        policyId: String? = nil,
+        reasonCode: String? = nil,
+        policyAction: String? = nil,
         matchedPolicyId: UUID? = nil
     ) {
         precondition(!id.isEmpty, "PermissionRecord id must not be empty")
@@ -104,6 +113,9 @@ public struct PermissionRecord: Codable, Sendable, Identifiable {
         self.resolvedBy = resolvedBy
         self.denyReason = denyReason
         self.isSessionApproval = isSessionApproval
+        self.policyId = policyId
+        self.reasonCode = reasonCode
+        self.policyAction = policyAction
         self.matchedPolicyId = matchedPolicyId
     }
 }
