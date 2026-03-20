@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import ILSShared
 
 /// View model for chat interactions with Claude Code.
@@ -178,6 +179,13 @@ class ChatViewModel {
     /// Number of messages queued for sending when network is restored.
     var queuedMessageCount: Int = 0
 
+    /// Current sync status for the active session, updated from SyncCoordinator notifications.
+    var sessionSyncStatus: SyncStatus = .synced
+
+    /// Task that listens for sync-status-change notifications.
+    // CON-001/MEM-003: OSAllocatedUnfairLock provides safe cross-isolation Task storage.
+    @ObservationIgnored private let syncObserverTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
+
     private var sseClient: SSEClient?
     private var apiClient: APIClient?
     @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
@@ -238,6 +246,7 @@ class ChatViewModel {
         self.sseClient = sseClient
         setupBindings()
         setupOfflineQueueObserver()
+        setupSyncStatusObserver()
     }
 
     deinit {
@@ -247,6 +256,7 @@ class ChatViewModel {
         if let observer = networkObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        syncObserverTaskLock.withLock { $0?.cancel() }
     }
 
     private func setupBindings() {
@@ -420,8 +430,8 @@ class ChatViewModel {
     // MARK: - Offline Queue Observer
 
     /// Observe network restoration to refresh `queuedMessageCount` after the
-    /// SyncCoordinator drains its queue.  The observer is set up once per configure()
-    /// call and torn down in deinit.
+    /// SyncCoordinator drains its queue, and trigger reconciliation for the active session.
+    /// The observer is set up once per configure() call and torn down in deinit.
     private func setupOfflineQueueObserver() {
         // Remove any previous observer before installing a new one
         if let existing = networkObserver {
@@ -437,6 +447,37 @@ class ChatViewModel {
                 // Allow SyncCoordinator time to begin draining before refreshing count
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 self.queuedMessageCount = await SyncCoordinator.shared.pendingCount
+
+                // Trigger reconciliation for the active session on reconnect
+                if let sessionId = self.sessionId {
+                    let sessionIdString = sessionId.uuidString.lowercased()
+                    await SyncCoordinator.shared.syncSession(sessionId: sessionIdString)
+                    await CacheService.shared.reconcileOnReconnect()
+                    // Refresh sync status after reconciliation
+                    let status = await SyncCoordinator.shared.getSyncStatus(for: sessionIdString)
+                    self.sessionSyncStatus = status
+                }
+            }
+        }
+    }
+
+    /// Subscribe to `syncStatusDidChange` to keep `sessionSyncStatus` up to date
+    /// for the active session. Uses `[weak self]` so the Task doesn't prevent deallocation.
+    private func setupSyncStatusObserver() {
+        syncObserverTaskLock.withLock { $0?.cancel(); $0 = nil }
+        syncObserverTaskLock.withLock {
+            $0 = Task { [weak self] in
+                for await notification in NotificationCenter.default.notifications(named: .syncStatusDidChange) {
+                    guard let self else { return }
+                    guard let sessionId = await self.sessionId else { continue }
+                    if let statusMap = notification.userInfo?["syncStatusMap"] as? [String: SyncStatus] {
+                        let key = sessionId.uuidString.lowercased()
+                        let status = statusMap[key] ?? .synced
+                        await MainActor.run {
+                            self.sessionSyncStatus = status
+                        }
+                    }
+                }
             }
         }
     }
@@ -621,6 +662,9 @@ class ChatViewModel {
                     }
                     AppLogger.shared.info("Loaded \(cached.count) cached messages for session \(sessionId)", category: "chat")
                 }
+                // Set sync status based on whether we have pending changes for this session
+                let status = await SyncCoordinator.shared.getSyncStatus(for: sessionId.uuidString.lowercased())
+                sessionSyncStatus = isOffline ? (status == .synced ? .pending : status) : status
             }
 
             if messages.isEmpty {
@@ -831,15 +875,28 @@ class ChatViewModel {
     ///
     /// Serializes the request and hands it to `SyncCoordinator`, which persists it
     /// and automatically replays it once `networkDidBecomeAvailable` fires.
+    /// Also tracks the change for per-session sync status.
     private func enqueueOfflineMessage(_ request: ChatStreamRequest) {
         let encoder = JSONEncoder()
         guard let body = try? encoder.encode(request) else {
             AppLogger.shared.error("Failed to encode message for offline queue", category: "chat")
             return
         }
+        let currentSessionId = sessionId
         Task {
             await SyncCoordinator.shared.enqueue(method: "POST", endpoint: "/chat/stream", body: body)
+            // Track the change so the session gets a 'pending' sync status
+            if let sessionId = currentSessionId {
+                let sessionIdString = sessionId.uuidString.lowercased()
+                await SyncCoordinator.shared.trackChange(
+                    entityType: "message",
+                    entityId: sessionIdString,
+                    changeType: "create",
+                    changeData: body
+                )
+            }
             self.queuedMessageCount = await SyncCoordinator.shared.pendingCount
+            self.sessionSyncStatus = .pending
         }
         AppLogger.shared.info("Message queued for offline delivery (queue size will update)", category: "chat")
     }

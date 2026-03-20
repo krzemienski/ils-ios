@@ -16,10 +16,23 @@ struct OfflineIndicator: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var pendingCount: Int = 0
+    @State private var pendingSyncCount: Int = 0
+    @State private var conflictCount: Int = 0
 
     private var queueLabel: String? {
         guard pendingCount > 0 else { return nil }
         return pendingCount == 1 ? "1 message queued" : "\(pendingCount) messages queued"
+    }
+
+    private var syncStatusLabel: String? {
+        var parts: [String] = []
+        if pendingSyncCount > 0 {
+            parts.append("\(pendingSyncCount) pending")
+        }
+        if conflictCount > 0 {
+            parts.append("\(conflictCount) \(conflictCount == 1 ? "conflict" : "conflicts")")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
 
     var body: some View {
@@ -34,6 +47,12 @@ struct OfflineIndicator: View {
 
                     if let label = queueLabel {
                         Text(label)
+                            .font(.system(size: theme.fontCaption - 1, weight: .regular, design: theme.fontDesign))
+                            .opacity(0.85)
+                    }
+
+                    if let syncLabel = syncStatusLabel {
+                        Text(syncLabel)
                             .font(.system(size: theme.fontCaption - 1, weight: .regular, design: theme.fontDesign))
                             .opacity(0.85)
                     }
@@ -55,13 +74,18 @@ struct OfflineIndicator: View {
                     ? .opacity
                     : .move(edge: .top).combined(with: .opacity)
             )
-            .accessibilityLabel(pendingCount > 0
-                ? "Offline mode. Showing cached data. \(queueLabel ?? "")."
-                : "Offline mode. Showing cached data."
-            )
+            .accessibilityLabel({
+                var label = "Offline mode. Showing cached data."
+                if let queue = queueLabel { label += " \(queue)." }
+                if let sync = syncStatusLabel { label += " \(sync)." }
+                return label
+            }())
             .task {
                 while !Task.isCancelled {
                     pendingCount = await SyncCoordinator.shared.pendingCount
+                    let statusMap = await SyncCoordinator.shared.syncStatusMap
+                    pendingSyncCount = statusMap.values.filter { $0 == .pending }.count
+                    conflictCount = statusMap.values.filter { $0 == .conflict }.count
                     try? await Task.sleep(nanoseconds: 1_000_000_000)
                 }
             }

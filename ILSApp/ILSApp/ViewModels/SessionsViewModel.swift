@@ -112,9 +112,19 @@ class SessionsViewModel: BaseViewModel {
     /// The NL filter version at which groupedSessionsByTime cache was last built.
     private var cachedGroupedByTimeNLVersion: Int = -1
 
+    // MARK: - Sync Status Tracking
+
+    /// Per-session sync status map, updated from CacheService and SyncCoordinator notifications.
+    var sessionSyncStatuses: [UUID: SyncStatus] = [:]
+
+    /// Task that listens for sync-status-change notifications.
+    // CON-001/MEM-003: Same rationale as searchTaskLock above.
+    @ObservationIgnored private let syncObserverTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
+
     deinit {
         searchTaskLock.withLock { $0?.cancel() }
         networkObserverTaskLock.withLock { $0?.cancel() }
+        syncObserverTaskLock.withLock { $0?.cancel() }
     }
 
     /// Configure the view model with an API client and start observing network changes.
@@ -122,6 +132,7 @@ class SessionsViewModel: BaseViewModel {
     override func configure(client: APIClient) {
         super.configure(client: client)
         setupNetworkObserver()
+        setupSyncStatusObserver()
     }
 
     /// Subscribe to `networkDidBecomeAvailable` and auto-refresh sessions when connectivity returns.
@@ -133,6 +144,30 @@ class SessionsViewModel: BaseViewModel {
                 for await _ in NotificationCenter.default.notifications(named: .networkDidBecomeAvailable) {
                     guard let self else { return }
                     await self.loadSessions(refresh: true)
+                }
+            }
+        }
+    }
+
+    /// Subscribe to `syncStatusDidChange` to keep per-session sync statuses up to date.
+    /// Uses `[weak self]` so the Task doesn't prevent deallocation.
+    private func setupSyncStatusObserver() {
+        syncObserverTaskLock.withLock { $0?.cancel(); $0 = nil }
+        syncObserverTaskLock.withLock {
+            $0 = Task { [weak self] in
+                for await notification in NotificationCenter.default.notifications(named: .syncStatusDidChange) {
+                    guard let self else { return }
+                    if let statusMap = notification.userInfo?["syncStatusMap"] as? [String: SyncStatus] {
+                        var uuidMap: [UUID: SyncStatus] = [:]
+                        for (key, value) in statusMap {
+                            if let uuid = UUID(uuidString: key) {
+                                uuidMap[uuid] = value
+                            }
+                        }
+                        await MainActor.run {
+                            self.sessionSyncStatuses = uuidMap
+                        }
+                    }
                 }
             }
         }
@@ -447,6 +482,7 @@ class SessionsViewModel: BaseViewModel {
             sessions = cached
             totalCount = cached.count
             rebuildSearchCache()
+            await refreshSyncStatuses()
             if !cached.isEmpty {
                 AppLogger.shared.info("Offline: serving \(cached.count) cached sessions", category: "sessions")
             }
@@ -482,6 +518,7 @@ class SessionsViewModel: BaseViewModel {
                 sessions = newItems
                 rebuildSearchCache()
                 lastUpdated = Date()
+                await refreshSyncStatuses()
                 // Update cache with fresh data in background
                 Task.detached {
                     await CacheService.shared.cacheSessions(newItems)
@@ -538,6 +575,23 @@ class SessionsViewModel: BaseViewModel {
 
     func renameSession(_ session: ChatSession, to newName: String) async {
         guard let client else { return }
+
+        // Offline: apply rename locally and mark dirty for later sync
+        if !NetworkMonitor.shared.isConnected {
+            if let idx = sessions.firstIndex(where: { $0.id == session.id }) {
+                var updated = sessions[idx]
+                updated.name = newName
+                sessions[idx] = updated
+                if let cacheIdx = searchCache.firstIndex(where: { $0.session.id == updated.id }) {
+                    searchCache[cacheIdx] = makeSearchEntry(for: updated)
+                }
+                sessionsMutationVersion += 1
+            }
+            let changeData = try? JSONEncoder().encode(["name": newName])
+            await CacheService.shared.markSessionDirty(sessionId: session.id, changeType: "update", changeData: changeData)
+            return
+        }
+
         do {
             let response: APIResponse<ChatSession> = try await client.renameSession(id: session.id, name: newName)
             if let updated = response.data {
@@ -571,6 +625,15 @@ class SessionsViewModel: BaseViewModel {
             return
         }
 
+        // Offline: remove locally and mark dirty for later sync
+        if !NetworkMonitor.shared.isConnected {
+            sessions.removeAll { $0.id == session.id }
+            searchCache.removeAll { $0.session.id == session.id }
+            sessionsMutationVersion += 1
+            await CacheService.shared.markSessionDirty(sessionId: session.id, changeType: "delete", changeData: nil)
+            return
+        }
+
         do {
             let _: APIResponse<DeletedResponse> = try await client.delete("/sessions/\(session.id)")
             sessions.removeAll { $0.id == session.id }
@@ -598,5 +661,23 @@ class SessionsViewModel: BaseViewModel {
             AppLogger.shared.error("Failed to fork session: \(error.localizedDescription)", category: "sessions")
         }
         return nil
+    }
+
+    // MARK: - Sync Status
+
+    /// Refresh sync statuses from CacheService for all loaded sessions.
+    private func refreshSyncStatuses() async {
+        let statuses = await CacheService.shared.getSessionSyncStatuses()
+        sessionSyncStatuses = statuses
+    }
+
+    /// Returns the sync status for a given session, defaulting to `.synced`.
+    func syncStatus(for session: ChatSession) -> SyncStatus {
+        sessionSyncStatuses[session.id] ?? .synced
+    }
+
+    /// Retry syncing a failed session by delegating to SyncCoordinator.
+    func retrySync(for session: ChatSession) async {
+        await SyncCoordinator.shared.retryFailed(sessionId: session.id.uuidString)
     }
 }

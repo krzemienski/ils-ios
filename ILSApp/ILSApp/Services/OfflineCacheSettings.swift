@@ -68,6 +68,14 @@ final class OfflineCacheSettings: ObservableObject {
         didSet { UserDefaults.standard.set(pluginsEnabled, forKey: AppConstants.offlineCachePluginsEnabledKey) }
     }
 
+    // MARK: - Sync Conflict Resolution
+
+    /// Whether conflicts should be auto-resolved using last-write-wins strategy.
+    /// When enabled, timestamp-based resolution is applied automatically.
+    @Published var autoResolveConflicts: Bool {
+        didSet { UserDefaults.standard.set(autoResolveConflicts, forKey: AppConstants.offlineCacheAutoResolveConflictsKey) }
+    }
+
     // MARK: - Init
 
     private init() {
@@ -89,6 +97,9 @@ final class OfflineCacheSettings: ObservableObject {
         skillsEnabled = defaults.object(forKey: AppConstants.offlineCacheSkillsEnabledKey) as? Bool ?? true
         mcpServersEnabled = defaults.object(forKey: AppConstants.offlineCacheMCPServersEnabledKey) as? Bool ?? true
         pluginsEnabled = defaults.object(forKey: AppConstants.offlineCachePluginsEnabledKey) as? Bool ?? true
+
+        // Sync conflict resolution — auto-resolve enabled by default
+        autoResolveConflicts = defaults.object(forKey: AppConstants.offlineCacheAutoResolveConflictsKey) as? Bool ?? true
     }
 
     // MARK: - Helpers
@@ -117,6 +128,7 @@ final class OfflineCacheSettings: ObservableObject {
         skillsEnabled = true
         mcpServersEnabled = true
         pluginsEnabled = true
+        autoResolveConflicts = true
     }
 }
 

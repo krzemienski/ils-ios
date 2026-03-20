@@ -66,6 +66,9 @@ struct SidebarView: View {
     @State private var templatesViewModel = TemplatesViewModel()
     /// Whether the "too many pinned sessions" limit alert is visible.
     @State private var showPinLimitAlert = false
+    /// Conflict resolution sheet state for sync conflicts.
+    @State private var selectedConflictSession: (local: ChatSession, server: ChatSession, fields: [ConflictField])? = nil
+    @State private var showConflictSheet: Bool = false
 
     /// Version monitor to check for Claude Code CLI updates.
     @State private var versionMonitorViewModel = VersionMonitorViewModel()
@@ -137,6 +140,18 @@ struct SidebarView: View {
             }
             .environment(appState)
             .environment(\.theme, theme)
+        }
+        .sheet(isPresented: $showConflictSheet) {
+            if let conflict = selectedConflictSession {
+                NavigationStack {
+                    ConflictResolutionSheet(
+                        localSession: conflict.local,
+                        serverSession: conflict.server,
+                        conflictFields: conflict.fields
+                    )
+                }
+                .environment(\.theme, theme)
+            }
         }
         .task {
             templatesViewModel.configure(client: appState.apiClient)
@@ -597,7 +612,14 @@ struct SidebarView: View {
                     SidebarSessionRow(
                         session: session,
                         isActive: isSessionActive(session),
-                        searchText: sessionsViewModel.debouncedSearchText
+                        searchText: sessionsViewModel.debouncedSearchText,
+                        syncStatus: sessionsViewModel.syncStatus(for: session),
+                        onRetrySync: {
+                            Task { await sessionsViewModel.retrySync(for: session) }
+                        },
+                        onConflictTap: {
+                            presentConflictSheet(for: session)
+                        }
                     ) {
                         QueryLearningService.shared.recordSessionSelected(
                             forQuery: sessionsViewModel.searchText,
@@ -838,6 +860,30 @@ struct SidebarView: View {
             return activeSession.id == session.id
         }
         return false
+    }
+
+    /// Present a conflict resolution sheet for the given session.
+    ///
+    /// Fetches sync metadata from the database, decodes the stored server session
+    /// from the conflict data, and populates the conflict sheet state.
+    private func presentConflictSheet(for session: ChatSession) {
+        Task {
+            guard let metadata = try? await LocalDatabase.shared.getSessionSyncMetadata(sessionId: session.id.uuidString),
+                  let conflictData = metadata.conflictData else { return }
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            guard let serverSession = try? decoder.decode(ChatSession.self, from: conflictData) else { return }
+
+            var fields: [ConflictField] = []
+            if session.name != serverSession.name { fields.append(.name) }
+            if session.status != serverSession.status { fields.append(.status) }
+            if session.messageCount != serverSession.messageCount { fields.append(.messageCount) }
+
+            await MainActor.run {
+                selectedConflictSession = (local: session, server: serverSession, fields: fields)
+                showConflictSheet = true
+            }
+        }
     }
 
     private func isScreenActive(_ screen: ActiveScreen) -> Bool {
