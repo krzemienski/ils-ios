@@ -1,0 +1,79 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Unified Consumption & Quota Transparency Dashboard
+Workspace: 244-unified-consumption-quota-transparency-dashboard (worktree)
+Started: 2026-03-20
+
+Workflow Type: feature
+Rationale: Multi-service feature spanning shared DTOs (ILSShared), backend API (ILSBackend/Vapor), and iOS/macOS frontend (SwiftUI). Builds on existing usage/analytics infrastructure with new consumption tracking, burn rate projections, anomaly detection, and configurable alerts.
+
+Session 1 (Planner):
+- Completed deep codebase investigation (Phase 0)
+- Analyzed existing Usage dashboard stack (UsageController -> UsageDTOs -> UsageDashboardViewModel -> UsageDashboardView)
+- Analyzed existing Analytics stack (AnalyticsController -> AnalyticsDTOs with token fields already scaffolded)
+- Identified key gap: tokensUsed fields exist but are always 0 (no actual token tracking)
+- Documented patterns: DTO conventions, controller patterns, MVVM with @Observable, navigation via ActiveScreen enum
+- Created implementation_plan.json
+- Phases: 5
+- Total subtasks: 10
+- Created init.sh
+- Created context.json and project_index.json
+
+Phase Summary:
+- Phase 1 (Shared DTOs): 1 subtask - Create ConsumptionDTOs.swift in ILSShared
+- Phase 2 (Backend): 2 subtasks - ConsumptionService.swift + ConsumptionController.swift, register routes
+- Phase 3 (iOS ViewModel): 1 subtask - ConsumptionDashboardViewModel.swift
+- Phase 4 (iOS Views): 5 subtasks - ConsumptionTrendChart, BurnRateGauge, AnomalyCardView, ConsumptionAlertSettingsView, ConsumptionDashboardView
+- Phase 5 (Integration): 2 subtasks - Navigation integration into Usage tab + final build verification
+
+Services Involved:
+- shared (ILSShared): New DTOs for consumption metrics, burn rates, anomalies
+- backend (ILSBackend): New service + controller for consumption API endpoints
+- ios (ILSApp): New ViewModel + Views for consumption dashboard UI
+
+Key Design Decisions:
+1. Token estimation (not actual tracking): Since message-level token counts aren't persisted, we estimate tokens using model-specific averages (haiku: ~2K/msg, sonnet: ~3.5K/msg, opus: ~5K/msg)
+2. Anomaly detection via rolling 7-day average comparison (>50% deviation = warning, >100% = critical)
+3. Burn rate calculated from messages in recent time window, projected against 45-msg/5-hr rate limit
+4. Navigation: Add segmented control to existing Usage section (Usage | Consumption tabs) rather than new sidebar item
+5. Reuse existing RateLimitStatus from UsageDTOs rather than duplicating
+
+Parallelism Analysis:
+- Max parallel phases: 1
+- Recommended workers: 1
+- Sequential dependency chain: shared -> backend -> viewmodel -> views -> integration
+- No parallel groups (each phase depends on previous)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, the coder agent should:
+
+1. Read implementation_plan.json for subtask list
+2. Start with subtask-1-1 (ConsumptionDTOs.swift)
+3. Build-verify after each subtask
+4. Proceed sequentially through phases
+
+Build verification commands:
+  swift build 2>&1 | tail -5
+  xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSApp -destination 'id=50523130-57AA-48B0-ABD0-4D59CE455F14' -quiet 2>&1 | tail -5
+  xcodebuild -project ILSApp/ILSApp.xcodeproj -scheme ILSMacApp -destination 'platform=macOS' -quiet 2>&1 | tail -5
+
+=== END SESSION 1 ===
+
+=== SESSION 2 (Final Build Verification) ===
+
+subtask-5-2: Final build verification across all three targets
+- swift build: ✅ Build complete (0.48s) - backend + shared compile cleanly
+- ILSApp (iOS): ✅ Swift compilation succeeds, zero errors/warnings from our code
+- ILSMacApp (macOS): ✅ Swift compilation succeeds, zero errors/warnings from our code
+- Sendable/concurrency: ✅ No warnings related to Sendable conformance or strict concurrency
+- Regressions: ✅ No regressions - all Swift source compiles cleanly
+
+NOTE: Both xcodebuild targets fail at the CpResource step due to pre-existing missing
+.omc/state files (checkpoint JSONs, hud-state.json, session JSON). These files are NOT
+tracked in git and are missing on main branch as well. This is a pre-existing environment
+issue unrelated to our changes. All Swift compilation (the actual code verification) passes.
+
+All 11/11 subtasks COMPLETED.
+
+=== END SESSION 2 ===
