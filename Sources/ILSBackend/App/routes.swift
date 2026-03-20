@@ -23,6 +23,7 @@ func routes(_ app: Application) throws {
     try api.register(collection: SessionHealthController(fileSystem: fileSystem))
     try api.register(collection: SessionBackupController())
     try api.register(collection: UsageController())
+    try api.register(collection: ConsumptionController())
     try api.register(collection: ThemesController())
     try api.register(collection: TeamsController(fileService: TeamsFileService(), executorService: TeamsExecutorService()))
     try api.register(collection: CheckpointsController())

@@ -277,6 +277,17 @@ extension DailyUsage: Content {}
 extension ProjectUsage: Content {}
 extension RateLimitStatus: Content {}
 extension UsagePeriod: Content {}
+
+// MARK: - Consumption Types
+extension ConsumptionDashboardResponse: Content {}
+extension DailyConsumption: Content {}
+extension ModelConsumption: Content {}
+extension SessionConsumption: Content {}
+extension ProjectConsumption: Content {}
+extension BurnRateInfo: Content {}
+extension AnomalyFlag: Content {}
+extension AnomalyType: Content {}
+extension AnomalySeverity: Content {}
 extension UsageExportFormat: Content {}
 
 // MARK: - Permission Types
