@@ -550,6 +550,12 @@
 		97C4414ED49565016EA15D1F /* GitHubPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8EB630B92CF8F94722E2ED /* GitHubPreviewView.swift */; };
 		994AFD33B07891FB4B4A2C7B /* SessionHealthBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7C67A61F4B593C51F184A7 /* SessionHealthBadge.swift */; };
 		99CCAEBFD2A3B89084E26FAD /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB18E987E5534E0CFE144AD0 /* SpeechRecognitionService.swift */; };
+		VC02A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC01A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift */; };
+		VC03A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC01A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift */; };
+		VC05A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC04A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift */; };
+		VC06A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC04A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift */; };
+		VC08A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC07A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift */; };
+		VC09A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC07A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift */; };
 		99E148F9DFA37DFE3B2FA1E8 /* SidebarSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDC83A920F8536C2B11A4FA /* SidebarSessionRow.swift */; };
 		9A2ABF790EE467BD4168A9C8 /* FeatureGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */; };
 		9A561D9E85EB630763ACB722 /* HookTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28D64369CB35AEA4B5FDB37 /* HookTemplate.swift */; };
@@ -1296,6 +1302,9 @@
 		AA09F1978FCE210EBAC2797E /* ConnectionMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionMode.swift; sourceTree = "<group>"; };
 		AA4D98A0CF55C5C4EE360081 /* PermissionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionHistoryView.swift; sourceTree = "<group>"; };
 		AB18E987E5534E0CFE144AD0 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		VC01A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommand.swift; sourceTree = "<group>"; };
+		VC04A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandInterpreter.swift; sourceTree = "<group>"; };
+		VC07A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandExecutor.swift; sourceTree = "<group>"; };
 		AB21906489F9396858EEBC0E /* SessionCheckpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCheckpointsView.swift; sourceTree = "<group>"; };
 		197BEA7E2D374477B9B6B2C1 /* AuditActionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditActionRowView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* AuditTrailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditTrailView.swift; sourceTree = "<group>"; };
@@ -2249,6 +2258,8 @@
 				06A8A5DC276AB8E77D502627 /* SSEClient.swift */,
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
+				VC04A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift */,
+				VC07A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift */,
 				66D1968D94BA6425D3F89B98 /* TerminalWebSocketClient.swift */,
 			);
 			path = Services;
@@ -2547,6 +2558,7 @@
 				A1C3D5E7F9B2E4A6C8D0F1E3 /* SyncStatus.swift */,
 				AFA8E77DE401528CFA32211B /* TaggedSession.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
+				VC01A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift */,
 				5EEC85653CDED4349865125A /* WorkflowExecution.swift */,
 				B8A191B5D1E0900CB193306A /* WorkflowNode.swift */,
 				7DAD0AAC28C8ABAB8CD7260C /* WorkflowSchedule.swift */,
@@ -3171,6 +3183,9 @@
 				217B408FC61DFCC3B1D4E880 /* SpawnTeammateView.swift in Sources */,
 				535205AB7A82B0D38DDD0953 /* SpeechRecognitionProvider.swift in Sources */,
 				99CCAEBFD2A3B89084E26FAD /* SpeechRecognitionService.swift in Sources */,
+				VC02A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift in Sources */,
+				VC05A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift in Sources */,
+				VC08A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift in Sources */,
 				619698A9E38584266DDEA13B /* SplitViewLayoutPicker.swift in Sources */,
 				062146CB422A72CF6170ED7D /* StatCard.swift in Sources */,
 				02DF31D5753A3D1A805198E2 /* StreamingIndicatorView.swift in Sources */,
@@ -3614,6 +3629,9 @@
 				8B51E92863D3F7AA73B6F65E /* SpawnTeammateView.swift in Sources */,
 				6306B2BA7877459ACE545282 /* SpeechRecognitionProvider.swift in Sources */,
 				D1564CD825C9E3179C72B3FF /* SpeechRecognitionService.swift in Sources */,
+				VC03A1B2C3D4E5F6A7B8C9D0 /* VoiceCommand.swift in Sources */,
+				VC06A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandInterpreter.swift in Sources */,
+				VC09A1B2C3D4E5F6A7B8C9D0 /* VoiceCommandExecutor.swift in Sources */,
 				240563AE811B8914AE13B689 /* SplitViewLayoutPicker.swift in Sources */,
 				029BE21752EEEAB02DA9DB1A /* SpotlightIndexer.swift in Sources */,
 				BFC1BD3E7E6F94F5B12F06E0 /* StatCard.swift in Sources */,
