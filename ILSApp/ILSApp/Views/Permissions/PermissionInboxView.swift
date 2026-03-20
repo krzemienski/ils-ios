@@ -147,6 +147,24 @@ struct PermissionInboxView: View {
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .multilineTextAlignment(.center)
+
+            NavigationLink {
+                ApprovalPoliciesView()
+            } label: {
+                HStack(spacing: theme.spacingSM) {
+                    Image(systemName: "shield.checkered")
+                        .accessibilityHidden(true)
+                    Text("Manage Approval Policies")
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                }
+                .foregroundStyle(theme.accent)
+                .padding(.vertical, theme.spacingSM)
+                .padding(.horizontal, theme.spacingMD)
+                .background(theme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .buttonStyle(.plain)
+
             Spacer()
         }
         .padding(theme.spacingXL)
