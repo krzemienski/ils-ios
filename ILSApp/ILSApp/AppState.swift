@@ -36,8 +36,14 @@ class AppState {
     let iCloudSyncManager: ICloudSyncManager
     let backendManager: BackendManager
 
+    /// Conflict resolver for offline-first session cache reconciliation.
+    let conflictResolver: ConflictResolver
+
     /// Observer token for `.backendDidActivate` — used to update `serverURL` on backend switch.
     @ObservationIgnored private var backendActivateObserver: NSObjectProtocol?
+
+    /// Observer token for `.networkDidBecomeAvailable` — triggers cache reconciliation on reconnect.
+    @ObservationIgnored private var networkReconnectObserver: NSObjectProtocol?
 
     // MARK: - Computed Helpers
 
@@ -89,6 +95,7 @@ class AppState {
         self.connectionQualityService = ConnectionQualityService.shared
         self.iCloudSyncManager = ICloudSyncManager.shared
         self.backendManager = BackendManager.shared
+        self.conflictResolver = ConflictResolver.shared
         self.activeHostName = UserDefaults.standard.string(forKey: "activeHostName")
 
         connectionQualityService.serverURL = cm.serverURL
@@ -114,10 +121,25 @@ class AppState {
                 self?.updateServerURL(url)
             }
         }
+
+        // Reconcile local cache with server when network connectivity is restored.
+        // Triggers conflict detection and auto-resolution for sessions modified while offline.
+        networkReconnectObserver = NotificationCenter.default.addObserver(
+            forName: .networkDidBecomeAvailable,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task {
+                await CacheService.shared.reconcileOnReconnect()
+            }
+        }
     }
 
     deinit {
         if let observer = backendActivateObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = networkReconnectObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }
