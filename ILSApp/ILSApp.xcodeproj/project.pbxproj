@@ -473,6 +473,12 @@
 		82504FC1B976E66D50A632B6 /* UnifiedSessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4F4DC1C08A6A64A6EBE6E5F /* UnifiedSessionsViewModel.swift */; };
 		82D5FE7CECA55595FB06C356 /* AgentQueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35619597E3AEAD57D0E1A30 /* AgentQueueView.swift */; };
 		82E6EFFFE1C6F0252A28CF1E /* UsageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE97A62865C6EF071597B3E /* UsageDashboardViewModel.swift */; };
+		64F082DA70A1E9821F15AC0B /* ConsumptionDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE682536C0D023197BD0505 /* ConsumptionDashboardViewModel.swift */; };
+		A124F78B04567D3990D68198 /* ConsumptionTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F760EE4D63291B80A3E2808 /* ConsumptionTrendChart.swift */; };
+		74C3180C334C5C3E739EA407 /* BurnRateGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88781011199D57D2C90DCE7D /* BurnRateGauge.swift */; };
+		CC74AE282FDD060C0F6A6A6C /* AnomalyCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A214BE4EC7883E81CF37DE9B /* AnomalyCardView.swift */; };
+		E9F75E707A14C73A57D32030 /* ConsumptionAlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72759DBA54C92EE854086CC /* ConsumptionAlertSettingsView.swift */; };
+		ACFA68EFC160A4EA56EA5DC1 /* ConsumptionDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81C48A9AD58BE50BD36F432 /* ConsumptionDashboardView.swift */; };
 		82F5A30F5952B9FE9060DFFA /* HookPreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1979B190E44AB9B489A20E /* HookPreviewPanel.swift */; };
 		830FDD95D24330BEE460A61E /* HookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334E9560FEAD6ECF333A872 /* HookEditorSheet.swift */; };
 		832F8F414F560102139D911F /* AutoApproveRulesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8641A37467E80E65B27D54AB /* AutoApproveRulesViewModel.swift */; };
@@ -821,6 +827,12 @@
 		DC359B35978E1B1B2492DFCB /* Scenario08_SettingsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CB6410FDBABFD56EC9C9B28 /* Scenario08_SettingsConfiguration.swift */; };
 		DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D5049476821865BC65876F /* CarbonTheme.swift */; };
 		DD442257704FBEDDE9DFB9BB /* UsageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE97A62865C6EF071597B3E /* UsageDashboardViewModel.swift */; };
+		5A45252D17FE282058A4A918 /* ConsumptionDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE682536C0D023197BD0505 /* ConsumptionDashboardViewModel.swift */; };
+		6F35E89BEDBE24D829B9BEE9 /* ConsumptionTrendChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F760EE4D63291B80A3E2808 /* ConsumptionTrendChart.swift */; };
+		E1231DC6A59453992F5E2842 /* BurnRateGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88781011199D57D2C90DCE7D /* BurnRateGauge.swift */; };
+		2D80BC1427B2E3EBD4FD6307 /* AnomalyCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A214BE4EC7883E81CF37DE9B /* AnomalyCardView.swift */; };
+		EB0EA580108E6340D0B2D7BC /* ConsumptionAlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72759DBA54C92EE854086CC /* ConsumptionAlertSettingsView.swift */; };
+		7A7FE59DDE0122DDC1D69300 /* ConsumptionDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B81C48A9AD58BE50BD36F432 /* ConsumptionDashboardView.swift */; };
 		DDC7A5E5F6945F976D80C7E3 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */; };
 		DE0C58B0013ACBFAAE12737F /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */; };
 		DE34AC0159DFC8DE7ED2A9A6 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548657A1773765E26B590326 /* SkillsViewModel.swift */; };
@@ -1499,6 +1511,12 @@
 		FED45A3BE00DA53DAAE2A43D /* SessionPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPaneView.swift; sourceTree = "<group>"; };
 		FEE97A62865C6EF071597B3E /* UsageDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageDashboardViewModel.swift; sourceTree = "<group>"; };
 		FF79B379753DF9239B9A59CE /* SessionTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTemplate.swift; sourceTree = "<group>"; };
+		9AE682536C0D023197BD0505 /* ConsumptionDashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionDashboardViewModel.swift; sourceTree = "<group>"; };
+		9F760EE4D63291B80A3E2808 /* ConsumptionTrendChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionTrendChart.swift; sourceTree = "<group>"; };
+		88781011199D57D2C90DCE7D /* BurnRateGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BurnRateGauge.swift; sourceTree = "<group>"; };
+		A214BE4EC7883E81CF37DE9B /* AnomalyCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnomalyCardView.swift; sourceTree = "<group>"; };
+		B72759DBA54C92EE854086CC /* ConsumptionAlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionAlertSettingsView.swift; sourceTree = "<group>"; };
+		B81C48A9AD58BE50BD36F432 /* ConsumptionDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionDashboardView.swift; sourceTree = "<group>"; };
 		41FC7FA4F5409482CAD49A22 /* SessionRecoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecoveryService.swift; sourceTree = "<group>"; };
 		A511E1494F345065B5D00DE9 /* SessionRecoveryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecoveryViewModel.swift; sourceTree = "<group>"; };
 		A786E1D5782D1FFE8C699B2A /* SessionRecoveryBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecoveryBannerView.swift; sourceTree = "<group>"; };
@@ -2225,6 +2243,7 @@
 				4DBBF3BECE68ADE6716DC71D /* Terminal */,
 				EC4E8B1351AF67B0ECBCCFA5 /* Themes */,
 				B054CBE53D1498EAF28925EC /* Tips */,
+				24E95CF63D2213AD1B9C25CE /* Consumption */,
 				DAE09728D55B98207A3FC700 /* Usage */,
 				112B3ED39CBC6822009C6D5F /* Workflows */,
 			);
@@ -2390,6 +2409,7 @@
 				83730169D6E423B5322B5F55 /* TunnelSettingsViewModel.swift */,
 				C4F4DC1C08A6A64A6EBE6E5F /* UnifiedSessionsViewModel.swift */,
 				FEE97A62865C6EF071597B3E /* UsageDashboardViewModel.swift */,
+				9AE682536C0D023197BD0505 /* ConsumptionDashboardViewModel.swift */,
 				2C9CA9D27C1CE640541F7472 /* VersionMonitorViewModel.swift */,
 				C094B4796F2132F607CA105C /* WorkflowViewModel.swift */,
 			);
@@ -2416,6 +2436,18 @@
 				6136B6DA3146EBFAA56BD687 /* UsageDashboardView.swift */,
 			);
 			path = Usage;
+			sourceTree = "<group>";
+		};
+		24E95CF63D2213AD1B9C25CE /* Consumption */ = {
+			isa = PBXGroup;
+			children = (
+				9F760EE4D63291B80A3E2808 /* ConsumptionTrendChart.swift */,
+				88781011199D57D2C90DCE7D /* BurnRateGauge.swift */,
+				A214BE4EC7883E81CF37DE9B /* AnomalyCardView.swift */,
+				B72759DBA54C92EE854086CC /* ConsumptionAlertSettingsView.swift */,
+				B81C48A9AD58BE50BD36F432 /* ConsumptionDashboardView.swift */,
+			);
+			path = Consumption;
 			sourceTree = "<group>";
 		};
 		E5193BAF30A537CA8DEC338C /* sessions */ = {
@@ -3295,6 +3327,12 @@
 				82504FC1B976E66D50A632B6 /* UnifiedSessionsViewModel.swift in Sources */,
 				27D2A4B265144D4B69EB9DA2 /* UsageDashboardView.swift in Sources */,
 				82E6EFFFE1C6F0252A28CF1E /* UsageDashboardViewModel.swift in Sources */,
+				64F082DA70A1E9821F15AC0B /* ConsumptionDashboardViewModel.swift in Sources */,
+				A124F78B04567D3990D68198 /* ConsumptionTrendChart.swift in Sources */,
+				74C3180C334C5C3E739EA407 /* BurnRateGauge.swift in Sources */,
+				CC74AE282FDD060C0F6A6A6C /* AnomalyCardView.swift in Sources */,
+				E9F75E707A14C73A57D32030 /* ConsumptionAlertSettingsView.swift in Sources */,
+				ACFA68EFC160A4EA56EA5DC1 /* ConsumptionDashboardView.swift in Sources */,
 				9B16BFDD6E3802ED2D0BDDEC /* UsageStatsWidget.swift in Sources */,
 				895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */,
 				5922226B3EC22F43CAB12D79 /* VersionMonitorView.swift in Sources */,
@@ -3753,6 +3791,12 @@
 				E2649AE8158ABFD60FB3412A /* UnifiedSessionsViewModel.swift in Sources */,
 				F4D2BEA06DF18A0DC67665B9 /* UsageDashboardView.swift in Sources */,
 				DD442257704FBEDDE9DFB9BB /* UsageDashboardViewModel.swift in Sources */,
+				5A45252D17FE282058A4A918 /* ConsumptionDashboardViewModel.swift in Sources */,
+				6F35E89BEDBE24D829B9BEE9 /* ConsumptionTrendChart.swift in Sources */,
+				E1231DC6A59453992F5E2842 /* BurnRateGauge.swift in Sources */,
+				2D80BC1427B2E3EBD4FD6307 /* AnomalyCardView.swift in Sources */,
+				EB0EA580108E6340D0B2D7BC /* ConsumptionAlertSettingsView.swift in Sources */,
+				7A7FE59DDE0122DDC1D69300 /* ConsumptionDashboardView.swift in Sources */,
 				C140359BF5F6730DA3DA0CEB /* UsageStatsWidget.swift in Sources */,
 				2C9CF6BB63C937DA6442373A /* UserMessageCard.swift in Sources */,
 				4C8183809528AB6141AE93FF /* VersionMonitorView.swift in Sources */,

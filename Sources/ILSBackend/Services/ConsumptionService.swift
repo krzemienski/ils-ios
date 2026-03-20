@@ -365,7 +365,10 @@ actor ConsumptionService {
     }
 
     /// Compute estimated cost in USD for a given token count and model.
-    private func computeCost(inputTokens: Int, outputTokens: Int, model: String) -> Double {
+    ///
+    /// Resolves the model family (haiku/sonnet/opus) before looking up pricing,
+    /// so full model IDs like "claude-sonnet-4-20250514" get correct costs.
+    func computeCost(inputTokens: Int, outputTokens: Int, model: String) -> Double {
         let claudeModel = ClaudeModel(rawValue: resolveModelFamily(model))
         let inputCost = Double(inputTokens) / 1_000_000.0 * claudeModel.costPerMInputTokens
         let outputCost = Double(outputTokens) / 1_000_000.0 * claudeModel.costPerMOutputTokens

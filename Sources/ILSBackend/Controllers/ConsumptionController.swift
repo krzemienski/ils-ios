@@ -147,9 +147,9 @@ struct ConsumptionController: RouteCollection {
                 messageCount: session.messageCount, model: session.model
             )
             let totalTokens = tokens.input + tokens.output
-            let claudeModel = ClaudeModel(rawValue: session.model)
-            let cost = Double(tokens.input) / 1_000_000.0 * claudeModel.costPerMInputTokens
-                + Double(tokens.output) / 1_000_000.0 * claudeModel.costPerMOutputTokens
+            let cost = await consumptionService.computeCost(
+                inputTokens: tokens.input, outputTokens: tokens.output, model: session.model
+            )
             result.append(SessionConsumption(
                 sessionId: session.id.uuidString,
                 sessionName: session.name ?? "Session \(session.id.uuidString.prefix(8))",
