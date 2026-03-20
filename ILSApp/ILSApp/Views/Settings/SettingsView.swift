@@ -662,6 +662,22 @@ struct SettingsView: View {
                     .padding(theme.spacingMD)
                 }
                 .accessibilityLabel("AI action audit trail")
+
+                Divider().background(theme.borderSubtle)
+
+                NavigationLink(destination: ApprovalPoliciesView()) {
+                    HStack {
+                        Label("Guardrail Policies", systemImage: "shield.lefthalf.filled")
+                            .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                            .foregroundStyle(theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
+                    }
+                    .padding(theme.spacingMD)
+                }
+                .accessibilityLabel("Guardrail policies")
             }
             .modifier(GlassCard())
         }

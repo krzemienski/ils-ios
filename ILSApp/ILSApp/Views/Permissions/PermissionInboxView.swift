@@ -262,6 +262,16 @@ struct PermissionInboxView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        // Quick-access link to Guardrail Policies
+        ToolbarItem(placement: .navigationBarTrailing) {
+            NavigationLink(destination: ApprovalPoliciesView()) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
+                    .foregroundStyle(theme.accent)
+            }
+            .accessibilityLabel("Guardrail policies")
+        }
+
         // Select / Done toggle (only shown in Inbox segment with items)
         ToolbarItem(placement: .navigationBarTrailing) {
             if selectedSegment == 0 && !service.pendingPermissions.isEmpty {
