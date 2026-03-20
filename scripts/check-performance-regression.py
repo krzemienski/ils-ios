@@ -62,6 +62,10 @@ _XCRESULT_METRIC_MAP: dict[tuple[str, str], str] = {
     ("testlargelistscrollperformance_100", "hitch"):        "large_list_100_hitch_ms_per_s",
     ("testlargelistscrollperformance_1000", "cpu"):         "large_list_1k_cpu_pct",
     ("testlargelistscrollperformance_10000", "cpu"):        "large_list_10k_cpu_pct",
+    ("testidlecpu", "cpu"):                                 "idle_cpu_pct",
+    ("testbackgroundpollcpu", "cpu"):                       "background_cpu_pct",
+    ("testchatstreamingcpu", "cpu"):                        "chat_streaming_cpu_pct",
+    ("testcrashfreesessions", "crash"):                     "crash_free_sessions_pct",
 }
 
 

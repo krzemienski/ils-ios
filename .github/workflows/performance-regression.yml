@@ -14,6 +14,8 @@
 name: Performance Regression
 
 on:
+  schedule:
+    - cron: '0 3 * * *'
   push:
     branches: [master]
   pull_request:
@@ -377,6 +379,36 @@ PYEOF
             --artifact-url "$RUN_URL" \
             --verbose \
             >> "$GITHUB_STEP_SUMMARY"
+
+      # -----------------------------------------------------------------------
+      # 14. Generate reliability release notes (appended to job summary)
+      # -----------------------------------------------------------------------
+      - name: Generate reliability release notes
+        if: always()
+        env:
+          REPORT_FILE: regression_report_${{ github.sha }}.json
+        run: |
+          CRASH_FREE=$(python3 -c "
+          import json, sys
+          try:
+              r = json.load(open('$REPORT_FILE'))
+              all_r = r.get('regressions',[]) + r.get('warnings',[]) + r.get('passing',[])
+              for m in all_r:
+                  if m.get('key') == 'crash_free_sessions_pct':
+                      print(m['measured']); sys.exit(0)
+          except: pass
+          print('100.0')
+          " 2>/dev/null || echo "100.0")
+
+          {
+            echo "## Reliability Metrics for Release Notes"
+            echo ""
+            python3 scripts/generate-release-notes.py \
+              --baselines performance-baselines.json \
+              --crash-free-rate "$CRASH_FREE" \
+              --session-count 0 \
+              2>/dev/null || echo "_Release notes generation unavailable — script not found or encountered an error._"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # -----------------------------------------------------------------------
       # Cleanup: stop backend

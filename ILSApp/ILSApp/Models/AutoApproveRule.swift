@@ -1,8 +1,13 @@
 import Foundation
+import ILSShared
 
 // MARK: - AutoApproveRule
 
-/// A user-configured rule for automatically approving permission requests without manual confirmation.
+/// A user-configured rule for automatically allowing or denying permission requests.
+///
+/// Rules are evaluated in priority order (lower number = higher priority). The first matching
+/// rule determines the outcome. A rule matches when all non-nil criteria fields match the
+/// incoming permission request.
 struct AutoApproveRule: Codable, Identifiable, Sendable, Hashable {
     /// Unique identifier for this rule.
     let id: UUID
@@ -15,12 +20,20 @@ struct AutoApproveRule: Codable, Identifiable, Sendable, Hashable {
     /// A command prefix this rule applies to (e.g. "git status").
     /// A nil value means any command is matched.
     var commandPrefix: String?
+    /// The MCP server name this rule applies to for MCP tool requests.
+    /// A nil value means any MCP server is matched.
+    var mcpServer: String?
+    /// Action to take when this rule matches: allow or deny.
+    /// Defaults to `.allow` for backward compatibility with existing stored rules.
+    var action: PermissionPolicyAction
     /// Whether this rule is currently active.
     var isEnabled: Bool
     /// The project this rule is scoped to. A nil value means the rule is global.
     var projectId: UUID?
     /// An optional human-readable description of the rule's intent.
     var note: String?
+    /// Evaluation order — lower numbers are evaluated first. Default is 100.
+    var priority: Int
     /// When this rule was created.
     var createdAt: Date
 
@@ -29,26 +42,65 @@ struct AutoApproveRule: Codable, Identifiable, Sendable, Hashable {
         toolName: String? = nil,
         pathGlob: String? = nil,
         commandPrefix: String? = nil,
+        mcpServer: String? = nil,
+        action: PermissionPolicyAction = .allow,
         isEnabled: Bool = true,
         projectId: UUID? = nil,
         note: String? = nil,
+        priority: Int = 100,
         createdAt: Date = Date()
     ) {
         self.id = id
         self.toolName = toolName
         self.pathGlob = pathGlob
         self.commandPrefix = commandPrefix
+        self.mcpServer = mcpServer
+        self.action = action
         self.isEnabled = isEnabled
         self.projectId = projectId
         self.note = note
+        self.priority = priority
         self.createdAt = createdAt
+    }
+
+    // MARK: - Codable (Backward Compatibility)
+
+    enum CodingKeys: String, CodingKey {
+        case id, toolName, pathGlob, commandPrefix, mcpServer, action, isEnabled, projectId, note, priority, createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        toolName = try container.decodeIfPresent(String.self, forKey: .toolName)
+        pathGlob = try container.decodeIfPresent(String.self, forKey: .pathGlob)
+        commandPrefix = try container.decodeIfPresent(String.self, forKey: .commandPrefix)
+        mcpServer = try container.decodeIfPresent(String.self, forKey: .mcpServer)
+        // Default to .allow for backward compatibility with existing stored rules that lack this field
+        action = try container.decodeIfPresent(PermissionPolicyAction.self, forKey: .action) ?? .allow
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        projectId = try container.decodeIfPresent(UUID.self, forKey: .projectId)
+        note = try container.decodeIfPresent(String.self, forKey: .note)
+        // Default to 100 for backward compatibility with existing stored rules that lack this field
+        priority = try container.decodeIfPresent(Int.self, forKey: .priority) ?? 100
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
 
     // MARK: - Destructive Operation Detection
 
-    /// Returns true if this rule would auto-approve a potentially destructive operation.
-    /// Rules matching dangerous patterns require explicit user confirmation before being saved.
+    /// Returns true if this rule is considered destructive.
+    ///
+    /// A rule is destructive if:
+    /// - Its action is `.deny` (silently blocking operations without prompting the user).
+    /// - Its action is `.allow` but it would auto-approve a potentially dangerous command pattern.
+    ///
+    /// Destructive rules require explicit user confirmation before being saved.
     var isDestructive: Bool {
+        // Deny rules are inherently destructive — they silently block tool-use operations
+        if action == .deny {
+            return true
+        }
+
         let dangerousCommandPatterns = [
             "rm -rf",
             "git push --force",

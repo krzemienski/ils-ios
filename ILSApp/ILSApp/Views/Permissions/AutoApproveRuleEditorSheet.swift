@@ -1,11 +1,12 @@
 import SwiftUI
+import ILSShared
 
 /// Modal form sheet for creating or editing an auto-approve rule.
 ///
-/// Shows a tool picker, optional path glob, optional command prefix, a note field,
-/// and an enabled toggle. If the rule targets a known destructive operation pattern
-/// (e.g. `rm -rf`, `git push --force`), an explicit confirmation alert is shown
-/// before the rule is persisted — satisfying the destructive safety guard requirement.
+/// Shows an action picker (allow/deny), a tool picker, optional path glob, optional command
+/// prefix, an optional MCP server filter, a priority stepper, and a note field. If the rule
+/// targets a known destructive operation pattern (e.g. `rm -rf`, `git push --force`) or is
+/// a deny rule, an explicit confirmation alert is shown before the rule is persisted.
 struct AutoApproveRuleEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -22,9 +23,12 @@ struct AutoApproveRuleEditorSheet: View {
 
     // MARK: - Form State
 
+    @State private var selectedAction: PermissionPolicyAction = .allow
     @State private var selectedTool: String = ""  // empty = "Any Tool"
     @State private var pathGlob: String = ""
     @State private var commandPrefix: String = ""
+    @State private var mcpServer: String = ""
+    @State private var priority: Int = 100
     @State private var note: String = ""
     @State private var isEnabled: Bool = true
 
@@ -47,8 +51,10 @@ struct AutoApproveRuleEditorSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                actionSection
                 toolSection
                 conditionsSection
+                prioritySection
                 optionsSection
 
                 if let errorMessage {
@@ -77,7 +83,7 @@ struct AutoApproveRuleEditorSheet: View {
             }
             .onAppear { populateFromExisting() }
         }
-        .alert("Destructive Operation", isPresented: $showDestructiveConfirm) {
+        .alert("Confirm Rule", isPresented: $showDestructiveConfirm) {
             Button("Save Anyway", role: .destructive) {
                 Task {
                     if let rule = pendingRule {
@@ -90,15 +96,59 @@ struct AutoApproveRuleEditorSheet: View {
                 pendingRule = nil
             }
         } message: {
-            Text(
-                "This rule would auto-approve a potentially destructive operation " +
-                "(e.g. rm -rf, git push --force). Are you sure you want to allow this " +
-                "without manual confirmation?"
-            )
+            Text(destructiveAlertMessage)
         }
     }
 
     // MARK: - Sections
+
+    private var actionSection: some View {
+        Section {
+            Picker("Action", selection: $selectedAction) {
+                Label {
+                    Text("Allow")
+                        .foregroundStyle(.green)
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                }
+                .tag(PermissionPolicyAction.allow)
+
+                Label {
+                    Text("Deny")
+                        .foregroundStyle(.red)
+                } icon: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.red)
+                }
+                .tag(PermissionPolicyAction.deny)
+            }
+            .pickerStyle(.segmented)
+
+            actionDescriptionText
+        } header: {
+            Text("Action")
+        }
+    }
+
+    @ViewBuilder
+    private var actionDescriptionText: some View {
+        switch selectedAction {
+        case .allow:
+            Text("Matching requests will be automatically approved without prompting.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                .foregroundStyle(theme.textSecondary)
+        case .deny:
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .font(.system(size: theme.fontCaption))
+                Text("Matching requests will be silently blocked. Use with caution.")
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                    .foregroundStyle(.orange)
+            }
+        }
+    }
 
     private var toolSection: some View {
         Section {
@@ -138,10 +188,36 @@ struct AutoApproveRuleEditorSheet: View {
                 #if os(iOS)
                 .textInputAutocapitalization(.never)
                 #endif
+
+            TextField("MCP server (optional)", text: $mcpServer)
+                .font(.system(size: theme.fontBody, design: .monospaced))
+                .autocorrectionDisabled()
+                #if os(iOS)
+                .textInputAutocapitalization(.never)
+                #endif
         } header: {
             Text("Conditions")
         } footer: {
-            Text("Leave both empty to match all requests for the selected tool. At least a specific tool, path glob, or command prefix is required.")
+            Text("Leave fields empty to match all requests for the selected tool. At least a specific tool, path glob, or command prefix is required. MCP server restricts matching to requests from a specific MCP server.")
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+        }
+    }
+
+    private var prioritySection: some View {
+        Section {
+            Stepper(value: $priority, in: 1...999, step: 10) {
+                HStack {
+                    Text("Priority")
+                    Spacer()
+                    Text("\(priority)")
+                        .foregroundStyle(theme.textSecondary)
+                        .monospacedDigit()
+                }
+            }
+        } header: {
+            Text("Priority")
+        } footer: {
+            Text("Lower numbers are evaluated first (1 = highest priority, 999 = lowest). Default is 100.")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
         }
     }
@@ -166,13 +242,27 @@ struct AutoApproveRuleEditorSheet: View {
         !commandPrefix.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
+    // MARK: - Destructive Alert
+
+    private var destructiveAlertMessage: String {
+        if selectedAction == PermissionPolicyAction.deny {
+            return "This is a deny rule — it will silently block matching tool requests without prompting the user. Are you sure you want to create this rule?"
+        }
+        return "This rule would auto-approve a potentially destructive operation " +
+               "(e.g. rm -rf, git push --force). Are you sure you want to allow this " +
+               "without manual confirmation?"
+    }
+
     // MARK: - Populate from Existing
 
     private func populateFromExisting() {
         guard let existing = existingRule else { return }
+        selectedAction = existing.action
         selectedTool = existing.toolName ?? ""
         pathGlob = existing.pathGlob ?? ""
         commandPrefix = existing.commandPrefix ?? ""
+        mcpServer = existing.mcpServer ?? ""
+        priority = existing.priority
         note = existing.note ?? ""
         isEnabled = existing.isEnabled
     }
@@ -210,6 +300,7 @@ struct AutoApproveRuleEditorSheet: View {
         let toolNameValue = selectedTool.trimmingCharacters(in: .whitespaces)
         let pathGlobValue = pathGlob.trimmingCharacters(in: .whitespaces)
         let commandPrefixValue = commandPrefix.trimmingCharacters(in: .whitespaces)
+        let mcpServerValue = mcpServer.trimmingCharacters(in: .whitespaces)
         let noteValue = note.trimmingCharacters(in: .whitespaces)
 
         return AutoApproveRule(
@@ -217,9 +308,12 @@ struct AutoApproveRuleEditorSheet: View {
             toolName: toolNameValue.isEmpty ? nil : toolNameValue,
             pathGlob: pathGlobValue.isEmpty ? nil : pathGlobValue,
             commandPrefix: commandPrefixValue.isEmpty ? nil : commandPrefixValue,
+            mcpServer: mcpServerValue.isEmpty ? nil : mcpServerValue,
+            action: selectedAction,
             isEnabled: isEnabled,
             projectId: existingRule?.projectId,
             note: noteValue.isEmpty ? nil : noteValue,
+            priority: priority,
             createdAt: existingRule?.createdAt ?? Date()
         )
     }

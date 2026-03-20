@@ -171,6 +171,7 @@ struct ILSAppApp: App {
                             }
                         }
                         PerformanceMonitor.shared.start()
+                        PerformanceMonitor.shared.sessionStarted()
 
                         // Register permission notification category and request authorization.
                         // Delegate is set before requestAuthorization so action taps received

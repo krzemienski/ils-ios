@@ -73,6 +73,11 @@ class GlobalSearchViewModel: BaseViewModel {
     ///
     /// Call this from `.onChange(of: searchQuery)` (and filter onChange handlers)
     /// rather than calling `search()` directly to avoid hammering the API on every keystroke.
+    ///
+    /// Filter/ranking work runs inside a `Task.detached(priority: .userInitiated)` block
+    /// so it executes off the MainActor. Results are assigned back on the MainActor via
+    /// `await MainActor.run`. Cancelling `searchTask` cooperatively cancels in-flight work
+    /// via `Task.isCancelled` checks inside the detached block.
     func scheduleSearch() {
         searchTask?.cancel()
         let query = searchQuery
@@ -81,10 +86,72 @@ class GlobalSearchViewModel: BaseViewModel {
             totalResults = 0
             return
         }
-        searchTask = Task { [weak self] in
+
+        // Snapshot all filter state on MainActor before detaching so the detached
+        // task never needs to hop back just to read properties.
+        let role = selectedRole
+        let from = dateFrom
+        let to = dateTo
+        let projectId = selectedProjectId
+        let codeOnlyFlag = codeOnly
+        let capturedClient = client
+
+        searchTask = Task.detached(priority: .userInitiated) { [weak self] in
+            // Debounce: sleep off the main actor so the main thread stays free.
             try? await Task.sleep(nanoseconds: 300_000_000)
-            guard let self, !Task.isCancelled else { return }
-            await self.search()
+            guard !Task.isCancelled, let self else { return }
+            guard let client = capturedClient else { return }
+
+            // Signal loading state on MainActor before network work begins.
+            await MainActor.run {
+                self.isLoading = true
+                self.error = nil
+            }
+
+            // Build query items off the main actor — pure value computation.
+            var items: [URLQueryItem] = [URLQueryItem(name: "q", value: query)]
+            if let role {
+                items.append(URLQueryItem(name: "role", value: role.rawValue))
+            }
+            let iso = ISO8601DateFormatter()
+            if let from {
+                items.append(URLQueryItem(name: "from", value: iso.string(from: from)))
+            }
+            if let to {
+                items.append(URLQueryItem(name: "to", value: iso.string(from: to)))
+            }
+            if let projectId {
+                items.append(URLQueryItem(name: "projectId", value: projectId.uuidString.lowercased()))
+            }
+            if codeOnlyFlag {
+                items.append(URLQueryItem(name: "codeOnly", value: "true"))
+            }
+
+            var components = URLComponents()
+            components.queryItems = items
+            let queryString = components.percentEncodedQuery ?? ""
+            let path = "/sessions/search?\(queryString)"
+
+            do {
+                let response: APIResponse<ListResponse<MessageSearchResult>> = try await client.get(path)
+                guard !Task.isCancelled else { return }
+                let results = response.data?.items ?? []
+                let total = response.data?.total ?? 0
+
+                // Hop back to MainActor only to assign results.
+                await MainActor.run {
+                    self.searchResults = results
+                    self.totalResults = total
+                    self.isLoading = false
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    self.error = error
+                    self.isLoading = false
+                    AppLogger.shared.error("Global search failed: \(error.localizedDescription)", category: "search")
+                }
+            }
         }
     }
 

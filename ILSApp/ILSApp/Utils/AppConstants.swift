@@ -155,6 +155,9 @@ enum AppConstants {
     /// UserDefaults key for whether plugin caching is enabled.
     static let offlineCachePluginsEnabledKey = "offline_cache_plugins_enabled"
 
+    /// UserDefaults key for whether auto-resolve conflicts is enabled.
+    static let offlineCacheAutoResolveConflictsKey = "offline_cache_auto_resolve_conflicts"
+
     // MARK: - Chat Draft Limits
 
     /// Maximum number of chat drafts to retain in UserDefaults.
