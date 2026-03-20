@@ -190,6 +190,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
                 .kerning(1)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 HStack {
@@ -201,6 +202,7 @@ struct SettingsView: View {
                         .labelsHidden()
                         .tint(theme.accent)
                 }
+                .accessibilityElement(children: .combine)
                 .accessibilityLabel("Show session suggestions")
                 .onChange(of: showSessionSuggestions) {
                     HapticManager.selection()
@@ -222,6 +224,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
                 .kerning(1)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 HStack {
@@ -233,6 +236,7 @@ struct SettingsView: View {
                         .labelsHidden()
                         .tint(theme.accent)
                 }
+                .accessibilityElement(children: .combine)
                 .accessibilityLabel("Show prompt suggestions")
                 .onChange(of: showPromptSuggestions) {
                     HapticManager.selection()
@@ -273,6 +277,7 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold))
                 .foregroundStyle(theme.textSecondary)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             NavigationLink {
                 KeyboardShortcutsView(commandRegistry: commandRegistry, shortcutStore: shortcutStore)
@@ -291,6 +296,7 @@ struct SettingsView: View {
                 }
                 .padding(theme.spacingMD)
             }
+            .accessibilityIdentifier("settings-keyboard-shortcuts")
             .background(theme.bgSecondary)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
@@ -303,6 +309,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
                 .kerning(1)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 HStack {
@@ -314,6 +321,7 @@ struct SettingsView: View {
                         .labelsHidden()
                         .tint(theme.accent)
                 }
+                .accessibilityElement(children: .combine)
                 .accessibilityLabel("Enable agent queue")
                 .onChange(of: enableAgentQueue) {
                     HapticManager.selection()
@@ -334,6 +342,7 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold))
                 .foregroundStyle(theme.textSecondary)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 Toggle(isOn: $showContextWindowBar) {
@@ -368,6 +377,7 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold))
                 .foregroundStyle(theme.textSecondary)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 Toggle(isOn: $autoCheckpointsEnabled) {
@@ -405,6 +415,8 @@ struct SettingsView: View {
                             )
                     }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Auto-save every \(checkpointInterval) messages")
                 .padding(theme.spacingMD)
                 .disabled(!autoCheckpointsEnabled)
 
@@ -423,6 +435,8 @@ struct SettingsView: View {
                             .foregroundStyle(theme.textPrimary)
                     }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Keep last \(checkpointMaxCount) checkpoints")
                 .padding(theme.spacingMD)
             }
             .background(theme.bgSecondary)
@@ -443,6 +457,7 @@ struct SettingsView: View {
                 .textCase(.uppercase)
                 .kerning(1)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 HStack {
@@ -454,6 +469,7 @@ struct SettingsView: View {
                         .labelsHidden()
                         .tint(theme.accent)
                 }
+                .accessibilityElement(children: .combine)
                 .accessibilityLabel("Automatically fork session before context compaction at 95%")
                 .onChange(of: autoForkBeforeCompaction) {
                     HapticManager.selection()
@@ -471,6 +487,7 @@ struct SettingsView: View {
                         .labelsHidden()
                         .tint(theme.accent)
                 }
+                .accessibilityElement(children: .combine)
                 .accessibilityLabel("Automatically save context snapshot when usage reaches 85%")
                 .onChange(of: autoSnapshotEnabled) {
                     HapticManager.selection()
@@ -491,6 +508,7 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
+                .accessibilityIdentifier("settings-alert-settings")
                 .accessibilityLabel("Context alert threshold settings")
             }
             .modifier(GlassCard())
@@ -508,6 +526,7 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold))
                 .foregroundStyle(theme.textSecondary)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 HStack {
@@ -523,6 +542,8 @@ struct SettingsView: View {
                     )
                     .fixedSize()
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Checkpoint interval, \(checkpointIntervalOptions[checkpointIntervalIndex]) messages")
                 .padding(theme.spacingMD)
 
                 Divider().background(theme.borderSubtle)
@@ -547,6 +568,8 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
+                .accessibilityIdentifier("settings-check-backup-integrity")
+                .accessibilityLabel(isRunningIntegrityCheck ? "Check backup integrity, running" : "Check backup integrity")
                 .disabled(isRunningIntegrityCheck)
             }
             .background(theme.bgSecondary)
@@ -570,6 +593,7 @@ struct SettingsView: View {
                 .font(.system(size: theme.fontCaption, weight: .semibold))
                 .foregroundStyle(theme.textSecondary)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 Button {
@@ -592,6 +616,8 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
+                .accessibilityIdentifier("settings-delete-all-data")
+                .accessibilityLabel(viewModel.isDeleting ? "Delete all my data, deleting" : "Delete all my data")
                 .disabled(viewModel.isDeleting)
 
                 if let result = viewModel.deleteResult {
@@ -631,6 +657,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
                 .kerning(1)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(spacing: 0) {
                 NavigationLink(destination: AutoApproveRulesView()) {
@@ -645,6 +672,7 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
+                .accessibilityIdentifier("settings-auto-approve-rules")
                 .accessibilityLabel("Auto-approve rules")
 
                 Divider().background(theme.borderSubtle)
@@ -661,6 +689,7 @@ struct SettingsView: View {
                     }
                     .padding(theme.spacingMD)
                 }
+                .accessibilityIdentifier("settings-audit-trail")
                 .accessibilityLabel("AI action audit trail")
 
                 Divider().background(theme.borderSubtle)
@@ -705,6 +734,7 @@ struct SettingsView: View {
                 .textCase(.uppercase)
                 .kerning(1)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             NavigationLink(destination: ICloudSyncSettingsView()) {
                 HStack {
@@ -719,6 +749,7 @@ struct SettingsView: View {
                 }
                 .padding(theme.spacingMD)
             }
+            .accessibilityIdentifier("settings-icloud-sync")
             .modifier(GlassCard())
         }
     }
@@ -749,6 +780,7 @@ struct SettingsView: View {
                 .textCase(.uppercase)
                 .kerning(1)
                 .padding(.horizontal, theme.spacingXS)
+                .accessibilityAddTraits(.isHeader)
 
             let customCount = QuickReplyTemplateManager.shared.customTemplates.count
 
@@ -769,6 +801,7 @@ struct SettingsView: View {
                 }
                 .padding(theme.spacingMD)
             }
+            .accessibilityIdentifier("settings-quick-reply-templates")
             .modifier(GlassCard())
         }
     }
@@ -784,6 +817,7 @@ struct SettingsView: View {
                 .foregroundStyle(theme.textTertiary)
                 .textCase(.uppercase)
                 .kerning(1)
+                .accessibilityAddTraits(.isHeader)
 
             VStack(alignment: .leading, spacing: theme.spacingSM) {
                 Toggle(isOn: $analyticsEnabled) {
