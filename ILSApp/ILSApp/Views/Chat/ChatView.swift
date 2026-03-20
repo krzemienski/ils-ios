@@ -378,6 +378,13 @@ struct ChatView: View {
             }
             .onDisappear {
                 draftPersistTask?.cancel()
+                // STOR-002: Remove the draft key when the view disappears with an empty draft
+                // to prevent unbounded key accumulation in UserDefaults.
+                let key = "chatDraft_\(session.id.uuidString)"
+                if inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+                ChatView.trimDraftKeys()
             }
             .overlay {
                 ZStack {
@@ -592,15 +599,36 @@ struct ChatView: View {
             },
             sessionProjectId: session.projectId?.uuidString
         )
-        .simultaneousGesture(
-            DragGesture().onChanged { _ in
-                isInputFocused = false
-            }
-        )
+        // Keyboard dismissal handled by .scrollDismissesKeyboard(.interactively)
+        // on ChatMessageList's ScrollView — no DragGesture needed here, which
+        // previously blocked the sidebar edge-swipe gesture.
         .simultaneousGesture(
             sessionSwipeGesture,
             isEnabled: horizontalSizeClass == .compact && onSessionSwitch != nil
         )
+        // ACC-003: Expose swipe-to-switch as named VoiceOver actions so assistive technology
+        // users can switch pinned sessions without performing a physical swipe gesture.
+        .accessibilityAction(named: "Next Session") {
+            let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+            guard pinned.count >= 2,
+                  let currentIndex = pinned.firstIndex(where: { $0.id == session.id }) else { return }
+            let next = pinned[(currentIndex + 1) % pinned.count]
+            HapticManager.impact(.light)
+            onSessionSwitch?(next)
+        }
+        .accessibilityAction(named: "Previous Session") {
+            let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+            guard pinned.count >= 2,
+                  let currentIndex = pinned.firstIndex(where: { $0.id == session.id }) else { return }
+            let prev = pinned[(currentIndex - 1 + pinned.count) % pinned.count]
+            HapticManager.impact(.light)
+            onSessionSwitch?(prev)
+        }
+        // UX-005: Inform VoiceOver users about the swipe gesture when pinned sessions exist.
+        .accessibilityHint({
+            let pinned = multiSessionVM.pinnedSessions(from: sessionsVM.sessions)
+            return pinned.count >= 2 ? "Swipe left or right to switch between pinned sessions" : ""
+        }())
     }
 
     // MARK: - Session Swipe Navigation
@@ -1105,6 +1133,25 @@ struct ChatView: View {
     /// Present the export format picker for sharing the session.
     private func exportSession() {
         sheets.showExportSheet = true
+    }
+
+    // MARK: - Draft Key Maintenance
+
+    /// STOR-002: Caps the number of persisted chat draft keys in UserDefaults to 50.
+    ///
+    /// Scans all keys with the `chatDraft_` prefix and removes the oldest excess entries
+    /// (by UUID string lexicographic order, which is stable but not time-based — sufficient
+    /// since the goal is to bound total key count, not prioritise recency precisely).
+    static func trimDraftKeys(maxCount: Int = 50) {
+        let defaults = UserDefaults.standard
+        let prefix = "chatDraft_"
+        let draftKeys = defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix(prefix) }
+        guard draftKeys.count > maxCount else { return }
+        let sorted = draftKeys.sorted()
+        let toRemove = sorted.prefix(draftKeys.count - maxCount)
+        for key in toRemove {
+            defaults.removeObject(forKey: key)
+        }
     }
 
 }

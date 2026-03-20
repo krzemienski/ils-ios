@@ -160,6 +160,16 @@
     "%@ entity" : {
 
     },
+    "%@ filter%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ filter%2$@"
+          }
+        }
+      }
+    },
     "%@ hook, %@, %@" : {
       "localizations" : {
         "en" : {
@@ -604,6 +614,16 @@
         }
       }
     },
+    "%lld highly rated response%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld highly rated response%2$@"
+          }
+        }
+      }
+    },
     "%lld key" : {
 
     },
@@ -748,6 +768,16 @@
     "%lld sessions active" : {
 
     },
+    "%lld top-rated response%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld top-rated response%2$@"
+          }
+        }
+      }
+    },
     "%lld total" : {
 
     },
@@ -883,6 +913,9 @@
     "Accent" : {
 
     },
+    "Action Detail" : {
+
+    },
     "Activate" : {
 
     },
@@ -998,6 +1031,9 @@
     "Add your first memory note" : {
 
     },
+    "Additional comments (optional)" : {
+
+    },
     "Advanced" : {
 
     },
@@ -1061,6 +1097,15 @@
       }
     },
     "ago" : {
+
+    },
+    "AI action audit trail" : {
+
+    },
+    "AI Action Audit Trail" : {
+
+    },
+    "AI actions will appear here as Claude modifies files, runs commands, and uses tools." : {
 
     },
     "AI Model" : {
@@ -1300,6 +1345,9 @@
     "Audio waveform animation" : {
 
     },
+    "Audit Trail" : {
+
+    },
     "Author (optional)" : {
 
     },
@@ -1438,6 +1486,12 @@
 
     },
     "Best for:" : {
+
+    },
+    "Best Of Collection" : {
+
+    },
+    "Best Of Response" : {
 
     },
     "Beta Flags" : {
@@ -2307,6 +2361,9 @@
     "Cost: $%.4f" : {
 
     },
+    "Count" : {
+
+    },
     "Courier" : {
 
     },
@@ -3136,6 +3193,9 @@
     "Failed to load analytics" : {
 
     },
+    "Failed to Load Audit Trail" : {
+
+    },
     "Failed to load checkpoints" : {
 
     },
@@ -3387,6 +3447,16 @@
     },
     "Highlighted text to draw attention" : {
 
+    },
+    "Highly rated response from %@, %@. Tap to read full content." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Highly rated response from %1$@, %2$@. Tap to read full content."
+          }
+        }
+      }
     },
     "History" : {
 
@@ -3749,6 +3819,9 @@
     "Load earlier messages" : {
 
     },
+    "Load More" : {
+
+    },
     "Load more..." : {
 
     },
@@ -3788,6 +3861,9 @@
 
     },
     "Loading API key status..." : {
+
+    },
+    "Loading audit trail…" : {
 
     },
     "Loading cache statistics..." : {
@@ -4221,6 +4297,9 @@
     "No %@ entries found" : {
 
     },
+    "No Actions Recorded" : {
+
+    },
     "No active sessions" : {
 
     },
@@ -4287,6 +4366,9 @@
     "No configuration loaded" : {
 
     },
+    "No content recorded for this action." : {
+
+    },
     "No custom templates yet" : {
 
     },
@@ -4315,6 +4397,12 @@
 
     },
     "No files match your search" : {
+
+    },
+    "No highly-rated responses yet" : {
+
+    },
+    "No highly-rated responses yet. Rate AI responses with thumbs up to build your collection." : {
 
     },
     "No Hooks Configured" : {
@@ -4405,6 +4493,12 @@
 
     },
     "No projects yet" : {
+
+    },
+    "No quality ratings available" : {
+
+    },
+    "No ratings yet" : {
 
     },
     "No README available" : {
@@ -4750,6 +4844,9 @@
     "out of 100" : {
 
     },
+    "Overall quality score: %lld percent" : {
+
+    },
     "Overlay" : {
 
     },
@@ -5000,6 +5097,15 @@
     "QR Code Scanner" : {
 
     },
+    "Quality score" : {
+
+    },
+    "Quality Trend" : {
+
+    },
+    "Quality trend grouped bar chart" : {
+
+    },
     "Queue and manage multiple background agent tasks for batch processing." : {
 
     },
@@ -5077,6 +5183,9 @@
     "Radius" : {
 
     },
+    "Rate AI responses with thumbs up to build your collection." : {
+
+    },
     "Rate Limit" : {
 
     },
@@ -5099,6 +5208,15 @@
           }
         }
       }
+    },
+    "Rate response negatively" : {
+
+    },
+    "Rate response positively" : {
+
+    },
+    "Rating" : {
+
     },
     "Re-check" : {
 
@@ -5380,6 +5498,21 @@
     "Reveal %@" : {
 
     },
+    "Rollback" : {
+
+    },
+    "Rollback Failed" : {
+
+    },
+    "Rollback This Action" : {
+
+    },
+    "Rollback This Action?" : {
+
+    },
+    "Rolled Back" : {
+
+    },
     "Row 1" : {
 
     },
@@ -5580,6 +5713,9 @@
     "Search Failed" : {
 
     },
+    "Search file, command, tool…" : {
+
+    },
     "Search files…" : {
 
     },
@@ -5695,6 +5831,9 @@
 
     },
     "Select all permissions" : {
+
+    },
+    "Select all that apply" : {
 
     },
     "Select an event type, provide optional inputs, then tap Simulate to see which of your enabled hooks would fire." : {
@@ -5973,6 +6112,9 @@
     "Shows the number of sessions per day" : {
 
     },
+    "Shows thumbs-up and thumbs-down ratings per day" : {
+
+    },
     "Simulate %@ event" : {
 
     },
@@ -6245,6 +6387,9 @@
 
     },
     "Subject" : {
+
+    },
+    "Submit" : {
 
     },
     "Succeeded" : {
@@ -6565,6 +6710,9 @@
 
     },
     "This will remove all custom keyboard shortcut bindings and restore the defaults." : {
+
+    },
+    "This will restore the file to its state before this action. The rollback itself will be recorded in the audit trail." : {
 
     },
     "Threshold" : {
@@ -7026,6 +7174,9 @@
     "What should happen when the rule triggers?" : {
 
     },
+    "What went wrong?" : {
+
+    },
     "What's Inside" : {
 
     },
@@ -7075,6 +7226,9 @@
 
     },
     "You'll receive a notification when rate limit consumption reaches this percentage." : {
+
+    },
+    "Your feedback" : {
 
     },
     "Your named tunnel requires DNS records in your Cloudflare dashboard. If the tunnel is active but unreachable, verify these settings." : {

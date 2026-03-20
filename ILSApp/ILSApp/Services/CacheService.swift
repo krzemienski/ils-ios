@@ -43,6 +43,9 @@ actor CacheService {
         do {
             let toCache = applySessionLimit(sessions)
             try await db.saveSessions(toCache)
+            // MEM-005: Proactively enforce the hard size limit after every write so
+            // the cache never silently grows beyond the 500 MB bound between cleanup cycles.
+            await enforceHardSizeLimitIfNeeded()
         } catch {
             AppLogger.shared.error(
                 "Failed to cache sessions: \(error.localizedDescription)",
@@ -291,6 +294,20 @@ actor CacheService {
     /// If the SQLite cache exceeds this limit, aggressively prune oldest entries
     /// even if they haven't expired by TTL yet.
     private static let hardMaxCacheBytes: Int64 = 500 * 1024 * 1024
+
+    /// MEM-005: Proactively check the hard size limit and prune if exceeded.
+    /// Called after every session write so the cache never silently grows beyond
+    /// the 500 MB bound between scheduled cleanup cycles.
+    /// Uses a lightweight byte check first to avoid unnecessary work on most writes.
+    private func enforceHardSizeLimitIfNeeded() async {
+        let currentSize = await db.cacheStorageBytes()
+        guard currentSize > Self.hardMaxCacheBytes else { return }
+        AppLogger.shared.warning(
+            "Cache size \(currentSize / (1024 * 1024)) MB exceeds \(Self.hardMaxCacheBytes / (1024 * 1024)) MB hard limit — running proactive cleanup",
+            category: "cache"
+        )
+        await cleanupExpired()
+    }
 
     /// Remove expired cache entries using the configured TTL.
     /// Also enforces the hard maximum cache size (STOR-004).

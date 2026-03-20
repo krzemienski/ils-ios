@@ -80,6 +80,7 @@ struct ChatMessageList: View {
                     .frame(maxWidth: horizontalSizeClass == .regular ? 800 : .infinity)
                     .frame(maxWidth: .infinity)
             }
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: messages.count) { oldCount, newCount in
                 let isNewMessage = oldCount > 0 && newCount == oldCount + 1
                 if isNewMessage && !isUserScrolledUp {

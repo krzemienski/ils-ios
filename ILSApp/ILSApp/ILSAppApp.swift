@@ -80,9 +80,19 @@ struct ILSAppApp: App {
                     .environment(densityManager)
                     .environment(\.theme, themeSnapshot)
                     .preferredColorScheme(computedColorScheme)
-                    .dynamicTypeSize(DynamicTypeSize.xSmall ... DynamicTypeSize.accessibility3)
+                    // ACC-001/LAY-001: Dynamic Type cap removed — all sizes must be supported.
+                    // If individual layouts break at larger sizes, fix them in the affected view.
                     .onOpenURL { url in
+                        let intentBefore = appState.navigationIntent
                         appState.handleURL(url)
+                        // NAV-002: Log unknown deep link routes. If handleURL did not set a
+                        // navigationIntent, the URL host was not a recognised route.
+                        if appState.navigationIntent == nil && intentBefore == nil {
+                            AppLogger.shared.warning(
+                                "Unknown deep link route: \(url)",
+                                category: "deeplink"
+                            )
+                        }
                     }
                     .task {
                         withAnimation(.easeOut(duration: 0.2)) {

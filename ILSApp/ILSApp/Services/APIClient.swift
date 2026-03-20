@@ -23,12 +23,17 @@ actor APIClient {
 
     /// ETag backing store for conditional HTTP requests.
     ///
-    /// Stores the last successful response body (Data) and its ETag per path.
+    /// Stores the last successful response body (Data), its ETag, and the timestamp
+    /// when the entry was stored per path.
     /// Unlike NSCache, this dictionary is never evicted by memory pressure, ensuring
     /// that a 304 Not Modified response always has backing data to decode from.
     /// Entries are cleared on mutations (POST/PUT/DELETE) via invalidateCacheForMutation.
+    /// Entries older than 24 hours are evicted before sending conditional requests.
     /// Total byte footprint is bounded by `conditionalCacheByteLimit`.
-    private var conditionalCache: [String: (data: Data, etag: String)] = [:]
+    private var conditionalCache: [String: (data: Data, etag: String, storedAt: Date)] = [:]
+
+    /// Maximum age of a conditionalCache entry in seconds (24 hours).
+    private static let conditionalCacheMaxAge: TimeInterval = 86400
 
     /// Running total of bytes stored across all `conditionalCache` entries.
     private var conditionalCacheByteCount: Int = 0
@@ -265,8 +270,13 @@ actor APIClient {
             return cached
         }
 
-        // In-flight coalescing: if a GET for this path is already running, share its result
-        if let existingTask = inFlightGETs[path] {
+        // NET-005: Include API key hash in coalescing key so requests with different
+        // auth credentials are never coalesced — they must each make their own network call.
+        loadAPIKeyIfNeeded()
+        let coalesceKey = "\(path)_\(apiKey?.hashValue ?? 0)"
+
+        // In-flight coalescing: if a GET for this path+auth is already running, share its result
+        if let existingTask = inFlightGETs[coalesceKey] {
             if let result = try await existingTask.value as? T {
                 return result
             }
@@ -280,7 +290,7 @@ actor APIClient {
         // - APIClient is an app-lifetime singleton; the Task cannot outlive the actor.
         // - Tasks are removed from inFlightGETs in the defer block, so cancelled tasks release promptly.
         let task = Task<any Sendable, Error> { [baseURL, decoder] in
-            defer { self.inFlightGETs[path] = nil }
+            defer { self.inFlightGETs[coalesceKey] = nil }
 
             // Track cache miss for statistics
             self.cacheMisses += 1
@@ -292,6 +302,10 @@ actor APIClient {
             request.httpMethod = "GET"
             request.addValue("application/json", forHTTPHeaderField: "Accept")
             self.applyAuth(to: &request)
+
+            // NET-001: Evict stale conditional cache entries (older than 24 hours) before
+            // sending conditional requests so stale ETags are never sent to the server.
+            self.evictStaleConditionalCacheEntries()
 
             // Attach stored ETag for conditional request (If-None-Match).
             // If server content is unchanged it will respond 304 Not Modified,
@@ -344,7 +358,7 @@ actor APIClient {
             self.approximateEntryCount += 1
 
             // Store ETag and raw body for future conditional requests.
-            // Evict all entries when total byte footprint would exceed the 10 MB limit.
+            // Evict all entries when total byte footprint would exceed the limit.
             if let etag = httpResponse?.value(forHTTPHeaderField: "ETag") {
                 let incomingSize = data.count
                 let existingSize = self.conditionalCache[path]?.data.count ?? 0
@@ -353,13 +367,13 @@ actor APIClient {
                     self.conditionalCache.removeAll()
                     self.conditionalCacheByteCount = 0
                 }
-                self.conditionalCache[path] = (data: data, etag: etag)
+                self.conditionalCache[path] = (data: data, etag: etag, storedAt: Date())
                 self.conditionalCacheByteCount += delta
             }
 
             return decoded as any Sendable
         }
-        inFlightGETs[path] = task
+        inFlightGETs[coalesceKey] = task
 
         let result = try await task.value
         // Safe downcast — created as T above via `decoded as any Sendable`. Fall through handles edge cases.
@@ -676,6 +690,44 @@ actor APIClient {
         }
     }
 
+    /// NET-001: Evict conditionalCache entries older than 24 hours.
+    /// Called before sending any conditional request to ensure stale ETags are never used.
+    private func evictStaleConditionalCacheEntries() {
+        let cutoff = Date().addingTimeInterval(-APIClient.conditionalCacheMaxAge)
+        let staleKeys = conditionalCache.compactMap { key, entry -> String? in
+            entry.storedAt < cutoff ? key : nil
+        }
+        for key in staleKeys {
+            removeConditionalEntry(forKey: key)
+        }
+        if !staleKeys.isEmpty {
+            AppLogger.shared.info(
+                "Evicted \(staleKeys.count) stale ETag(s) from conditionalCache (>24h old)",
+                category: "cache"
+            )
+        }
+    }
+
+    /// MEM-001: Evict conditionalCache if byte count exceeds the limit.
+    /// Call on memory warning to proactively free memory before NSCache pressure eviction.
+    func evictConditionalCacheIfNeeded() {
+        guard conditionalCacheByteCount > conditionalCacheByteLimit else { return }
+        AppLogger.shared.info(
+            "Memory warning — evicting conditionalCache (\(conditionalCacheByteCount / 1024) KB)",
+            category: "cache"
+        )
+        conditionalCache.removeAll()
+        conditionalCacheByteCount = 0
+    }
+
+    /// Clear the conditional cache (ETag backing store) and reset its byte counter.
+    /// Use this to force unconditional requests on the next fetch.
+    func clearConditionalCache() {
+        conditionalCache.removeAll()
+        conditionalCacheByteCount = 0
+        AppLogger.shared.info("Conditional cache (ETags) cleared", category: "cache")
+    }
+
     // MARK: - Cache Statistics
 
     /// Returns current cache statistics for monitoring and debugging.
@@ -750,7 +802,10 @@ actor APIClient {
     /// with an oversized timeout while preventing premature cancellation
     /// of long-running server-side work.
     private lazy var longTimeoutSession: URLSession = {
-        let config = URLSessionConfiguration.default
+        // NET-003: ephemeral avoids persisting cookies/credentials for bulk operations
+        // that may touch sensitive data. Each bulk request is fully authenticated via
+        // the Authorization header so session-level credential sharing is unnecessary.
+        let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 300 // 5 minutes for bulk ops
         config.waitsForConnectivity = true
@@ -861,12 +916,9 @@ struct APIResponse<T: Decodable>: Decodable {
     let data: T?
     let error: APIErrorDetail?
 }
-// COD-003 / CONC-19: All stored properties are `let` and the struct uses value semantics,
-// making it inherently safe to send across concurrency boundaries. @unchecked is retained
-// (vs conditional `where T: Sendable`) so callers using non-Sendable T
-// (e.g. PaginatedResponse<ChatSession> before ChatSession gets Sendable) don't warn.
-// Once all T parameters conform to Sendable, this can be changed to plain Sendable.
-extension APIResponse: @unchecked Sendable {}
+// COD-001: Conditional Sendable conformance — only propagates Sendable when T itself is Sendable.
+// This is stricter than @unchecked Sendable and allows the compiler to verify safety at call sites.
+extension APIResponse: Sendable where T: Sendable {}
 
 /// App-side error detail from backend responses (Decodable only).
 /// Separate from ILSShared's APIError which requires Codable & Sendable.
@@ -879,9 +931,8 @@ struct ListResponse<T: Decodable>: Decodable {
     let items: [T]
     let total: Int
 }
-// COD-003 / CONC-19: @unchecked Sendable — same reasoning as APIResponse above.
-// All stored properties are `let` with value semantics.
-extension ListResponse: @unchecked Sendable {}
+// COD-001: Conditional Sendable conformance — same reasoning as APIResponse above.
+extension ListResponse: Sendable where T: Sendable {}
 
 // MARK: - Health Response
 

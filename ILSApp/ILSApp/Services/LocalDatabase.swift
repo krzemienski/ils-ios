@@ -424,8 +424,14 @@ actor LocalDatabase {
 
         var migrator = DatabaseMigrator()
 
+        // SEC-001/STOR-003: Only erase on schema change when explicitly opted in via a
+        // UserDefaults flag. This prevents accidental data loss on debug devices that
+        // accumulate real data during development. Set "eraseDatabaseOnSchemaChange_enabled"
+        // to true via the Xcode scheme's launch arguments when migration testing is needed.
         #if DEBUG
-        migrator.eraseDatabaseOnSchemaChange = true
+        migrator.eraseDatabaseOnSchemaChange = UserDefaults.standard.bool(
+            forKey: "eraseDatabaseOnSchemaChange_enabled"
+        )
         #endif
 
         migrator.registerMigration("v1_create_tables") { db in
@@ -556,10 +562,13 @@ actor LocalDatabase {
                 t.column("createdAt", .datetime).notNull()
                 t.column("cachedAt", .datetime).notNull()
             }
+            // STOR-005: Compound index on (sessionId, createdAt) allows the query
+            // "notes for session X ordered by date" to be satisfied entirely from
+            // the index without a separate sort step.
             try db.create(
-                index: "session_memory_notes_sessionId",
+                index: "session_memory_notes_sessionId_createdAt",
                 on: "session_memory_notes",
-                columns: ["sessionId"]
+                columns: ["sessionId", "createdAt"]
             )
 
             try db.create(table: "context_snapshots") { t in
@@ -809,13 +818,15 @@ actor LocalDatabase {
     }
 
     /// MEM-005: Checkpoint WAL to reclaim memory after memory warning.
-    /// Moves pending WAL data into the main database file, reducing memory footprint.
+    /// PERF-006: Uses PASSIVE mode instead of TRUNCATE — PASSIVE checkpoints without
+    /// blocking readers or writers, making it safe to call on the main path.
+    /// TRUNCATE is reserved for `clearAll()` where full reclamation is required.
     func checkpointWAL() throws {
         guard let dbPool else { return }
         try dbPool.write { db in
-            try db.execute(sql: "PRAGMA wal_checkpoint(TRUNCATE)")
+            try db.execute(sql: "PRAGMA wal_checkpoint(PASSIVE)")
         }
-        AppLogger.shared.info("WAL checkpoint completed", category: "cache")
+        AppLogger.shared.info("WAL checkpoint (PASSIVE) completed", category: "cache")
     }
 
     // MARK: - Server Connections (SSH Profiles)

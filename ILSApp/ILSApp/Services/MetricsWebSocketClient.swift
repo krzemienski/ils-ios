@@ -63,6 +63,16 @@ final class MetricsWebSocketClient {
         disconnect()
     }
 
+    /// ENERGY-004: Disconnect the WebSocket (and cancel all tasks) when the System Monitor
+    /// view is not visible. Call this from `SystemMonitorView.onDisappear` or whenever the
+    /// view moves off-screen. Reconnect by calling `connect()` from `onAppear`.
+    ///
+    /// The WebSocket should only be connected while `SystemMonitorView` is visible —
+    /// keeping it alive in the background drains battery and wastes server resources.
+    func disconnectIfInactive() {
+        disconnect()
+    }
+
     // MARK: - Public API
 
     func connect() {
