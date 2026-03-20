@@ -170,7 +170,9 @@ struct SessionsController: RouteCollection {
             data: PaginatedResponse(
                 items: page_items,
                 total: total,
-                hasMore: end < total
+                hasMore: end < total,
+                page: page,
+                limit: limit
             )
         )
     }
