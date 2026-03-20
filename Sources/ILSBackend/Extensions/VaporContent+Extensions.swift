@@ -404,6 +404,20 @@ extension QualityTrendResponse: Content {}
 extension BestOfItem: Content {}
 extension FeedbackExportData: Content {}
 
+// MARK: - Approval Policy Types
+extension ApprovalPolicy: Content {}
+extension PolicyAction: Content {}
+extension PolicyScope: Content {}
+extension PolicyTemplate: Content {}
+extension PolicyToolRule: Content {}
+extension DenialReasonCode: Content {}
+extension ApprovalPolicyListResponse: Content {}
+extension CreateApprovalPolicyRequest: Content {}
+extension UpdateApprovalPolicyRequest: Content {}
+extension PolicyEvaluationResult: Content {}
+extension PolicyTemplateResponse: Content {}
+extension ListPolicyTemplatesResponse: Content {}
+
 // MARK: - Audit Action Types
 extension AuditAction: Content {}
 extension AuditActionType: Content {}
