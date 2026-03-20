@@ -1,4 +1,5 @@
 import Vapor
+import ILSShared
 
 func routes(_ app: Application) throws {
     // Health check endpoints (registered at root, outside /api/v1)
@@ -52,4 +53,23 @@ func routes(_ app: Application) throws {
     try admin.register(collection: TunnelController())
     try admin.register(collection: DataErasureController())
     try admin.register(collection: PairingController())
+
+    // Security abuse log endpoint (admin-only)
+    admin.get("security", "abuse-log") { req async throws -> Response in
+        guard let abuseService = req.application.storage[AbuseDetectionServiceKey.self] else {
+            let empty = SecurityAuditEventsResponse(items: [], total: 0)
+            let response = Response(status: .ok)
+            try response.content.encode(empty, as: .json)
+            return response
+        }
+
+        let limit = req.query[Int.self, at: "limit"] ?? 100
+        let categoryRaw = req.query[String.self, at: "category"]
+        let category = categoryRaw.flatMap { SecurityAuditCategory(rawValue: $0) }
+
+        let result = await abuseService.recentEvents(limit: limit, category: category)
+        let response = Response(status: .ok)
+        try response.content.encode(result, as: .json)
+        return response
+    }
 }

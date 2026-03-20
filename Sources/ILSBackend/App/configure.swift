@@ -9,6 +9,10 @@ func configure(_ app: Application) async throws {
     let securityConfig = SecurityConfigService(logger: app.logger)
     app.storage[SecurityConfigServiceKey.self] = securityConfig
 
+    // SEC-ABUSE: Initialize abuse detection service for tracking security violations.
+    let abuseDetection = AbuseDetectionService()
+    app.storage[AbuseDetectionServiceKey.self] = abuseDetection
+
     // CORS middleware — restrict to configured origins (default: localhost only)
     // Set ILS_CORS_ORIGINS env var to comma-separated list for production
     // SEC-CORS: Wildcard '*' origins are rejected entirely for zero-trust posture.

@@ -205,6 +205,16 @@ struct RateLimitMiddleware: AsyncMiddleware {
             let retryAfter = result.retryAfter ?? 1
             request.logger.warning("Rate limit exceeded for \(clientIP) on \(request.url.path) [group=\(group.rawValue), tier=\(tierName)]")
 
+            // Report violation to AbuseDetectionService if available
+            if let abuseService = request.application.storage[AbuseDetectionServiceKey.self] {
+                await abuseService.recordRateLimitViolation(
+                    ip: clientIP,
+                    path: request.url.path,
+                    group: group.rawValue,
+                    logger: request.logger
+                )
+            }
+
             var headers = HTTPHeaders()
             headers.add(name: .retryAfter, value: String(retryAfter))
             headers.add(name: "X-RateLimit-Limit", value: String(limit))
