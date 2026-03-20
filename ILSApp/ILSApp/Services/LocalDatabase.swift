@@ -895,12 +895,15 @@ actor LocalDatabase {
     // MARK: - Session Sync Metadata
 
     /// Update the sync status for a cached session.
-    func updateSessionSyncStatus(sessionId: String, status: SyncStatus, failureReason: String? = nil) throws {
+    func updateSessionSyncStatus(sessionId: String, status: SyncStatus, failureReason: String? = nil, conflictData: Data? = nil) throws {
         guard let dbPool else { return }
         try dbPool.write { db in
             if var session = try CachedSession.fetchOne(db, key: sessionId) {
                 session.syncStatus = status.rawValue
                 session.failureReason = failureReason
+                if let conflictData {
+                    session.conflictData = conflictData
+                }
                 if status == .synced {
                     session.lastSyncedAt = Date()
                     session.failureReason = nil

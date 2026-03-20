@@ -197,6 +197,7 @@ actor ConflictResolver {
     /// keeping the process simple and predictable. Multiple differing
     /// fields warrant user attention.
     private func shouldAutoResolve(conflictingFields: [ConflictField]) -> Bool {
+        guard OfflineCacheSettings.shared.autoResolveConflicts else { return false }
         return conflictingFields.count <= 1
     }
 
@@ -230,11 +231,12 @@ actor ConflictResolver {
                 data: data
             )
 
-            // Persist the conflict status
+            // Persist the conflict status and server snapshot
             try db.updateSessionSyncStatus(
                 sessionId: sessionId.uuidString,
                 status: .conflict,
-                failureReason: nil
+                failureReason: nil,
+                conflictData: data
             )
         } catch {
             AppLogger.shared.error(

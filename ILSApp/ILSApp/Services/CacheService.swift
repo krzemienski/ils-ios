@@ -504,6 +504,15 @@ actor CacheService {
     private func detectConflictsForIncomingSessions(_ serverSessions: [ChatSession]) async -> Set<UUID> {
         var conflictedIds = Set<UUID>()
 
+        // Fetch all local sessions once before the loop for O(1) lookups
+        let allLocalSessions: [ChatSession]
+        do {
+            allLocalSessions = try db.fetchSessions(newerThan: nil, isOffline: true)
+        } catch {
+            return conflictedIds
+        }
+        let localSessionMap = Dictionary(uniqueKeysWithValues: allLocalSessions.map { ($0.id, $0) })
+
         for serverSession in serverSessions {
             let sessionId = serverSession.id.uuidString
 
@@ -517,15 +526,8 @@ actor CacheService {
 
             guard let metadata, metadata.hasLocalChanges else { continue }
 
-            // Fetch the locally cached version for comparison
-            let localSessions: [ChatSession]
-            do {
-                localSessions = try db.fetchSessions(newerThan: nil, isOffline: true)
-            } catch {
-                continue
-            }
-
-            guard let localSession = localSessions.first(where: { $0.id == serverSession.id }) else {
+            // Look up the locally cached version from the pre-fetched map
+            guard let localSession = localSessionMap[serverSession.id] else {
                 continue
             }
 
