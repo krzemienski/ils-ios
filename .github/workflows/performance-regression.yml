@@ -381,6 +381,29 @@ PYEOF
             >> "$GITHUB_STEP_SUMMARY"
 
       # -----------------------------------------------------------------------
+      # 14. Generate reliability release notes (appended to job summary)
+      # -----------------------------------------------------------------------
+      - name: Generate reliability release notes
+        if: always()
+        env:
+          REPORT_FILE: regression_report_${{ github.sha }}.json
+          METRICS_FILE: performance_metrics_${{ github.sha }}.json
+          COMMIT_SHA: ${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          {
+            echo "## Reliability Metrics for Release Notes"
+            echo ""
+            python3 scripts/generate-release-notes.py \
+              --baselines performance-baselines.json \
+              --report "$REPORT_FILE" \
+              --metrics "$METRICS_FILE" \
+              --commit "$COMMIT_SHA" \
+              --ref "$REF_NAME" \
+              2>/dev/null || echo "_Release notes generation unavailable — script not found or encountered an error._"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # -----------------------------------------------------------------------
       # Cleanup: stop backend
       # -----------------------------------------------------------------------
       - name: Stop backend
