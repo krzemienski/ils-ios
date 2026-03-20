@@ -871,6 +871,13 @@ private struct QuickActionCard: View {
         )
         .accessibilityLabel("\(title)\(subtitle.map { ", \($0)" } ?? "")")
         .accessibilityHint("Double tap to open \(title)")
+        // ACC-002: The DragGesture for press animation can interfere with VoiceOver activation.
+        // Explicitly mark as a button and add a named action so VoiceOver users can activate
+        // the card reliably via the accessibility action rotor.
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            action()
+        }
     }
 }
 

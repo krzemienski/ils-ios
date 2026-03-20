@@ -16,6 +16,10 @@ struct InfoTooltipButton: View {
             Image(systemName: "info.circle")
                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
+                // ACC-009/LAY-002: Keep the visual icon at its natural size but expand the
+                // hit area to the HIG minimum of 44×44 pt for reliable tap targeting.
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .popover(isPresented: $isShowing) {

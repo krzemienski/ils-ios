@@ -279,9 +279,22 @@ class SSEClient {
 
     /// Determine if we should attempt reconnection
     private func shouldReconnect(error: Error) async -> Bool {
+        // CON-008: When maxReconnectAttempts is exhausted, do NOT clear currentRequest.
+        // Keeping it allows handleNetworkRestoration() to restart the stream when
+        // network becomes available again, instead of giving up permanently.
+        guard isNetworkError(error) else {
+            return false
+        }
         guard let request = currentRequest,
-              reconnectAttempts < maxReconnectAttempts,
-              isNetworkError(error) else {
+              reconnectAttempts < maxReconnectAttempts else {
+            if reconnectAttempts >= maxReconnectAttempts {
+                AppLogger.shared.warning(
+                    "SSE max reconnect attempts (\(maxReconnectAttempts)) reached — " +
+                    "stream paused until network restoration",
+                    category: "sse"
+                )
+                // Keep currentRequest intact for network restoration handler.
+            }
             return false
         }
 
@@ -290,8 +303,11 @@ class SSEClient {
 
         AppLogger.shared.warning("Reconnection attempt \(reconnectAttempts)/\(maxReconnectAttempts)", category: "sse")
 
-        // Exponential backoff capped at 30 seconds
-        let delay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
+        // NET-002: Exponential backoff capped at 30 seconds with ±25% random jitter
+        // to prevent thundering-herd reconnection storms when many clients reconnect simultaneously.
+        let baseDelay = min(reconnectDelay * UInt64(1 << (reconnectAttempts - 1)), 30_000_000_000)
+        let jitter = Double.random(in: 0.75...1.25)
+        let delay = UInt64(Double(baseDelay) * jitter)
 
         // NET-RES-1: Wrap sleep in a separate task so network restoration can cancel
         // just the backoff without cancelling the parent stream task.
@@ -300,7 +316,14 @@ class SSEClient {
         }
         backoffSleepTask = sleepTask
         await sleepTask.value
+        let sleepWasCancelled = sleepTask.isCancelled
         backoffSleepTask = nil
+
+        // CON-004: If network restoration cancelled the sleep, reset attempt counter so
+        // the next reconnect starts fresh rather than continuing an exhausted backoff sequence.
+        if sleepWasCancelled {
+            reconnectAttempts = 0
+        }
 
         // Check if parent stream task was cancelled during sleep
         if Task.isCancelled {

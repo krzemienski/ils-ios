@@ -46,6 +46,10 @@ import UniformTypeIdentifiers
 ///     onNavigateToBrowser: onNavigateToBrowser
 /// )
 /// ```
+// SUIPERF-002: DashboardGridView intentionally accepts only specific typed properties
+// (layout, sessionsVM, apiClient, callbacks) rather than AppState as a whole.
+// Fine-grained prop threading prevents SwiftUI from re-rendering this view on
+// every AppState mutation — only the properties it actually reads trigger updates.
 struct DashboardGridView: View {
 
     // MARK: - Properties
