@@ -252,7 +252,7 @@ struct SidebarView: View {
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Backend connections")
-                .accessibilityValue("\(backendManager.backends.count) backends configured")
+                .accessibilityValue(backendHealthSummary)
                 .accessibilityHint("Navigate to backend management")
             } else {
                 // Single or no backend: original connection status indicator
@@ -267,7 +267,7 @@ struct SidebarView: View {
                 }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("Connection status")
-                .accessibilityValue(appState.isConnected ? appState.serverURL : "Disconnected")
+                .accessibilityValue(appState.isConnected ? "Connected to \(appState.serverURL)" : "Disconnected")
 
                 // Active host indicator
                 if let hostName = appState.activeHostName {
@@ -383,6 +383,26 @@ struct SidebarView: View {
         }
     }
 
+    /// Human-readable description of a backend health status for VoiceOver.
+    private func healthDescription(_ status: BackendConnection.HealthStatus) -> String {
+        switch status {
+        case .healthy: return "healthy"
+        case .degraded: return "degraded"
+        case .unreachable: return "unreachable"
+        case .unknown: return "unknown"
+        }
+    }
+
+    /// Summarizes all backend health statuses for VoiceOver (e.g. "3 backends: 2 healthy, 1 degraded").
+    private var backendHealthSummary: String {
+        let backends = backendManager.backends
+        let counts = Dictionary(grouping: backends, by: { $0.healthStatus })
+            .mapValues(\.count)
+            .sorted { $0.key.hashValue < $1.key.hashValue }
+        let details = counts.map { "\($0.value) \(healthDescription($0.key))" }.joined(separator: ", ")
+        return "\(backends.count) backends: \(details)"
+    }
+
     // MARK: - Navigation Items
 
     private var navigationItems: some View {
@@ -495,6 +515,7 @@ struct SidebarView: View {
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         .foregroundStyle(theme.textPrimary)
                         .accessibilityLabel("Search sessions")
+                        .accessibilityIdentifier("sidebar_search_field")
                         .focused($isSearchFocused)
                         .onChange(of: sessionsViewModel.searchText) { _, _ in
                             sessionsViewModel.scheduleSearchDebounce()
@@ -732,6 +753,8 @@ struct SidebarView: View {
                             .padding(.vertical, theme.spacingXS)
                         Spacer()
                     }
+                    .accessibilityLabel("Load more sessions for \(name)")
+                    .accessibilityHint("Fetches additional sessions in this project")
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))

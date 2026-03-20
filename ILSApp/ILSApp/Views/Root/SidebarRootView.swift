@@ -376,6 +376,13 @@ struct SidebarRootView: View {
             sidebarPanel
         }
         .gesture(edgeSwipeGesture)
+        .accessibilityAction(named: "Toggle sidebar") {
+            if isSidebarOpen {
+                closeSidebar()
+            } else {
+                openSidebar()
+            }
+        }
     }
 
     // MARK: - Main Content
@@ -478,8 +485,9 @@ struct SidebarRootView: View {
                                 .font(.system(size: theme.fontTitle3, weight: .medium, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
+                        .accessibilityIdentifier("sidebar_toggle_button")
                         .accessibilityLabel("Open sidebar")
-                        .accessibilityHint("Opens navigation sidebar")
+                        .accessibilityHint("Swipe right from the left edge or tap to open navigation sidebar")
                     }
                     #else
                     ToolbarItem(placement: .automatic) {
@@ -490,8 +498,9 @@ struct SidebarRootView: View {
                                 .font(.system(size: theme.fontTitle3, weight: .medium, design: theme.fontDesign))
                                 .foregroundStyle(theme.textPrimary)
                         }
+                        .accessibilityIdentifier("sidebar_toggle_button")
                         .accessibilityLabel("Open sidebar")
-                        .accessibilityHint("Opens navigation sidebar")
+                        .accessibilityHint("Swipe right from the left edge or tap to open navigation sidebar")
                     }
                     #endif
                 }
