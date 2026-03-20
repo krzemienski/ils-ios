@@ -47,6 +47,10 @@ final class SessionModel: Model, Content, @unchecked Sendable {
     @OptionalField(key: "live_activity_push_token")
     var liveActivityPushToken: String?
 
+    /// Reason the session was interrupted (e.g., process crash, timeout).
+    @OptionalField(key: "interruption_reason")
+    var interruptionReason: String?
+
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
 
@@ -99,7 +103,8 @@ final class SessionModel: Model, Content, @unchecked Sendable {
             source: SessionSource(rawValue: source) ?? .ils,
             forkedFrom: forkedFrom,
             createdAt: createdAt ?? Date(),
-            lastActiveAt: lastActiveAt ?? Date()
+            lastActiveAt: lastActiveAt ?? Date(),
+            interruptionReason: interruptionReason
         )
     }
 
