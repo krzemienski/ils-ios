@@ -178,6 +178,8 @@ struct ChatInputBar: View {
             }
             .padding(.horizontal, theme.spacingMD)
             .padding(.vertical, theme.spacingSM)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("chat-input-controls")
         }
         .background(theme.bgSecondary)
         .accessibilityIdentifier("chat-input-bar")
@@ -215,6 +217,7 @@ struct ChatInputBar: View {
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
+        .accessibilityIdentifier("command-palette-button")
     }
 
     private var attachmentButton: some View {
@@ -245,6 +248,7 @@ struct ChatInputBar: View {
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
         .accessibilityHint("Opens advanced chat options")
+        .accessibilityValue(hasCustomOptions ? "Custom options active" : "Default options")
     }
 
     /// Documentation quick-access button that opens ``DocumentationView`` pre-filtered for commands.
@@ -275,6 +279,7 @@ struct ChatInputBar: View {
             .focusRing(isFocused: isInputFocused, cornerRadius: theme.cornerRadius)
             .accessibilityIdentifier("chat-input-field")
             .accessibilityLabel("Message input field")
+            .accessibilityValue(isDisabled ? "Disabled" : (text.isEmpty ? "Empty" : text))
             .imagePasteHandler(attachments: attachments)
     }
 
