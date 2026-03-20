@@ -6,6 +6,7 @@ import ILSShared
 enum SettingsTab: String, CaseIterable, Identifiable {
     case general = "General"
     case appearance = "Appearance"
+    case approvalPolicies = "Guardrails"
     case connection = "Connection"
     case backend = "Backend"
     case advanced = "Advanced"
@@ -17,6 +18,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
         switch self {
         case .general: return "gearshape"
         case .appearance: return "paintbrush"
+        case .approvalPolicies: return "shield.lefthalf.filled"
         case .connection: return "network"
         case .backend: return "server.rack"
         case .advanced: return "wrench.and.screwdriver"
@@ -69,6 +71,8 @@ struct MacSettingsView: View {
                         generalSettings
                     case .appearance:
                         appearanceSettings
+                    case .approvalPolicies:
+                        ApprovalPoliciesView()
                     case .connection:
                         connectionSettings
                     case .backend:
