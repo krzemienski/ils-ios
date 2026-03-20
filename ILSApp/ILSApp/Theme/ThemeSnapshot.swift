@@ -20,12 +20,12 @@ import ILSShared
 /// ```
 ///
 /// ## Accessibility Notes
-/// - ACC-MED-2: Contrast ratios are not validated at compile time. Theme authors should verify
-///   WCAG AA (4.5:1 body text, 3:1 large text) using the Xcode Accessibility Inspector.
-///   Future: add a `contrastRatio(_:on:)` helper and flag violations in ThemeEditorView.
+/// - ACC-MED-2: Contrast ratios can be validated at runtime using `ContrastChecker.meetsWCAGAA()`
+///   from `AccessibilityHelpers.swift`. Theme authors should verify WCAG AA compliance
+///   (4.5:1 body text, 3:1 large text) using the checker or Xcode Accessibility Inspector.
 /// - ACC-MED-5: Font sizes use theme tokens (`fontBody`, `fontCaption`, etc.) which scale with
-///   Dynamic Type via `.dynamicTypeSize(...)` modifiers. Full Dynamic Type audit (all screens)
-///   is tracked as future work.
+///   Dynamic Type via `.dynamicTypeSize(...)` modifiers. Views should use `@ScaledMetric` for
+///   padding/spacing values and the `scaledPadding(_:)` modifier from `AccessibilityHelpers.swift`.
 struct ThemeSnapshot: Sendable {
     // MARK: - Identity
 
@@ -251,6 +251,40 @@ struct ThemeSnapshot: Sendable {
         // MeshGradient — reads from AppTheme protocol; custom themes provide via CustomThemeAdapter
         self.meshGradientColors = source.meshGradientColors
         self.meshGradientAnimated = source.meshGradientAnimated
+    }
+
+    // MARK: - Contrast Validation
+
+    /// Validates the primary text/background color pairs against WCAG AA requirements.
+    ///
+    /// Returns an array of human-readable violation descriptions. An empty array means
+    /// all checked pairs pass.
+    ///
+    /// Checked pairs:
+    /// - `textPrimary` on `bgPrimary` (body text, 4.5:1)
+    /// - `textSecondary` on `bgPrimary` (body text, 4.5:1)
+    /// - `textOnAccent` on `accent` (large text, 3:1)
+    func contrastViolations() -> [String] {
+        var violations: [String] = []
+
+        let pairs: [(String, Color, Color, Bool)] = [
+            ("textPrimary on bgPrimary", textPrimary, bgPrimary, false),
+            ("textSecondary on bgPrimary", textSecondary, bgPrimary, false),
+            ("textPrimary on bgSecondary", textPrimary, bgSecondary, false),
+            ("textOnAccent on accent", textOnAccent, accent, true),
+        ]
+
+        for (name, fg, bg, isLarge) in pairs {
+            let ratio = ContrastChecker.contrastRatio(fg, on: bg)
+            let minimum = isLarge ? ContrastChecker.wcagAALargeTextMinimum : ContrastChecker.wcagAABodyMinimum
+            if ratio < minimum {
+                violations.append(
+                    "\(name): \(String(format: "%.2f", ratio)):1 (requires \(String(format: "%.1f", minimum)):1)"
+                )
+            }
+        }
+
+        return violations
     }
 
 }
