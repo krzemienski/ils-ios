@@ -55,6 +55,9 @@ func configure(_ app: Application) async throws {
     // API key authentication middleware (opt-in via ILS_API_KEY env var)
     app.middleware.use(APIKeyMiddleware())
 
+    // Request validation middleware (Content-Type enforcement, JSON validation, suspicious header rejection)
+    app.middleware.use(RequestValidationMiddleware())
+
     // Rate limiting middleware
     let rateLimitStorage = RateLimitStorage()
     app.middleware.use(RateLimitMiddleware(storage: rateLimitStorage))
