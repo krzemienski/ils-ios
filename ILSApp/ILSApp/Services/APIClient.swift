@@ -570,6 +570,12 @@ actor APIClient {
         return try await post("/sessions/checkpoints/\(id.uuidString)/restore", body: EmptyRequestBody())
     }
 
+    /// List sessions that terminated with an error and have at least one checkpoint,
+    /// ordered by lastActiveAt descending (most recently interrupted first).
+    func listRecoverableSessions<T: Decodable>() async throws -> T {
+        return try await get("/sessions/recoverable", cacheTTL: 0)
+    }
+
     /// Import a previously exported session. Pass an `ImportSessionRequest` as the body.
     func importSession<T: Decodable, B: Encodable>(export: B) async throws -> T {
         return try await post("/sessions/import", body: export)

@@ -1,9 +1,10 @@
 import Vapor
+import ILSShared
 
 /// Custom error middleware that returns structured JSON error responses.
 ///
-/// Replaces Vapor's default ErrorMiddleware to ensure all errors
-/// return consistent `{error: true, code: "...", reason: "..."}` format.
+/// Replaces Vapor's default ErrorMiddleware to ensure all errors return an
+/// ``APIResponse``-compatible envelope: `{ success: false, data: null, error: { code, message } }`.
 struct ILSErrorMiddleware: AsyncMiddleware {
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         do {
@@ -12,25 +13,25 @@ struct ILSErrorMiddleware: AsyncMiddleware {
             return errorResponse(
                 status: abort.status,
                 code: httpStatusToCode(abort.status),
-                reason: abort.reason ?? abort.status.reasonPhrase,
+                message: abort.reason,
                 on: request
             )
         } catch let error as DecodingError {
-            let reason: String
+            let message: String
             switch error {
             case .keyNotFound(let key, _):
-                reason = "Missing required field: \(key.stringValue)"
+                message = "Missing required field: \(key.stringValue)"
             case .typeMismatch(let type, let context):
-                reason = "Type mismatch for \(context.codingPath.map(\.stringValue).joined(separator: ".")): expected \(type)"
+                message = "Type mismatch for \(context.codingPath.map(\.stringValue).joined(separator: ".")): expected \(type)"
             case .valueNotFound(_, let context):
-                reason = "Missing value for \(context.codingPath.map(\.stringValue).joined(separator: "."))"
+                message = "Missing value for \(context.codingPath.map(\.stringValue).joined(separator: "."))"
             default:
-                reason = "Invalid request body"
+                message = "Invalid request body"
             }
             return errorResponse(
                 status: .unprocessableEntity,
                 code: "VALIDATION_ERROR",
-                reason: reason,
+                message: message,
                 on: request
             )
         } catch {
@@ -38,21 +39,22 @@ struct ILSErrorMiddleware: AsyncMiddleware {
             return errorResponse(
                 status: .internalServerError,
                 code: "INTERNAL_ERROR",
-                reason: "Something went wrong. Please try again.",
+                message: "Something went wrong. Please try again.",
                 on: request
             )
         }
     }
 
-    private func errorResponse(status: HTTPResponseStatus, code: String, reason: String, on request: Request) -> Response {
-        let body = ErrorBody(success: false, error: reason, code: code, reason: reason)
+    private func errorResponse(status: HTTPResponseStatus, code: String, message: String, on request: Request) -> Response {
+        let apiError = APIError(code: code, message: message)
+        let body = APIResponse<String>(success: false, data: nil, error: apiError)
         let response = Response(status: status)
         do {
             response.headers.contentType = .json
             try response.content.encode(body)
         } catch {
             request.logger.error("Failed to encode error response: \(error)")
-            response.body = .init(string: "{\"success\":false,\"error\":\"Something went wrong.\",\"code\":\"INTERNAL_ERROR\",\"reason\":\"Something went wrong.\"}")
+            response.body = .init(string: "{\"success\":false,\"data\":null,\"error\":{\"code\":\"INTERNAL_ERROR\",\"message\":\"Something went wrong.\",\"reason\":null}}")
             response.headers.contentType = .json
         }
         return response
@@ -76,15 +78,4 @@ struct ILSErrorMiddleware: AsyncMiddleware {
             return "INTERNAL_ERROR"
         }
     }
-}
-
-/// Structured error response body.
-///
-/// Format: `{ success: false, error: "message", code: "ERROR_CODE" }`
-/// Also includes `reason` for backward compatibility.
-struct ErrorBody: Content {
-    let success: Bool
-    let error: String
-    let code: String
-    let reason: String
 }

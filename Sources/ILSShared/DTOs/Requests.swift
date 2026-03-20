@@ -27,15 +27,21 @@ public struct APIResponse<T: Codable>: Codable where T: Sendable {
 }
 
 /// Error information returned in APIResponse when success is false.
+///
+/// Mirrors the `ErrorBody` produced by `ILSErrorMiddleware` so that iOS clients
+/// can decode both the wrapped (`APIResponse`) and unwrapped error shapes.
 public struct APIError: Codable, Sendable {
     /// Error code (e.g., "validation_error", "not_found").
     public let code: String
     /// Human-readable error message.
     public let message: String
+    /// Reason string included for compatibility with ILSErrorMiddleware.ErrorBody.
+    public let reason: String?
 
-    public init(code: String, message: String) {
+    public init(code: String, message: String, reason: String? = nil) {
         self.code = code
         self.message = message
+        self.reason = reason
     }
 }
 
