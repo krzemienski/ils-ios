@@ -293,13 +293,20 @@ struct OfflineCacheSettingsView: View {
     }
 
     private func refreshTroubledSessions() {
-        do {
-            let allSessions = try LocalDatabase.shared.fetchSessionsWithSyncStatus()
-            troubledSessions = allSessions.filter { entry in
-                entry.syncMetadata.syncStatus == .conflict || entry.syncMetadata.syncStatus == .failed
+        Task {
+            do {
+                let allSessions = try await LocalDatabase.shared.fetchSessionsWithSyncStatus()
+                let filtered = allSessions.filter { entry in
+                    entry.syncMetadata.syncStatus == .conflict || entry.syncMetadata.syncStatus == .failed
+                }
+                await MainActor.run {
+                    troubledSessions = filtered
+                }
+            } catch {
+                await MainActor.run {
+                    troubledSessions = []
+                }
             }
-        } catch {
-            troubledSessions = []
         }
     }
 

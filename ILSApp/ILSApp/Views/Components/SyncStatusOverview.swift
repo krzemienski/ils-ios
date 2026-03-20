@@ -96,10 +96,10 @@ struct SyncStatusOverview: View {
         }
         .glassCard()
         .task {
-            refreshCounts()
+            await refreshCounts()
         }
         .onReceive(NotificationCenter.default.publisher(for: .syncStatusDidChange)) { _ in
-            refreshCounts()
+            Task { await refreshCounts() }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Sync status overview")
@@ -123,8 +123,8 @@ struct SyncStatusOverview: View {
 
     // MARK: - Data
 
-    private func refreshCounts() {
-        let statusMap = SyncCoordinator.shared.syncStatusMap
+    private func refreshCounts() async {
+        let statusMap = await SyncCoordinator.shared.syncStatusMap
         var synced = 0
         var pending = 0
         var conflict = 0
@@ -139,14 +139,16 @@ struct SyncStatusOverview: View {
             }
         }
 
-        syncedCount = synced
-        pendingCount = pending
-        conflictCount = conflict
-        failedCount = failed
+        await MainActor.run {
+            syncedCount = synced
+            pendingCount = pending
+            conflictCount = conflict
+            failedCount = failed
+        }
     }
 
     private func retryAllFailed() async {
-        let statusMap = SyncCoordinator.shared.syncStatusMap
+        let statusMap = await SyncCoordinator.shared.syncStatusMap
         let failedSessionIds = statusMap
             .filter { $0.value == .failed }
             .map(\.key)

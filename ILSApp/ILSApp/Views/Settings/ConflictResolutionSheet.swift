@@ -314,9 +314,6 @@ struct ConflictResolutionSheet: View {
 
     private func resolveKeepNewest() {
         isResolving = true
-        let newest = localSession.lastActiveAt >= serverSession.lastActiveAt
-            ? localSession
-            : serverSession
         let resolution: ConflictResolution = localSession.lastActiveAt >= serverSession.lastActiveAt
             ? .keepLocal
             : .keepServer

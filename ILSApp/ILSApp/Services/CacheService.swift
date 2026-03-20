@@ -51,13 +51,19 @@ actor CacheService {
         do {
             let toCache = applySessionLimit(sessions)
 
-            // Detect conflicts for sessions with pending local changes
-            await detectConflictsForIncomingSessions(toCache)
+            // Detect conflicts for sessions with pending local changes.
+            // Returns IDs that should NOT be overwritten (conflicted or auto-resolved).
+            let conflictedIds = await detectConflictsForIncomingSessions(toCache)
 
-            try await db.saveSessions(toCache)
+            // Only save sessions that are not conflicted, preventing overwrite of
+            // conflict metadata or auto-resolved merge results.
+            let sessionsToSave = toCache.filter { !conflictedIds.contains($0.id) }
+            if !sessionsToSave.isEmpty {
+                try await db.saveSessions(sessionsToSave)
+            }
 
             // Update sync metadata for freshly cached sessions
-            updateSyncMetadataAfterCache(toCache)
+            updateSyncMetadataAfterCache(sessionsToSave)
 
             // MEM-005: Proactively enforce the hard size limit after every write so
             // the cache never silently grows beyond the 500 MB bound between cleanup cycles.
@@ -491,7 +497,13 @@ actor CacheService {
     ///
     /// Only checks sessions that have pending local changes (localVersion > serverVersion).
     /// For each conflict, stores the server data for later resolution.
-    private func detectConflictsForIncomingSessions(_ serverSessions: [ChatSession]) async {
+    ///
+    /// - Returns: Set of session IDs that have active conflicts and should not be overwritten
+    ///   by the incoming server data.
+    @discardableResult
+    private func detectConflictsForIncomingSessions(_ serverSessions: [ChatSession]) async -> Set<UUID> {
+        var conflictedIds = Set<UUID>()
+
         for serverSession in serverSessions {
             let sessionId = serverSession.id.uuidString
 
@@ -540,13 +552,19 @@ actor CacheService {
                         category: "cache"
                     )
                 }
+                // Auto-resolved sessions were already saved with the merged version;
+                // exclude from the bulk save to avoid overwriting the merge result.
+                conflictedIds.insert(serverSession.id)
             case .manualRequired(_, let server, _):
                 await conflictResolver.storeConflictData(
                     sessionId: serverSession.id,
                     serverSession: server
                 )
+                conflictedIds.insert(serverSession.id)
             }
         }
+
+        return conflictedIds
     }
 
     /// Update sync metadata for sessions that were successfully cached from the server.
