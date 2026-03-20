@@ -30,11 +30,15 @@ import ILSShared
 // TODO: SUIP-002 + UXF-005 — Add pagination (50 sessions per page) for large session lists
 struct UnifiedSessionsView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(AppState.self) private var appState
 
     /// Called when the user selects a session. Wired by the parent navigation layer.
     var onSessionSelected: ((TaggedSession) -> Void)?
 
     @State private var viewModel = UnifiedSessionsViewModel()
+    @State private var recoveryViewModel = SessionRecoveryViewModel()
+    @State private var showRecoveryTimeline = false
+    @State private var recoveryTimelineSession: ChatSession? = nil
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
@@ -52,6 +56,13 @@ struct UnifiedSessionsView: View {
             .padding(.horizontal, theme.spacingMD)
             .padding(.top, theme.spacingMD)
             .padding(.bottom, theme.spacingSM)
+
+            // Recovery banner — surfaces interrupted sessions eligible for recovery
+            if !recoveryViewModel.recoverableSessions.isEmpty {
+                SessionRecoveryBannerView(viewModel: recoveryViewModel)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.25), value: recoveryViewModel.recoverableSessions.isEmpty)
+            }
 
             // Search bar — filters all backends simultaneously
             searchBar
@@ -98,8 +109,26 @@ struct UnifiedSessionsView: View {
         .background(theme.bgPrimary)
         .navigationTitle("All Sessions")
         .inlineNavigationBarTitle()
+        .sheet(isPresented: $showRecoveryTimeline) {
+            if let session = recoveryTimelineSession {
+                NavigationStack {
+                    RecoveryTimelineView(session: session) { restored in
+                        showRecoveryTimeline = false
+                        Task { await recoveryViewModel.dismissSession(session) }
+                        onSessionSelected?(TaggedSession(
+                            session: restored,
+                            backendId: UUID(),
+                            backendName: "",
+                            backendColorHex: "#888888"
+                        ))
+                    }
+                }
+            }
+        }
         .task {
             await viewModel.loadSessions()
+            recoveryViewModel.configure(client: appState.apiClient)
+            await recoveryViewModel.loadIfNeeded()
         }
     }
 
@@ -335,5 +364,6 @@ struct UnifiedSessionsView: View {
     NavigationStack {
         UnifiedSessionsView()
     }
+    .environment(AppState())
     .environment(\.theme, ThemeSnapshot(ObsidianTheme()))
 }
