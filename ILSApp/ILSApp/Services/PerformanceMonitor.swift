@@ -14,6 +14,32 @@
 final class PerformanceMonitor: NSObject, MXMetricManagerSubscriber {
     static let shared = PerformanceMonitor()
 
+    // MARK: - Crash-Free Session Tracking
+
+    private enum Keys {
+        static let sessionCount = "performance.sessionCount"
+        static let crashCount = "performance.crashCount"
+    }
+
+    /// Total number of app sessions recorded since install.
+    private(set) var sessionCount: Int {
+        get { UserDefaults.standard.integer(forKey: Keys.sessionCount) }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.sessionCount) }
+    }
+
+    /// Total number of crashes detected via MetricKit diagnostic payloads.
+    private(set) var crashCount: Int {
+        get { UserDefaults.standard.integer(forKey: Keys.crashCount) }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.crashCount) }
+    }
+
+    /// Ratio of crash-free sessions: 1.0 means no crashes recorded.
+    var crashFreeRate: Double {
+        guard sessionCount > 0 else { return 1.0 }
+        let crashedSessions = min(crashCount, sessionCount)
+        return Double(sessionCount - crashedSessions) / Double(sessionCount)
+    }
+
     private override init() {
         super.init()
     }
@@ -28,6 +54,15 @@ final class PerformanceMonitor: NSObject, MXMetricManagerSubscriber {
     func stop() {
         MXMetricManager.shared.remove(self)
         AppLogger.shared.info("MetricKit subscriber removed", category: "performance")
+    }
+
+    /// Increment the session launch counter. Call once at app launch.
+    func sessionStarted() {
+        sessionCount += 1
+        AppLogger.shared.info(
+            "Session started — total: \(sessionCount), crashFreeRate: \(String(format: "%.3f", crashFreeRate))",
+            category: "performance"
+        )
     }
 
     // MARK: - MXMetricManagerSubscriber
@@ -57,11 +92,23 @@ final class PerformanceMonitor: NSObject, MXMetricManagerSubscriber {
     /// MetricKit delivers on arbitrary background queue — `nonisolated` with actor hop.
     nonisolated func didReceive(_ payloads: [MXDiagnosticPayload]) {
         // CONC-27: MXDiagnosticPayload is non-Sendable. Extract Strings before actor hop.
+        // Count crash diagnostics before crossing the actor boundary.
         var messages: [String] = []
+        var newCrashCount = 0
         for payload in payloads {
+            if let crashes = payload.crashDiagnostics, !crashes.isEmpty {
+                newCrashCount += crashes.count
+            }
             messages.append("MetricKit diagnostic: \(payload.jsonRepresentation())")
         }
         Task { @MainActor in
+            if newCrashCount > 0 {
+                self.crashCount += newCrashCount
+                AppLogger.shared.error(
+                    "MetricKit: \(newCrashCount) crash(es) recorded — total crashes: \(self.crashCount), crashFreeRate: \(String(format: "%.3f", self.crashFreeRate))",
+                    category: "performance"
+                )
+            }
             for message in messages {
                 AppLogger.shared.error(message, category: "performance")
             }

@@ -36,6 +36,8 @@ struct CodeBlockView: View {
     @State private var scrollOffset: CGFloat = 0
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // PERF-CB: Reference LowPowerModeMonitor so SwiftUI tracks isLowPowerModeEnabled changes.
+    private var lowPowerMonitor: LowPowerModeMonitor { LowPowerModeMonitor.shared }
 
     init(code: String, language: String?) {
         self.code = code
@@ -186,15 +188,11 @@ struct CodeBlockView: View {
                         .accessibilityHidden(true)
 
                     // Code text with syntax highlighting (cached — only recomputed when code/language changes)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(highlightedCode)
-                            .lineLimit(shouldBeCollapsible && !isExpanded ? collapsedLineLimit : nil)
-                            .textSelection(.enabled)
-                            .padding(.leading, theme.spacingSM)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .accessibilityIdentifier("code-block-content")
-                    .accessibilityLabel(accessibilityCodeLabel)
+                    // PERF-CB: .drawingGroup() composites the attributed-string Text into a single CALayer,
+                    // reducing per-frame CPU cost during chat scroll. Skipped in Low Power Mode to avoid
+                    // the upfront GPU rasterisation cost when the device is conserving energy.
+                    codeContentView
+                        .drawingGroupIfEnabled(!lowPowerMonitor.isLowPowerModeEnabled)
                 }
                 .padding(.vertical, theme.spacingSM)
                 .background(
@@ -238,6 +236,22 @@ struct CodeBlockView: View {
         }
     }
 
+    // MARK: - Code Content View
+
+    /// Attributed-string rendering area. Extracted so `.drawingGroup()` can be applied conditionally.
+    @ViewBuilder
+    private var codeContentView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(highlightedCode)
+                .lineLimit(shouldBeCollapsible && !isExpanded ? collapsedLineLimit : nil)
+                .textSelection(.enabled)
+                .padding(.leading, theme.spacingSM)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityIdentifier("code-block-content")
+        .accessibilityLabel(accessibilityCodeLabel)
+    }
+
     // MARK: - Scroll Gradient Overlay
 
     @ViewBuilder
@@ -273,6 +287,21 @@ struct CodeBlockView: View {
     }
 }
 
+
+// MARK: - View+DrawingGroup Helpers
+
+private extension View {
+    /// Applies `.drawingGroup()` only when `enabled` is true, allowing callers to skip
+    /// GPU rasterisation in Low Power Mode or other battery-sensitive contexts.
+    @ViewBuilder
+    func drawingGroupIfEnabled(_ enabled: Bool) -> some View {
+        if enabled {
+            self.drawingGroup()
+        } else {
+            self
+        }
+    }
+}
 
 // MARK: - Preview
 

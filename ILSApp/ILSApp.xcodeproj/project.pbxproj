@@ -92,6 +92,7 @@
 		17A74E55E278036CFD6586B4 /* SessionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A62D7935983104927D75A0 /* SessionPickerView.swift */; };
 		17F430E8749692B2C9F6E931 /* ContextWindowBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A8BAF9DD408DC7B2930414B /* ContextWindowBar.swift */; };
 		17F72BFD17BB2EE9A44859BB /* ActivityFeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C842E584DF35A0CF053C28 /* ActivityFeedViewModel.swift */; };
+		18111FD62B0342E8167C0500 /* UnifiedSessionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F84691593F8AE0A6FE0AD5 /* UnifiedSessionRowView.swift */; };
 		18357DC6909A92960DCF90E6 /* ILSMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB16994516471A2241BCCC2 /* ILSMacApp.swift */; };
 		18BD56C6F5F42E8BE89CAF6C /* SessionMetricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 450F8C2FED413E76C3A84102 /* SessionMetricsView.swift */; };
 		19C0A1FC13A28B246ABDD885 /* MultiSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146AFCC143B00CC155C2103F /* MultiSessionViewModel.swift */; };
@@ -272,6 +273,7 @@
 		46A28AD0491373CD08B47A82 /* LocalDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF22D9EAA8556A1D32F90924 /* LocalDatabase.swift */; };
 		46C4FD899210BB0293368BC2 /* ThemeShadowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751C7B1C31C6E1B8006E0821 /* ThemeShadowSection.swift */; };
 		46FE20EC8FF98AB41024C66F /* ProjectEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4765E8736AD78D45B421EEFF /* ProjectEntity.swift */; };
+		474021B1F3C2C1049BA2B220 /* UnifiedSessionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4F84691593F8AE0A6FE0AD5 /* UnifiedSessionRowView.swift */; };
 		479CB44FE94E4B0021B92A8B /* SkillFavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D516718F86AC23C231145753 /* SkillFavoritesManager.swift */; };
 		47C604CF499F29E3DB4DADC9 /* ServerStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59590E5FFF289E598D2F6A1C /* ServerStatusWidget.swift */; };
 		48D85DFFA54660C66A98E3B0 /* ILSShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */; };
@@ -279,6 +281,7 @@
 		498CE5EB4DC0AA62C4381F57 /* ThemesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7753C25377A815B2158332 /* ThemesListView.swift */; };
 		49CB9B24826033E385DFFD68 /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		49EE7FC9324DA4792EAFE9D6 /* CrossSessionSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9C2128D00ABE45432812A0 /* CrossSessionSearchViewModel.swift */; };
+		4A4F470D04585D654224F26B /* EnergyProfilingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D6387A6286F7071339E0FB /* EnergyProfilingTests.swift */; };
 		4A0C8AC0630B3881FAF58087 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70D04010DA9C7A983032E9DA /* SidebarView.swift */; };
 		4A1532CA971F2EF89C94DD7D /* NewSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C82F89BCFDD21A13377F020D /* NewSessionView.swift */; };
 		4A25CC33FA5ED049DB704652 /* LaunchScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B362EB116BA72D20A9DA31F /* LaunchScreenView.swift */; };
@@ -1106,6 +1109,7 @@
 		4F0049EC9CA50AF245D41572 /* FileTypeBreakdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileTypeBreakdownView.swift; sourceTree = "<group>"; };
 		4F7B7B1F959FD07C4A23EE7F /* ConnectionBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionBanner.swift; sourceTree = "<group>"; };
 		50BF2DD5AB87E10B7CB8911B /* FeatureGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGate.swift; sourceTree = "<group>"; };
+		50D6387A6286F7071339E0FB /* EnergyProfilingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyProfilingTests.swift; sourceTree = "<group>"; };
 		5140980EC83AD31F84E8D935 /* PermissionRequestModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionRequestModal.swift; sourceTree = "<group>"; };
 		51712830C9EE6A1C89DDD126 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		51D5049476821865BC65876F /* CarbonTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarbonTheme.swift; sourceTree = "<group>"; };
@@ -1391,6 +1395,7 @@
 		E475CB02D35E6138F26D0CD9 /* DashboardSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardSettingsSection.swift; sourceTree = "<group>"; };
 		E489C56C978287BD1DD024E7 /* CreateTeamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTeamView.swift; sourceTree = "<group>"; };
 		E4E7D107C5255B902E735D71 /* ErrorHandlingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandlingTests.swift; sourceTree = "<group>"; };
+		E4F84691593F8AE0A6FE0AD5 /* UnifiedSessionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSessionRowView.swift; sourceTree = "<group>"; };
 		E5E2C1985E24E69457FC2BA4 /* BackendHealthDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendHealthDashboardView.swift; sourceTree = "<group>"; };
 		E664C3195016F6ABF8B3D121 /* Scenario01_CompleteSessionLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario01_CompleteSessionLifecycle.swift; sourceTree = "<group>"; };
 		E69CE46871F9776600935F2E /* ActivityFeedFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFeedFilterSheet.swift; sourceTree = "<group>"; };
@@ -1879,6 +1884,7 @@
 				9AE3D1287E33F3C2C0ED8B65 /* SessionRecordingsView.swift */,
 				7F54E8B68DCE0EA81149E3EC /* SessionStatusBadge.swift */,
 				EB9BFC1B2729224E76FB89EC /* SplitViewLayoutPicker.swift */,
+				E4F84691593F8AE0A6FE0AD5 /* UnifiedSessionRowView.swift */,
 				B5FD74260BB6090DD56B13AD /* UnifiedSessionsView.swift */,
 			);
 			path = Sessions;
@@ -2036,6 +2042,7 @@
 			isa = PBXGroup;
 			children = (
 				447788C9EF6EA3298A38810C /* ChatRenderPerformanceTests.swift */,
+				50D6387A6286F7071339E0FB /* EnergyProfilingTests.swift */,
 				9A27342B537D4BA1C881E171 /* LargeListRenderTests.swift */,
 				C5B056B7908867F6A45C233C /* LaunchPerformanceTests.swift */,
 				7F9176979DDDFBF744FC758B /* MemoryLeakTests.swift */,
@@ -2785,6 +2792,7 @@
 				D442F47EAA2CCE0D5ADD20DA /* Scenario10_DashboardAndAnalytics.swift in Sources */,
 				7325F9F731AFB7AC98F31B02 /* Scenario11_ExtendedChatConversation.swift in Sources */,
 				1E1A52630B2CA154E56432D5 /* ScreenSnapshotTests.swift in Sources */,
+				4A4F470D04585D654224F26B /* EnergyProfilingTests.swift in Sources */,
 				1F0E75F4FE9FA0A116F87AB5 /* ScrollPerformanceTests.swift in Sources */,
 				8DFCBB63740927D742700B4D /* SearchPerformanceTests.swift in Sources */,
 				38AA536E8D81462E17C77D72 /* SnapshotTestBase.swift in Sources */,
@@ -3188,6 +3196,7 @@
 				FE6E402C0086C6A5AF8ABFAF /* TunnelSetupWizardView.swift in Sources */,
 				5215186AB2AAB1E84695FB8C /* TunnelStatusCard.swift in Sources */,
 				A78516F2705D5D8ACE7C8218 /* TypingIndicatorBubble.swift in Sources */,
+				18111FD62B0342E8167C0500 /* UnifiedSessionRowView.swift in Sources */,
 				89E8C824EE9B7401F8D951E6 /* UnifiedSessionsView.swift in Sources */,
 				82504FC1B976E66D50A632B6 /* UnifiedSessionsViewModel.swift in Sources */,
 				27D2A4B265144D4B69EB9DA2 /* UsageDashboardView.swift in Sources */,
@@ -3625,6 +3634,7 @@
 				BECE5E1F55D2499F216F29D1 /* TunnelSetupWizardView.swift in Sources */,
 				D98343FCBE356024B617BBB3 /* TunnelStatusCard.swift in Sources */,
 				1DF691F3BAFDB545D82AD747 /* TypingIndicatorBubble.swift in Sources */,
+				474021B1F3C2C1049BA2B220 /* UnifiedSessionRowView.swift in Sources */,
 				9F93EA4D6E83FF5C84F8963F /* UnifiedSessionsView.swift in Sources */,
 				E2649AE8158ABFD60FB3412A /* UnifiedSessionsViewModel.swift in Sources */,
 				F4D2BEA06DF18A0DC67665B9 /* UsageDashboardView.swift in Sources */,
