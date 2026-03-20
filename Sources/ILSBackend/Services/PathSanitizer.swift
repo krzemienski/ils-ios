@@ -27,10 +27,46 @@ enum PathSanitizer {
 
     // MARK: - Validation
 
+    // MARK: - URL-Encoded Traversal Detection
+
+    /// Common URL-encoded traversal patterns that bypass naive literal checks.
+    /// Includes single-encoded, double-encoded, and overlong UTF-8 variants.
+    private static let encodedTraversalPatterns: [String] = [
+        // Single-encoded ../ and ..\
+        "%2e%2e/", "%2e%2e\\", "%2e%2e%2f", "%2e%2e%5c",
+        // Mixed case variants
+        "%2E%2E/", "%2E%2E\\", "%2E%2E%2F", "%2E%2E%5C",
+        // Double-encoded
+        "%252e%252e", "%252e%252e%252f", "%252e%252e%255c",
+        // Overlong UTF-8 encoding of '.'
+        "%c0%ae%c0%ae", "%c0%2e%c0%2e",
+        // Dot variations
+        "..%2f", "..%5c", "..%252f", "..%255c",
+        // Null byte injection (URL-encoded)
+        "%00",
+    ]
+
+    /// Check a string for URL-encoded path traversal sequences.
+    ///
+    /// Detects single-encoded, double-encoded, and overlong UTF-8 variants of
+    /// `..`, `/`, `\`, and null bytes that could bypass literal string checks.
+    ///
+    /// - Parameter input: The raw input string (before URL decoding)
+    /// - Throws: `PathError.pathTraversal` if encoded traversal sequences are found
+    static func rejectEncodedTraversal(_ input: String) throws {
+        let lowered = input.lowercased()
+        for pattern in encodedTraversalPatterns {
+            if lowered.contains(pattern.lowercased()) {
+                throw PathError.pathTraversal("URL-encoded traversal sequence detected")
+            }
+        }
+    }
+
     /// Validate that a path component (directory name, filename, session ID, etc.)
     /// does not contain traversal sequences or dangerous characters.
     ///
-    /// Rejects: `..`, `/`, `\`, `~`, null bytes, empty strings.
+    /// Rejects: `..`, `/`, `\`, `~`, null bytes, empty strings,
+    /// and URL-encoded traversal sequences.
     ///
     /// - Parameter component: A single path component to validate
     /// - Throws: `PathError` if the component is unsafe
@@ -43,6 +79,9 @@ enum PathSanitizer {
         guard !component.contains("\0") else {
             throw PathError.invalidComponent("null byte in path component")
         }
+
+        // SEC-PATH-01: Reject URL-encoded traversal sequences before decoding
+        try rejectEncodedTraversal(component)
 
         // Reject traversal sequences
         guard !component.contains("..") else {

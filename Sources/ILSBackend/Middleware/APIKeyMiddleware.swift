@@ -33,6 +33,16 @@ struct APIKeyMiddleware: AsyncMiddleware {
 
         // Extract bearer token from Authorization header
         guard let authHeader = request.headers[.authorization].first else {
+            // Report auth failure to AbuseDetectionService
+            if let abuseService = request.application.storage[AbuseDetectionServiceKey.self] {
+                let ip = request.peerAddress?.ipAddress ?? request.remoteAddress?.ipAddress ?? "unknown"
+                await abuseService.recordAuthFailure(
+                    ip: ip,
+                    path: request.url.path,
+                    reason: "missing_authorization_header",
+                    logger: request.logger
+                )
+            }
             throw Abort(.unauthorized, reason: "Missing Authorization header. Include 'Authorization: Bearer <api-key>'.")
         }
 
@@ -48,6 +58,16 @@ struct APIKeyMiddleware: AsyncMiddleware {
         // Constant-time comparison to prevent timing attacks
         guard constantTimeEqual(providedKey, requiredKey) else {
             request.logger.warning("Invalid API key attempt from \(request.remoteAddress?.description ?? "unknown")")
+            // Report auth failure to AbuseDetectionService
+            if let abuseService = request.application.storage[AbuseDetectionServiceKey.self] {
+                let ip = request.peerAddress?.ipAddress ?? request.remoteAddress?.ipAddress ?? "unknown"
+                await abuseService.recordAuthFailure(
+                    ip: ip,
+                    path: request.url.path,
+                    reason: "invalid_api_key",
+                    logger: request.logger
+                )
+            }
             throw Abort(.unauthorized, reason: "Invalid API key.")
         }
 
