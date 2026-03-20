@@ -108,6 +108,9 @@ final class PermissionService {
 
             // Fire notifications and check auto-approve for new arrivals.
             for record in newRecords {
+                // Log policy-driven context to local history if the backend provided it.
+                await logPolicyDecisionIfNeeded(record: record)
+
                 await checkAutoApprove(record: record, apiClient: apiClient)
                 fireNotification(for: record)
             }
@@ -385,6 +388,91 @@ final class PermissionService {
         } catch {
             AppLogger.shared.error(
                 "Failed to create pre-approval checkpoint: \(error.localizedDescription)",
+                category: "permissions"
+            )
+        }
+    }
+
+    // MARK: - Policy Context
+
+    /// Returns the ``PermissionReasonCode``-based policy badge label for a record,
+    /// or `nil` if no policy context was provided by the backend.
+    ///
+    /// Use this to render a badge in the permission inbox (e.g., "Auto-Approved" or "High Risk Blocked").
+    func policyBadgeLabel(for record: PermissionRecord) -> String? {
+        guard record.policyAction != nil || record.reasonCode != nil else { return nil }
+        let code = PermissionReasonCode(rawString: record.reasonCode)
+        return code.displayLabel
+    }
+
+    /// Returns the SF Symbol icon name for the policy badge, if applicable.
+    func policyBadgeIcon(for record: PermissionRecord) -> String? {
+        guard record.policyAction != nil || record.reasonCode != nil else { return nil }
+        let code = PermissionReasonCode(rawString: record.reasonCode)
+        return code.iconName
+    }
+
+    /// Returns a pre-populated deny reason when the backend policy suggests
+    /// ``requireConfirmation``, helping the user understand *why* the policy
+    /// flagged this request.
+    ///
+    /// Returns `nil` if no policy suggestion applies.
+    func suggestedDenyReason(for record: PermissionRecord) -> String? {
+        guard record.policyAction == PolicyAction.requireConfirmation.rawValue else { return nil }
+
+        let code = PermissionReasonCode(rawString: record.reasonCode)
+        switch code {
+        case .highRiskBlocked:
+            return "Policy requires confirmation: high-risk operation"
+        case .policyViolation:
+            return "Policy requires confirmation: policy rule violation"
+        case .patternDenied:
+            return "Policy requires confirmation: tool pattern restricted"
+        default:
+            return "Policy requires confirmation for this action"
+        }
+    }
+
+    /// Logs a policy-driven decision to the local ``PermissionHistoryService``
+    /// when the backend has attached policy context (``policyAction`` / ``reasonCode``).
+    ///
+    /// Only records entries that have meaningful policy metadata — records
+    /// without ``policyAction`` are silently skipped.
+    private func logPolicyDecisionIfNeeded(record: PermissionRecord) async {
+        guard let policyAction = record.policyAction else { return }
+
+        let decision: String
+        let isAutoApproved: Bool
+        switch policyAction {
+        case PolicyAction.autoApprove.rawValue:
+            decision = "allow"
+            isAutoApproved = true
+        case PolicyAction.autoDeny.rawValue:
+            decision = "deny"
+            isAutoApproved = false
+        case PolicyAction.requireConfirmation.rawValue,
+             PolicyAction.alwaysAsk.rawValue:
+            // These are pending user action — don't log a final decision yet.
+            return
+        default:
+            return
+        }
+
+        let toolInput = (record.toolInput.value as? String) ?? ""
+        let entry = PermissionHistoryEntry(
+            sessionId: record.sessionId,
+            toolName: record.toolName,
+            toolInputSummary: toolInput,
+            decision: decision,
+            isAutoApproved: isAutoApproved,
+            reasonCode: record.reasonCode
+        )
+
+        do {
+            try await PermissionHistoryService.shared.record(entry)
+        } catch {
+            AppLogger.shared.error(
+                "Failed to log policy decision for \(record.requestId): \(error.localizedDescription)",
                 category: "permissions"
             )
         }
