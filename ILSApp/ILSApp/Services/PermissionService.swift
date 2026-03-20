@@ -134,6 +134,18 @@ final class PermissionService {
         reason: String? = nil,
         apiClient: APIClient
     ) async throws {
+        // Auto-checkpoint before high-risk approvals for reversibility.
+        if decision == "allow",
+           let record = pendingPermissions.first(where: { $0.requestId == requestId }),
+           record.riskLevel == .high || record.riskLevel == .critical,
+           let sessionUUID = UUID(uuidString: record.sessionId) {
+            await createPreApprovalCheckpoint(
+                sessionId: sessionUUID,
+                toolName: record.toolName,
+                apiClient: apiClient
+            )
+        }
+
         let body = PermissionDecision(decision: decision, reason: reason)
         let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
             "/permissions/\(requestId)/decide",
@@ -340,6 +352,42 @@ final class PermissionService {
             return lowerTool.hasPrefix(prefix)
         }
         return lowerTool.contains(pattern.lowercased())
+    }
+
+    /// Creates an auto-checkpoint before a high-risk permission approval.
+    ///
+    /// Checkpoint failures are logged but do not block the approval — the decision
+    /// flow is more important than the safety-net checkpoint.
+    ///
+    /// - Parameters:
+    ///   - sessionId: The session to checkpoint.
+    ///   - toolName: The tool being approved (used in the checkpoint label).
+    ///   - apiClient: The API client used to POST the checkpoint.
+    private func createPreApprovalCheckpoint(
+        sessionId: UUID,
+        toolName: String,
+        apiClient: APIClient
+    ) async {
+        let request = CreateCheckpointRequest(
+            label: "Pre-approval: \(toolName)",
+            isAuto: true,
+            maxRetained: nil
+        )
+        do {
+            let _: APIResponse<Checkpoint> = try await apiClient.post(
+                "/sessions/\(sessionId.uuidString.lowercased())/checkpoints",
+                body: request
+            )
+            AppLogger.shared.info(
+                "Created pre-approval checkpoint for \(toolName) in session \(sessionId)",
+                category: "permissions"
+            )
+        } catch {
+            AppLogger.shared.error(
+                "Failed to create pre-approval checkpoint: \(error.localizedDescription)",
+                category: "permissions"
+            )
+        }
     }
 
     /// Risk levels ordered from lowest to highest risk.
