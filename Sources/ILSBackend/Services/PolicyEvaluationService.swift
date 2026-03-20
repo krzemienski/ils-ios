@@ -169,7 +169,7 @@ actor PolicyEvaluationService {
                     index = pattern.index(after: nextIndex)
                     // Absorb an optional trailing separator so "src/**" matches "src/foo/bar"
                     if index < pattern.endIndex && pattern[index] == "/" {
-                        regexString += "/?$|.*/"
+                        regexString += "(?:/?$|.*/)"
                         index = pattern.index(after: index)
                     }
                 } else {
