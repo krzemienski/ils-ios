@@ -842,6 +842,129 @@ actor LocalDatabase {
         }
     }
 
+    // MARK: - Pending Changes
+
+    /// Save a pending change to the sync queue.
+    func savePendingChange(_ change: PendingChange) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            try change.save(db)
+        }
+    }
+
+    /// Fetch pending changes filtered by entity type.
+    func fetchPendingChanges(for entityType: String) throws -> [PendingChange] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            try PendingChange
+                .filter(Column("entityType") == entityType)
+                .order(Column("createdAt").asc)
+                .fetchAll(db)
+        }
+    }
+
+    /// Fetch all pending changes ordered by creation date.
+    func fetchAllPendingChanges() throws -> [PendingChange] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            try PendingChange
+                .order(Column("createdAt").asc)
+                .fetchAll(db)
+        }
+    }
+
+    /// Delete a pending change by its ID.
+    func deletePendingChange(id: String) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            _ = try PendingChange.deleteOne(db, key: id)
+        }
+    }
+
+    /// Update the status of a pending change.
+    func updatePendingChangeStatus(id: String, status: String) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            if var change = try PendingChange.fetchOne(db, key: id) {
+                change.status = status
+                try change.update(db)
+            }
+        }
+    }
+
+    // MARK: - Session Sync Metadata
+
+    /// Update the sync status for a cached session.
+    func updateSessionSyncStatus(sessionId: String, status: SyncStatus, failureReason: String? = nil) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            if var session = try CachedSession.fetchOne(db, key: sessionId) {
+                session.syncStatus = status.rawValue
+                session.failureReason = failureReason
+                if status == .synced {
+                    session.lastSyncedAt = Date()
+                    session.failureReason = nil
+                    session.conflictData = nil
+                }
+                try session.update(db)
+            }
+        }
+    }
+
+    /// Update the local and server version numbers for a cached session.
+    func updateSessionVersions(sessionId: String, localVersion: Int, serverVersion: Int) throws {
+        guard let dbPool else { return }
+        try dbPool.write { db in
+            if var session = try CachedSession.fetchOne(db, key: sessionId) {
+                session.localVersion = localVersion
+                session.serverVersion = serverVersion
+                try session.update(db)
+            }
+        }
+    }
+
+    /// Retrieve sync metadata for a specific session.
+    func getSessionSyncMetadata(sessionId: String) throws -> SyncMetadata? {
+        guard let dbPool else { return nil }
+        return try dbPool.read { db in
+            guard let session = try CachedSession.fetchOne(db, key: sessionId) else {
+                return nil
+            }
+            return SyncMetadata(
+                localVersion: session.localVersion,
+                serverVersion: session.serverVersion,
+                lastSyncedAt: session.lastSyncedAt,
+                syncStatus: SyncStatus(rawValue: session.syncStatus) ?? .synced,
+                failureReason: session.failureReason,
+                conflictData: session.conflictData
+            )
+        }
+    }
+
+    /// Fetch all sessions paired with their sync status for UI display.
+    ///
+    /// Returns tuples of `(ChatSession, SyncMetadata)` ordered by most recently active first.
+    func fetchSessionsWithSyncStatus() throws -> [(session: ChatSession, syncMetadata: SyncMetadata)] {
+        guard let dbPool else { return [] }
+        return try dbPool.read { db in
+            let records = try CachedSession
+                .order(Column("lastActiveAt").desc)
+                .fetchAll(db)
+            return records.compactMap { record -> (session: ChatSession, syncMetadata: SyncMetadata)? in
+                guard let session = record.toChatSession() else { return nil }
+                let metadata = SyncMetadata(
+                    localVersion: record.localVersion,
+                    serverVersion: record.serverVersion,
+                    lastSyncedAt: record.lastSyncedAt,
+                    syncStatus: SyncStatus(rawValue: record.syncStatus) ?? .synced,
+                    failureReason: record.failureReason,
+                    conflictData: record.conflictData
+                )
+                return (session: session, syncMetadata: metadata)
+            }
+        }
+    }
+
     // MARK: - Cleanup
 
     /// Delete all cached entries older than the specified age.
