@@ -4,26 +4,56 @@ import FluentSQLiteDriver
 import SQLKit
 
 func configure(_ app: Application) async throws {
+    // SEC-CONFIG: Initialize security configuration service with hardened defaults.
+    // Must be created early so middleware and routes can access it via app.storage.
+    let securityConfig = SecurityConfigService(logger: app.logger)
+    app.storage[SecurityConfigServiceKey.self] = securityConfig
+
+    // SEC-ABUSE: Initialize abuse detection service for tracking security violations.
+    let abuseDetection = AbuseDetectionService()
+    app.storage[AbuseDetectionServiceKey.self] = abuseDetection
+
     // CORS middleware — restrict to configured origins (default: localhost only)
     // Set ILS_CORS_ORIGINS env var to comma-separated list for production
+    // SEC-CORS: Wildcard '*' origins are rejected entirely for zero-trust posture.
+    // Non-HTTPS origins in production emit warnings (localhost exempted).
+    let localhostOnlyOrigins = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:9999",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:9999"
+    ]
+
     let allowedOrigin: CORSMiddleware.AllowOriginSetting
     if let originsEnv = Environment.get("ILS_CORS_ORIGINS"), !originsEnv.isEmpty {
         let origins = originsEnv.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
-        if origins.count == 1 {
-            allowedOrigin = .custom(origins[0])
+
+        // SEC-CORS-01: Reject wildcard '*' — fall back to localhost-only
+        if origins.contains("*") {
+            app.logger.error("SEC-CORS-01: Wildcard '*' origin rejected — falling back to localhost-only. Configure explicit origins in ILS_CORS_ORIGINS.")
+            allowedOrigin = .any(localhostOnlyOrigins)
         } else {
-            allowedOrigin = .any(origins)
+            // SEC-CORS-02: Warn on non-HTTPS origins in production (localhost exempted)
+            if app.environment == .production {
+                for origin in origins {
+                    let isLocalhost = origin.contains("localhost") || origin.contains("127.0.0.1")
+                    if origin.hasPrefix("http://") && !isLocalhost {
+                        app.logger.warning("SEC-CORS-02: Non-HTTPS origin '\(origin)' configured in production — HTTPS recommended for security.")
+                    }
+                }
+            }
+
+            if origins.count == 1 {
+                allowedOrigin = .custom(origins[0])
+            } else {
+                allowedOrigin = .any(origins)
+            }
         }
     } else {
         // Default: localhost development origins only
-        allowedOrigin = .any([
-            "http://localhost:3000",
-            "http://localhost:8080",
-            "http://localhost:9999",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:8080",
-            "http://127.0.0.1:9999"
-        ])
+        allowedOrigin = .any(localhostOnlyOrigins)
     }
 
     let corsConfiguration = CORSMiddleware.Configuration(
@@ -38,6 +68,10 @@ func configure(_ app: Application) async throws {
     let cors = CORSMiddleware(configuration: corsConfiguration)
     app.middleware.use(cors, at: .beginning)
 
+    // SEC-CORS-03: Vary: Origin header on all responses to prevent cache poisoning.
+    // Ensures proxies/CDNs do not serve a cached CORS response for a different origin.
+    app.middleware.use(VaryOriginMiddleware(), at: .beginning)
+
     // Request logging middleware (logs method, path, status, duration)
     app.middleware.use(RequestLoggingMiddleware())
 
@@ -49,6 +83,9 @@ func configure(_ app: Application) async throws {
 
     // API key authentication middleware (opt-in via ILS_API_KEY env var)
     app.middleware.use(APIKeyMiddleware())
+
+    // Request validation middleware (Content-Type enforcement, JSON validation, suspicious header rejection)
+    app.middleware.use(RequestValidationMiddleware())
 
     // Rate limiting middleware
     let rateLimitStorage = RateLimitStorage()
