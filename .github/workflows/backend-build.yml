@@ -49,6 +49,9 @@ jobs:
       - name: Build backend
         run: swift build
 
+      - name: Run backend tests
+        run: swift test
+
       - name: Report build status
         if: always()
         run: |
@@ -57,6 +60,21 @@ jobs:
           else
             echo "::error::Backend build (macOS) failed"
           fi
+
+  backend-security:
+    name: Security Checks
+    runs-on: macos-15
+    needs: backend-build-macos
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run security checks
+        run: |
+          chmod +x scripts/security-check.sh
+          scripts/security-check.sh
 
   backend-build-linux:
     name: Build Backend (Linux)
