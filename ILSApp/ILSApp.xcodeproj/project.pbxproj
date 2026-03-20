@@ -820,6 +820,7 @@
 		DCE1AFC3B6111D22EA4B7526 /* CarbonTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D5049476821865BC65876F /* CarbonTheme.swift */; };
 		DD442257704FBEDDE9DFB9BB /* UsageDashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEE97A62865C6EF071597B3E /* UsageDashboardViewModel.swift */; };
 		DDC7A5E5F6945F976D80C7E3 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */; };
+		10013E48C0C605BF4FD8449C /* VoiceCommandOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28A5119CE315929B8500BC9 /* VoiceCommandOverlay.swift */; };
 		DE0C58B0013ACBFAAE12737F /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */; };
 		DE34AC0159DFC8DE7ED2A9A6 /* SkillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 548657A1773765E26B590326 /* SkillsViewModel.swift */; };
 		DE893CEB0453E88FE8A42DD1 /* BaseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */; };
@@ -853,6 +854,7 @@
 		E6267C7B476E8E41D172B62C /* AttachmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA01304E726384873EC0669 /* AttachmentPickerSheet.swift */; };
 		E6D80A18228021B5032890EB /* AppIconGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DEA312D98D14A52FD03359 /* AppIconGenerator.swift */; };
 		E6EBBAF4CD45B4357494981A /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */; };
+		8A4A20CBA7B5AF40C5FC4046 /* VoiceCommandOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28A5119CE315929B8500BC9 /* VoiceCommandOverlay.swift */; };
 		E6F992C4BA5DAA01E1C28291 /* SessionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42504430548D6626CEB65C9 /* SessionsViewModel.swift */; };
 		E72E9E428D357533E4673FCA /* ThemeEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE8A18EC92A35C2625C719B /* ThemeEditorViewModel.swift */; };
 		E735A55DF41AA970A5F0C1E2 /* SessionSnippetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB062D4AD1927E72C26655E /* SessionSnippetView.swift */; };
@@ -1206,6 +1208,7 @@
 		70CF3068B9F5D762E732DE8C /* QueryLearningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryLearningService.swift; sourceTree = "<group>"; };
 		70D04010DA9C7A983032E9DA /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputOverlay.swift; sourceTree = "<group>"; };
+		C28A5119CE315929B8500BC9 /* VoiceCommandOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandOverlay.swift; sourceTree = "<group>"; };
 		745BF2B4EF0FEC02963EBC63 /* GlobalSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchViewModel.swift; sourceTree = "<group>"; };
 		74E6CE265FDFF2EF878804C8 /* ActivityEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityEventRow.swift; sourceTree = "<group>"; };
 		751C7B1C31C6E1B8006E0821 /* ThemeShadowSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeShadowSection.swift; sourceTree = "<group>"; };
@@ -2540,6 +2543,7 @@
 				530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */,
 				01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */,
 				742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */,
+				C28A5119CE315929B8500BC9 /* VoiceCommandOverlay.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -3254,6 +3258,7 @@
 				5922226B3EC22F43CAB12D79 /* VersionMonitorView.swift in Sources */,
 				B739A715D9C59D482779BB11 /* VersionMonitorViewModel.swift in Sources */,
 				DDC7A5E5F6945F976D80C7E3 /* VoiceInputOverlay.swift in Sources */,
+				10013E48C0C605BF4FD8449C /* VoiceCommandOverlay.swift in Sources */,
 				FD23345543D373A75FAA3565 /* WelcomeCarouselView.swift in Sources */,
 				F67CF6C7C6DFE2DE29538176 /* WidgetBundle.swift in Sources */,
 				1BC82985D13E67DFAF49798F /* WidgetContainerView.swift in Sources */,
@@ -3701,6 +3706,7 @@
 				4C8183809528AB6141AE93FF /* VersionMonitorView.swift in Sources */,
 				ED8D5C830280169F57133204 /* VersionMonitorViewModel.swift in Sources */,
 				E6EBBAF4CD45B4357494981A /* VoiceInputOverlay.swift in Sources */,
+				8A4A20CBA7B5AF40C5FC4046 /* VoiceCommandOverlay.swift in Sources */,
 				A42A64AD79DA7CED6F6CA1E6 /* WelcomeCarouselView.swift in Sources */,
 				69B49241EE62B52643029E85 /* WidgetBundle.swift in Sources */,
 				21103185F2B49D51B37D068D /* WidgetContainerView.swift in Sources */,
