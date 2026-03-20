@@ -700,6 +700,7 @@
 		BD94C4C014635ACEC68935B6 /* DocumentationArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222B06ECDF47CD22A3657FFA /* DocumentationArticleView.swift */; };
 		BD9D1CA034556E998233AC92 /* BackendConnectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB0424F9445FB7E743C9346 /* BackendConnectionStore.swift */; };
 		BDA1A4013F8C2C78812C837B /* OfflineCacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DA9CA83A9E8DB9755C4EBD /* OfflineCacheSettingsView.swift */; };
+		4AEF19A60E2C9F0107A0FC8F /* VoiceCommandSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEF19A60E2C9F0007A0FC8F /* VoiceCommandSettingsView.swift */; };
 		BDA45EB5FF2F7650BA2AC69B /* PermissionInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842921C5E115DF4EDC1DB53C /* PermissionInboxView.swift */; };
 		BE1AD102E7BE63E09AB374E3 /* WorkflowsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 867E2895E67823690EB50D63 /* WorkflowsListView.swift */; };
 		BE6A0DBA034EC6767202145C /* GraphiteTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6435DCBC926C12F7B22C09B /* GraphiteTheme.swift */; };
@@ -876,6 +877,7 @@
 		EAC4EDE55DBD60DF16686672 /* MessageSearchResultRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38F9042913547966CFD44581 /* MessageSearchResultRow.swift */; };
 		EAD907D86498A92874D45BE4 /* CreateTeamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E489C56C978287BD1DD024E7 /* CreateTeamView.swift */; };
 		EB3E976690076C69A91AEC24 /* OfflineCacheSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DA9CA83A9E8DB9755C4EBD /* OfflineCacheSettingsView.swift */; };
+		4AEF19A60E2C9F0207A0FC8F /* VoiceCommandSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEF19A60E2C9F0007A0FC8F /* VoiceCommandSettingsView.swift */; };
 		EBC4AEF3138579540CBF2BF8 /* ILSShared in Frameworks */ = {isa = PBXBuildFile; productRef = 6AFB567C31A55DDB5B2954EB /* ILSShared */; };
 		EC47B80C7BE4E088450653CC /* QuickReplyTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB81FCE73319B9D152032132 /* QuickReplyTemplate.swift */; };
 		ECA2D87A0ED0E8E2BAF9DB18 /* SessionBookmarksManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D32DB069D5DAAE469D1B618 /* SessionBookmarksManager.swift */; };
@@ -1054,6 +1056,7 @@
 		20B151683C14821F7964A921 /* SpeechRecognitionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionProvider.swift; sourceTree = "<group>"; };
 		20DC40DA0D539B9F83B9F636 /* FirstSessionWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstSessionWizardView.swift; sourceTree = "<group>"; };
 		21DA9CA83A9E8DB9755C4EBD /* OfflineCacheSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineCacheSettingsView.swift; sourceTree = "<group>"; };
+		4AEF19A60E2C9F0007A0FC8F /* VoiceCommandSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandSettingsView.swift; sourceTree = "<group>"; };
 		222B06ECDF47CD22A3657FFA /* DocumentationArticleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentationArticleView.swift; sourceTree = "<group>"; };
 		24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAppearanceSection.swift; sourceTree = "<group>"; };
 		2532830FA136512C06CAB22B /* BackendManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendManager.swift; sourceTree = "<group>"; };
@@ -1834,6 +1837,7 @@
 				4005FE7854FDFA8AF9FE05D1 /* ModelStatsView.swift */,
 				64A7957225DCBFEA35CD3C6B /* NotificationPreferencesView.swift */,
 				21DA9CA83A9E8DB9755C4EBD /* OfflineCacheSettingsView.swift */,
+				4AEF19A60E2C9F0007A0FC8F /* VoiceCommandSettingsView.swift */,
 				80B42459F401D665426A7279 /* QuickReplyTemplatesSettingsView.swift */,
 				958D7CC1BAC316ED8C17C1B8 /* SettingsAboutSection.swift */,
 				24DC02D17B6C1A9ED2093C36 /* SettingsAppearanceSection.swift */,
@@ -3066,6 +3070,7 @@
 				D27CDEB3FFF8814B55E98B49 /* ObsidianTheme.swift in Sources */,
 				5CA6F24B31F3415D6E1CFF1B /* OfflineCacheSettings.swift in Sources */,
 				BDA1A4013F8C2C78812C837B /* OfflineCacheSettingsView.swift in Sources */,
+				4AEF19A60E2C9F0107A0FC8F /* VoiceCommandSettingsView.swift in Sources */,
 				E22DF7F6525F8DA5149951D2 /* OfflineIndicator.swift in Sources */,
 				3A428F89FADC77D6AD890B8F /* OnboardingView.swift in Sources */,
 				8CADC349B73CF6079C949D3B /* OnboardingViewModel.swift in Sources */,
@@ -3512,6 +3517,7 @@
 				415FA9BEB8D7C968A1383F44 /* ObsidianTheme.swift in Sources */,
 				346C2DE025D2A8EBA88371E1 /* OfflineCacheSettings.swift in Sources */,
 				EB3E976690076C69A91AEC24 /* OfflineCacheSettingsView.swift in Sources */,
+				4AEF19A60E2C9F0207A0FC8F /* VoiceCommandSettingsView.swift in Sources */,
 				6555329D4958AC6721212189 /* OfflineIndicator.swift in Sources */,
 				D34412D635D61666C3E92EDE /* OnboardingView.swift in Sources */,
 				5F158F2B9AC65AAE2C13C8C8 /* OnboardingViewModel.swift in Sources */,

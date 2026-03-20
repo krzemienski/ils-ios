@@ -117,6 +117,8 @@ struct SettingsView: View {
 
                 quickReplySection
 
+                VoiceCommandSettingsView()
+
                 SettingsAboutSection(
                     viewModel: viewModel,
                     serverURL: serverURL
