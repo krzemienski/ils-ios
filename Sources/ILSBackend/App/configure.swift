@@ -4,6 +4,11 @@ import FluentSQLiteDriver
 import SQLKit
 
 func configure(_ app: Application) async throws {
+    // SEC-CONFIG: Initialize security configuration service with hardened defaults.
+    // Must be created early so middleware and routes can access it via app.storage.
+    let securityConfig = SecurityConfigService(logger: app.logger)
+    app.storage[SecurityConfigServiceKey.self] = securityConfig
+
     // CORS middleware — restrict to configured origins (default: localhost only)
     // Set ILS_CORS_ORIGINS env var to comma-separated list for production
     let allowedOrigin: CORSMiddleware.AllowOriginSetting
