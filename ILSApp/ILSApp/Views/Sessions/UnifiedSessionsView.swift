@@ -59,9 +59,16 @@ struct UnifiedSessionsView: View {
 
             // Recovery banner — surfaces interrupted sessions eligible for recovery
             if !recoveryViewModel.recoverableSessions.isEmpty {
-                SessionRecoveryBannerView(viewModel: recoveryViewModel)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .animation(.easeInOut(duration: 0.25), value: recoveryViewModel.recoverableSessions.isEmpty)
+                SessionRecoveryBannerView(viewModel: recoveryViewModel) { restored in
+                    onSessionSelected?(TaggedSession(
+                        session: restored,
+                        backendId: UUID(),
+                        backendName: "",
+                        backendColorHex: "#888888"
+                    ))
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.easeInOut(duration: 0.25), value: recoveryViewModel.recoverableSessions.isEmpty)
             }
 
             // Search bar — filters all backends simultaneously

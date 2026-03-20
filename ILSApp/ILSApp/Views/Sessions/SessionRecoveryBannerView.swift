@@ -24,6 +24,7 @@ import ILSShared
 /// ```
 struct SessionRecoveryBannerView: View {
     @Bindable var viewModel: SessionRecoveryViewModel
+    var onRestored: ((ChatSession) -> Void)?
 
     @Environment(\.theme) private var theme: ThemeSnapshot
 
@@ -96,6 +97,7 @@ struct SessionRecoveryBannerView: View {
                 NavigationStack {
                     RecoveryTimelineView(session: session) { restored in
                         Task { await viewModel.dismissSession(session) }
+                        onRestored?(restored)
                     }
                 }
             }
