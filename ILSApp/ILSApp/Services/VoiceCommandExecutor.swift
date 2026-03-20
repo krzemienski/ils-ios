@@ -76,6 +76,15 @@ final class VoiceCommandExecutor {
     /// Maximum entries retained in the execution log.
     private let maxLogEntries = 50
 
+    /// Timeout duration for command execution in seconds.
+    private let executionTimeout: TimeInterval = 15.0
+
+    /// Number of consecutive failures for the same command action type.
+    private var consecutiveFailures: [String: Int] = [:]
+
+    /// Maximum retries before suggesting the user seek alternative action.
+    private static let maxRetries = 3
+
     // MARK: - Execution
 
     /// Execute a voice command.
@@ -138,41 +147,53 @@ final class VoiceCommandExecutor {
         executionState = .idle
     }
 
+    /// Retry a previously failed command.
+    ///
+    /// Re-dispatches the command using the stored context. If context is unavailable,
+    /// transitions to failed state with a descriptive error.
+    ///
+    /// - Parameter command: The command to retry.
+    /// - Parameter context: Execution context for retry dispatch.
+    func retry(_ command: VoiceCommand, context: VoiceCommandExecutionContext) async {
+        let actionKey = "\(command.action)"
+        let failures = consecutiveFailures[actionKey] ?? 0
+
+        if failures >= Self.maxRetries {
+            executionState = .failed(
+                command,
+                "Failed \(failures) times. Try a different approach or check the app state."
+            )
+            HapticManager.notification(.error)
+            AppLogger.shared.warning(
+                "Voice command retry limit reached for: \(command.id)",
+                category: "voice-commands"
+            )
+            return
+        }
+
+        AppLogger.shared.info(
+            "Retrying voice command: \(command.id) (attempt \(failures + 1))",
+            category: "voice-commands"
+        )
+        await dispatch(command, context: context)
+    }
+
     // MARK: - Dispatch
 
     /// Routes a command to the appropriate handler based on its action type.
+    /// Includes a timeout guard to prevent indefinite hangs on network operations.
     private func dispatch(_ command: VoiceCommand, context: VoiceCommandExecutionContext) async {
         executionState = .executing(command)
+        let actionKey = "\(command.action)"
 
         do {
-            let result: String
-            switch command.action {
-            case .approve:
-                result = try await handleApprove(context: context)
-            case .deny:
-                result = try await handleDeny(context: context)
-            case .approveAll:
-                result = try await handleApproveAll(context: context)
-            case .denyAll:
-                result = try await handleDenyAll(context: context)
-            case .newSession:
-                result = handleNewSession()
-            case .deleteSession:
-                result = try await handleDeleteSession(context: context)
-            case .openSession:
-                result = handleOpenSession(context: context)
-            case .summarizeStatus:
-                result = try await handleSummarizeStatus(context: context)
-            case .triggerWorkflow:
-                result = handleTriggerWorkflow()
-            case .navigate(let screen):
-                result = handleNavigate(to: screen, context: context)
-            case .custom(let action):
-                result = handleCustomAction(action, context: context)
+            let result: String = try await withThrowingTimeout(seconds: executionTimeout) {
+                try await self.executeAction(command, context: context)
             }
 
             lastResult = result
             executionState = .completed(command, result)
+            consecutiveFailures[actionKey] = 0
             HapticManager.notification(.success)
             recordLog(command: command, success: true)
             AppLogger.shared.info(
@@ -181,20 +202,55 @@ final class VoiceCommandExecutor {
             )
 
         } catch {
-            let message = error.localizedDescription
+            let message: String
+            if error is VoiceCommandTimeoutError {
+                message = "Command timed out. The operation took too long."
+            } else {
+                message = error.localizedDescription
+            }
+            let failures = (consecutiveFailures[actionKey] ?? 0) + 1
+            consecutiveFailures[actionKey] = failures
             executionState = .failed(command, message)
             HapticManager.notification(.error)
             recordLog(command: command, success: false)
             AppLogger.shared.error(
-                "Voice command failed: \(command.id) — \(message)",
+                "Voice command failed: \(command.id) — \(message) (failure #\(failures))",
                 category: "voice-commands"
             )
         }
     }
 
+    /// Executes the action for a given command, returning the result string.
+    private func executeAction(_ command: VoiceCommand, context: VoiceCommandExecutionContext) async throws -> String {
+        switch command.action {
+        case .approve:
+            return try await handleApprove(context: context)
+        case .deny:
+            return try await handleDeny(context: context)
+        case .approveAll:
+            return try await handleApproveAll(context: context)
+        case .denyAll:
+            return try await handleDenyAll(context: context)
+        case .newSession:
+            return handleNewSession()
+        case .deleteSession:
+            return try await handleDeleteSession(context: context)
+        case .openSession:
+            return handleOpenSession(context: context)
+        case .summarizeStatus:
+            return try await handleSummarizeStatus(context: context)
+        case .triggerWorkflow:
+            return handleTriggerWorkflow()
+        case .navigate(let screen):
+            return handleNavigate(to: screen, context: context)
+        case .custom(let action):
+            return handleCustomAction(action, context: context)
+        }
+    }
+
     // MARK: - Action Handlers
 
-    private func handleApprove(context: VoiceCommandExecutionContext) throws -> String {
+    private func handleApprove(context: VoiceCommandExecutionContext) async throws -> String {
         guard let chatViewModel = context.chatViewModel else {
             throw VoiceCommandError.noActiveSession
         }
@@ -205,7 +261,7 @@ final class VoiceCommandExecutor {
         return "Permission approved"
     }
 
-    private func handleDeny(context: VoiceCommandExecutionContext) throws -> String {
+    private func handleDeny(context: VoiceCommandExecutionContext) async throws -> String {
         guard let chatViewModel = context.chatViewModel else {
             throw VoiceCommandError.noActiveSession
         }
@@ -216,7 +272,7 @@ final class VoiceCommandExecutor {
         return "Permission denied"
     }
 
-    private func handleApproveAll(context: VoiceCommandExecutionContext) throws -> String {
+    private func handleApproveAll(context: VoiceCommandExecutionContext) async throws -> String {
         guard let chatViewModel = context.chatViewModel else {
             throw VoiceCommandError.noActiveSession
         }
@@ -229,7 +285,7 @@ final class VoiceCommandExecutor {
         return "All \(ids.count) permissions approved"
     }
 
-    private func handleDenyAll(context: VoiceCommandExecutionContext) throws -> String {
+    private func handleDenyAll(context: VoiceCommandExecutionContext) async throws -> String {
         guard let chatViewModel = context.chatViewModel else {
             throw VoiceCommandError.noActiveSession
         }
@@ -352,6 +408,42 @@ enum VoiceCommandError: LocalizedError {
         case .noConnection:
             return "Not connected to server."
         }
+    }
+}
+
+// MARK: - VoiceCommandTimeoutError
+
+/// Thrown when a voice command execution exceeds the allowed timeout.
+struct VoiceCommandTimeoutError: LocalizedError {
+    var errorDescription: String? { "Command timed out." }
+}
+
+// MARK: - Timeout Helper
+
+/// Executes an async throwing closure with a timeout.
+///
+/// - Parameters:
+///   - seconds: Maximum allowed execution time.
+///   - operation: The async operation to execute.
+/// - Returns: The operation's result if completed within the timeout.
+/// - Throws: `VoiceCommandTimeoutError` if the timeout is exceeded, or any error from the operation.
+@MainActor
+private func withThrowingTimeout<T: Sendable>(
+    seconds: TimeInterval,
+    operation: @escaping @MainActor () async throws -> T
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask {
+            try await operation()
+        }
+        group.addTask {
+            try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            throw VoiceCommandTimeoutError()
+        }
+        // Return first to finish; cancel the other
+        let result = try await group.next()!
+        group.cancelAll()
+        return result
     }
 }
 #endif

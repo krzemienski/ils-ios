@@ -83,6 +83,36 @@ class VoiceCommandInterpreter {
         "all", "everything"
     ]
 
+    /// Common speech recognition filler words to strip before matching.
+    private static let fillerWords: Set<String> = [
+        "um", "uh", "like", "please", "hey", "ok", "okay",
+        "can", "you", "could", "would", "the", "a", "an",
+        "just", "maybe", "so", "well", "actually", "basically"
+    ]
+
+    /// Common speech-to-text misrecognition corrections.
+    private static let corrections: [String: String] = [
+        "a prove": "approve",
+        "except": "accept",
+        "denied": "deny",
+        "sessions": "session",
+        "permits": "permission",
+        "allowed": "allow",
+        "removed": "remove",
+        "deleted": "delete",
+        "navigation": "navigate",
+        "navigates": "navigate",
+        "goes": "go",
+        "shows": "show",
+        "creates": "create",
+        "starts": "start",
+        "opens": "open",
+        "running": "run",
+        "triggered": "trigger",
+        "summarized": "summarize",
+        "summarizes": "summarize"
+    ]
+
     // MARK: - Public API
 
     /// Interprets a transcribed text string and returns the best matching voice command.
@@ -96,6 +126,20 @@ class VoiceCommandInterpreter {
         let normalized = normalize(transcription)
 
         guard !normalized.isEmpty else {
+            let result = VoiceCommandMatch.noMatch(suggestions: suggestionsForContext(context))
+            recordInterpretation(transcription: transcription, result: result, start: start)
+            return result
+        }
+
+        // Edge case: single character or very short input is unlikely to be a valid command
+        if normalized.count < 2 {
+            let result = VoiceCommandMatch.noMatch(suggestions: suggestionsForContext(context))
+            recordInterpretation(transcription: transcription, result: result, start: start)
+            return result
+        }
+
+        // Edge case: excessively long input — likely dictation, not a command
+        if normalized.count > 200 {
             let result = VoiceCommandMatch.noMatch(suggestions: suggestionsForContext(context))
             recordInterpretation(transcription: transcription, result: result, start: start)
             return result
@@ -161,7 +205,8 @@ class VoiceCommandInterpreter {
     // MARK: - Text Normalization
 
     /// Normalizes transcribed text for matching: lowercases, trims whitespace,
-    /// and strips leading/trailing punctuation.
+    /// strips leading/trailing punctuation, removes filler words, and applies
+    /// common speech-to-text corrections.
     private func normalize(_ text: String) -> String {
         var result = text
             .lowercased()
@@ -176,7 +221,26 @@ class VoiceCommandInterpreter {
             result = String(result.dropLast())
         }
 
-        return result.trimmingCharacters(in: .whitespaces)
+        result = result.trimmingCharacters(in: .whitespaces)
+
+        // Remove filler words
+        let words = result.split(separator: " ").map(String.init)
+        let filtered = words.filter { !Self.fillerWords.contains($0) }
+
+        // Apply speech-to-text corrections
+        let corrected = filtered.map { word in
+            Self.corrections[word] ?? word
+        }
+
+        // Also check multi-word corrections (e.g. "a prove" → "approve")
+        var joined = corrected.joined(separator: " ")
+        for (wrong, right) in Self.corrections {
+            if wrong.contains(" ") {
+                joined = joined.replacingOccurrences(of: wrong, with: right)
+            }
+        }
+
+        return joined.trimmingCharacters(in: .whitespaces)
     }
 
     /// Tokenizes text into individual words using NLTokenizer.

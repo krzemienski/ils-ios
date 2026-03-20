@@ -499,6 +499,9 @@ struct ChatView: View {
                     onSelectCommand: { command in
                         voiceCommandMatchResult = nil
                         Task { await executeVoiceCommand(command) }
+                    },
+                    onRetry: { command in
+                        Task { await retryVoiceCommand(command) }
                     }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -1155,6 +1158,17 @@ struct ChatView: View {
         showVoiceCommandOverlay = false
         voiceCommandMatchResult = nil
         voiceCommandExecutor.reset()
+    }
+
+    /// Retry a previously failed voice command.
+    private func retryVoiceCommand(_ command: VoiceCommand) async {
+        let context = VoiceCommandExecutionContext(
+            chatViewModel: viewModel,
+            appState: appState,
+            apiClient: viewModel.apiClient,
+            sessionId: session.id
+        )
+        await voiceCommandExecutor.retry(command, context: context)
     }
     #endif
 
