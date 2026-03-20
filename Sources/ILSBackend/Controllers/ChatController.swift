@@ -159,10 +159,15 @@ struct ChatController: RouteCollection {
         try await userMessage.save(on: req.db)
         let userMessageId = userMessage.id!
 
-        // Update session message count
+        // Update session message count and trigger auto-checkpoint if needed
         if let session = try await SessionModel.find(sessionId, on: req.db) {
             session.messageCount += 1
             try await session.save(on: req.db)
+            try? await SessionBackupController.createAutoCheckpointIfNeeded(
+                sessionId: sessionId,
+                messageCount: session.messageCount,
+                db: req.db
+            )
         }
 
         // Get project path if specified
