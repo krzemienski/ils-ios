@@ -18,6 +18,7 @@ struct PermissionHistoryView: View {
     @State private var searchText: String = ""
     @State private var selectedRecord: PermissionRecord? = nil
     @State private var isLoading: Bool = false
+    @State private var selectedReasonCode: PermissionReasonCode? = nil
     @State private var filterPolicyAutoResolved: Bool = false
 
     private var service: PermissionService { appState.permissionService }
@@ -25,10 +26,20 @@ struct PermissionHistoryView: View {
     private var filteredHistory: [PermissionRecord] {
         var records = service.permissionHistory
 
+        // Filter by reason code
+        if let selectedReasonCode {
+            records = records.filter { record in
+                let code = PermissionReasonCode(rawString: record.reasonCode)
+                return code == selectedReasonCode
+            }
+        }
+
+        // Filter by policy auto-resolved
         if filterPolicyAutoResolved {
             records = records.filter { $0.matchedPolicyId != nil }
         }
 
+        // Filter by search text
         guard !searchText.isEmpty else { return records }
         let query = searchText.lowercased()
         return records.filter {
@@ -105,6 +116,7 @@ struct PermissionHistoryView: View {
         ScrollView {
             LazyVStack(spacing: theme.spacingMD) {
                 statsSection
+                reasonCodeFilterBar
                 historySection
             }
             .padding(.horizontal, theme.spacingMD)
@@ -113,6 +125,61 @@ struct PermissionHistoryView: View {
         .searchable(text: $searchText, prompt: "Search tool, session, project")
         .refreshable {
             await viewModel.loadHistory()
+        }
+    }
+
+    // MARK: - Reason Code Filter Bar
+
+    private var reasonCodeFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: theme.spacingSM) {
+                reasonCodeFilterChip(label: "All", code: nil)
+                ForEach(PermissionReasonCode.deniedCodes, id: \.self) { code in
+                    reasonCodeFilterChip(label: code.displayLabel, code: code)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private func reasonCodeFilterChip(label: String, code: PermissionReasonCode?) -> some View {
+        let isSelected = selectedReasonCode == code
+        return Button {
+            selectedReasonCode = isSelected ? nil : code
+        } label: {
+            HStack(spacing: 4) {
+                if let code {
+                    Image(systemName: code.iconName)
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
+                }
+                Text(label)
+                    .font(.system(size: theme.fontCaption, weight: isSelected ? .semibold : .regular, design: theme.fontDesign))
+            }
+            .foregroundStyle(isSelected ? .white : theme.textSecondary)
+            .padding(.horizontal, theme.spacingSM)
+            .padding(.vertical, 6)
+            .background(
+                isSelected
+                    ? reasonCodeColor(for: code)
+                    : theme.bgSecondary,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(label) filter\(isSelected ? ", selected" : "")")
+    }
+
+    /// Returns the tint color for a reason code filter chip.
+    private func reasonCodeColor(for code: PermissionReasonCode?) -> Color {
+        guard let code else { return theme.accent }
+        switch code {
+        case .policyViolation: return theme.error
+        case .highRiskBlocked: return theme.warning
+        case .patternDenied: return theme.error.opacity(0.85)
+        case .userDenied: return theme.textSecondary
+        case .timeout: return theme.textTertiary
+        case .policyAutoApprove: return theme.accent
+        case .unknown: return theme.textTertiary
         }
     }
 
@@ -242,25 +309,32 @@ struct PermissionHistoryView: View {
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
 
-                if let policyId = record.matchedPolicyId,
-                   let policyName = viewModel.policyNames[policyId] {
-                    HStack(spacing: 3) {
-                        Image(systemName: "bolt.shield")
-                            .font(.system(size: 9, design: theme.fontDesign))
-                        Text(policyName)
+                HStack(spacing: 4) {
+                    if let policyId = record.matchedPolicyId,
+                       let policyName = viewModel.policyNames[policyId] {
+                        HStack(spacing: 3) {
+                            Image(systemName: "bolt.shield")
+                                .font(.system(size: 9, design: theme.fontDesign))
+                            Text(policyName)
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(theme.accent)
+                    } else if let session = record.sessionName {
+                        Text(session)
                             .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textSecondary)
                             .lineLimit(1)
+                    } else {
+                        Text(relativeTime(record.resolvedAt ?? record.requestedAt))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                            .foregroundStyle(theme.textTertiary)
                     }
-                    .foregroundStyle(theme.accent)
-                } else if let session = record.sessionName {
-                    Text(session)
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textSecondary)
-                        .lineLimit(1)
-                } else {
-                    Text(relativeTime(record.resolvedAt ?? record.requestedAt))
-                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                        .foregroundStyle(theme.textTertiary)
+
+                    // Reason code badge for denied/blocked entries
+                    if record.status == .denied, let reasonCodeStr = record.reasonCode {
+                        reasonCodeBadge(for: PermissionReasonCode(rawString: reasonCodeStr))
+                    }
                 }
             }
 
@@ -295,6 +369,38 @@ struct PermissionHistoryView: View {
         .padding(.vertical, 3)
         .background(color.opacity(0.12))
         .clipShape(Capsule())
+    }
+
+    // MARK: - Reason Code Badge
+
+    @ViewBuilder
+    private func reasonCodeBadge(for code: PermissionReasonCode) -> some View {
+        let color = reasonCodeBadgeColor(for: code)
+        HStack(spacing: 2) {
+            Image(systemName: code.iconName)
+                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
+            Text(code.displayLabel)
+                .font(.system(size: theme.fontCaption - 1, weight: .medium, design: theme.fontDesign))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, theme.spacingXS)
+        .padding(.vertical, 2)
+        .background(color.opacity(0.12))
+        .clipShape(Capsule())
+        .accessibilityLabel("Reason: \(code.displayLabel)")
+    }
+
+    /// Badge color for reason codes — red for policy violations, orange for high risk, etc.
+    private func reasonCodeBadgeColor(for code: PermissionReasonCode) -> Color {
+        switch code {
+        case .policyViolation: return theme.error
+        case .highRiskBlocked: return theme.warning
+        case .patternDenied: return theme.error
+        case .userDenied: return theme.textSecondary
+        case .timeout: return theme.textTertiary
+        case .policyAutoApprove: return theme.accent
+        case .unknown: return theme.textTertiary
+        }
     }
 
     // MARK: - Empty State
@@ -566,6 +672,11 @@ struct PermissionHistoryDetailSheet: View {
                     metaRow("Deny Reason", value: reason)
                 }
 
+                if let reasonCode = record.reasonCode {
+                    Divider().background(theme.bgTertiary)
+                    metaRow("Reason Code", value: PermissionReasonCode(rawString: reasonCode).displayLabel)
+                }
+
                 if record.isSessionApproval {
                     Divider().background(theme.bgTertiary)
                     metaRow("Scope", value: "Session-wide")
@@ -689,6 +800,7 @@ struct PermissionHistoryDetailSheet: View {
         switch resolvedBy {
         case "user": return "User"
         case "auto": return "Auto-Approve Rule"
+        case "policy": return "Approval Policy"
         case "timeout": return "Timeout"
         default: return resolvedBy.capitalized
         }

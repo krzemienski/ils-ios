@@ -646,6 +646,12 @@ actor LocalDatabase {
             )
         }
 
+        migrator.registerMigration("v5_permission_history_reason_code") { db in
+            try db.alter(table: "permission_history") { t in
+                t.add(column: "reasonCode", .text)
+            }
+        }
+
         try migrator.migrate(dbPool)
     }
 
