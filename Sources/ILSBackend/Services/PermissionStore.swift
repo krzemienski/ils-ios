@@ -40,7 +40,7 @@ actor PermissionStore {
 
     // MARK: - Public API
 
-    /// Create and store a new pending permission request, optionally evaluating policies.
+    /// Create and store a new pending permission request, evaluating it against configured policies.
     ///
     /// Infers the risk level from the tool name using a simple heuristic:
     /// - `bash` / `computer` → `.critical`
@@ -48,9 +48,15 @@ actor PermissionStore {
     /// - read/glob/grep/search/ls/find → `.low`
     /// - everything else → `.medium`
     ///
-    /// When `db` is supplied, the policy engine is evaluated immediately. If a matching
-    /// policy is found, the record is auto-resolved (approved or denied) and persisted to
-    /// the database with the `matched_policy_id` field set.
+    /// Evaluation proceeds in two stages:
+    ///
+    /// 1. **Approval guardrails** (in-memory, fast): Evaluates against `ApprovalPolicyStore`
+    ///    templates. If autoApprove/autoDeny → immediately resolves with reason code.
+    ///    If alwaysAsk/requireConfirmation → falls through to next stage.
+    ///
+    /// 2. **Permission policies** (DB-based): When `db` is supplied, evaluates against
+    ///    `PermissionPolicy` models. If a matching policy is found, the record is
+    ///    auto-resolved and persisted to the database.
     ///
     /// - Parameters:
     ///   - requestId: Unique identifier emitted by Claude (e.g. the tool-use block ID).
@@ -59,7 +65,7 @@ actor PermissionStore {
     ///   - toolInput: Arbitrary tool input parameters as `AnyCodable`.
     ///   - sessionName: Human-readable session name for display, if available.
     ///   - projectName: Project name associated with the session, if available.
-    ///   - db: Optional database connection for policy evaluation and auto-resolution persistence.
+    ///   - db: Optional database connection for permission policy evaluation and persistence.
     /// - Returns: The newly created `PermissionRecord` (status may be `.autoApproved` or
     ///   `.denied` if a policy matched, otherwise `.pending`).
     @discardableResult
@@ -72,6 +78,86 @@ actor PermissionStore {
         projectName: String?,
         db: Database? = nil
     ) async -> PermissionRecord {
+        let riskLevel = Self.inferRiskLevel(from: toolName)
+
+        // Stage 1: Evaluate against approval guardrails (in-memory, fast).
+        let approvalEval = await PolicyEvaluationService.shared.evaluateApprovalPolicy(
+            toolName: toolName,
+            toolInput: toolInput,
+            riskLevel: riskLevel,
+            projectId: projectName
+        )
+
+        let policyIdString = approvalEval.policyId?.uuidString
+        let reasonCodeString = approvalEval.reasonCode?.rawValue
+        let policyActionString = approvalEval.action.rawValue
+
+        switch approvalEval.action {
+        case .autoApprove:
+            // Approval policy says auto-approve: create record and immediately resolve it.
+            let record = PermissionRecord(
+                id: UUID().uuidString,
+                requestId: requestId,
+                sessionId: sessionId,
+                sessionName: sessionName,
+                projectName: projectName,
+                toolName: toolName,
+                toolInput: toolInput,
+                status: .autoApproved,
+                riskLevel: riskLevel,
+                requestedAt: Date(),
+                resolvedAt: Date(),
+                resolvedBy: "policy",
+                policyId: policyIdString,
+                reasonCode: reasonCodeString,
+                policyAction: policyActionString
+            )
+
+            // Store directly in resolved history (skip pending).
+            if resolvedRecords.count >= resolvedCapacity {
+                resolvedRecords.removeFirst()
+            }
+            resolvedRecords.append(record)
+
+            Self.logger.info("Permission auto-approved by approval policy: \(requestId) tool=\(toolName) policy=\(policyIdString ?? "none")")
+            return record
+
+        case .autoDeny:
+            // Approval policy says auto-deny: create record and immediately resolve as denied.
+            let record = PermissionRecord(
+                id: UUID().uuidString,
+                requestId: requestId,
+                sessionId: sessionId,
+                sessionName: sessionName,
+                projectName: projectName,
+                toolName: toolName,
+                toolInput: toolInput,
+                status: .denied,
+                riskLevel: riskLevel,
+                requestedAt: Date(),
+                resolvedAt: Date(),
+                resolvedBy: "policy",
+                denyReason: approvalEval.explanation,
+                policyId: policyIdString,
+                reasonCode: reasonCodeString,
+                policyAction: policyActionString
+            )
+
+            // Store directly in resolved history (skip pending).
+            if resolvedRecords.count >= resolvedCapacity {
+                resolvedRecords.removeFirst()
+            }
+            resolvedRecords.append(record)
+
+            Self.logger.info("Permission auto-denied by approval policy: \(requestId) tool=\(toolName) reason=\(reasonCodeString ?? "none")")
+            return record
+
+        case .alwaysAsk, .requireConfirmation:
+            // Approval policy says manual review required — fall through to permission policies.
+            break
+        }
+
+        // Stage 2: Create record in pending state with approval policy context.
         let record = PermissionRecord(
             id: UUID().uuidString,
             requestId: requestId,
@@ -81,14 +167,16 @@ actor PermissionStore {
             toolName: toolName,
             toolInput: toolInput,
             status: .pending,
-            riskLevel: Self.inferRiskLevel(from: toolName),
-            requestedAt: Date()
+            riskLevel: riskLevel,
+            requestedAt: Date(),
+            policyId: policyIdString,
+            reasonCode: reasonCodeString,
+            policyAction: policyActionString
         )
         pendingRequests[requestId] = record
-        Self.logger.info("Permission pending: \(requestId) tool=\(toolName) session=\(sessionId)")
+        Self.logger.info("Permission pending: \(requestId) tool=\(toolName) session=\(sessionId) policyAction=\(policyActionString)")
 
-        // Evaluate configured policies immediately when a database connection is available.
-        // If a policy matches, auto-resolve the record without requiring user interaction.
+        // Stage 3: Evaluate against permission policies (DB-based) if database is available.
         if let database = db {
             if let (action, matchedPolicy) = try? await PolicyEvaluationService.shared.evaluate(
                 request: record,
@@ -108,7 +196,7 @@ actor PermissionStore {
                         let model = PermissionModel.from(resolved)
                         try? await model.save(on: database)
                         Self.logger.info(
-                            "Permission auto-resolved: \(requestId) status=\(autoStatus.rawValue) policy=\(matchedPolicy?.name ?? "default-deny")"
+                            "Permission auto-resolved by permission policy: \(requestId) status=\(autoStatus.rawValue) policy=\(matchedPolicy?.name ?? "default-deny")"
                         )
                         return resolved
                     }
@@ -129,7 +217,7 @@ actor PermissionStore {
     ///   - requestId: The `requestId` of the pending record to resolve.
     ///   - status: Final status — `.approved`, `.denied`, `.autoApproved`, or `.expired`.
     ///   - reason: Optional denial reason or resolution note.
-    ///   - matchedPolicyId: UUID of the policy that triggered this resolution, if auto-resolved.
+    ///   - matchedPolicyId: UUID of the permission policy that triggered this resolution, if auto-resolved.
     /// - Returns: The updated `PermissionRecord`, or `nil` if `requestId` was not found.
     @discardableResult
     func resolve(
@@ -165,6 +253,9 @@ actor PermissionStore {
             resolvedBy: resolvedBy,
             denyReason: reason,
             isSessionApproval: existing.isSessionApproval,
+            policyId: existing.policyId,
+            reasonCode: existing.reasonCode,
+            policyAction: existing.policyAction,
             matchedPolicyId: matchedPolicyId
         )
 

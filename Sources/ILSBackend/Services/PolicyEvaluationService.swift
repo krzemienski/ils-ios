@@ -76,6 +76,129 @@ actor PolicyEvaluationService {
         return (.allow, matchedPolicy: nil)
     }
 
+    // MARK: - Approval Policy Evaluation
+
+    /// Evaluate a tool request against configured approval guardrail policies (in-memory, fast).
+    ///
+    /// Queries `ApprovalPolicyStore` for active policies matching the tool, path, and risk level,
+    /// then returns the action from the highest-priority matching policy.
+    ///
+    /// Falls back to `.alwaysAsk` if no approval policy matches — the caller should prompt the user.
+    ///
+    /// - Parameters:
+    ///   - toolName: Name of the tool requesting authorization.
+    ///   - toolInput: Arbitrary tool input parameters as `AnyCodable`.
+    ///   - riskLevel: Assessed risk level for the request.
+    ///   - projectId: Project name/identifier for scoping, if available.
+    /// - Returns: A `PolicyEvaluationResult` with the determined action, reason code, and policy ID.
+    func evaluateApprovalPolicy(
+        toolName: String,
+        toolInput: AnyCodable,
+        riskLevel: PermissionRiskLevel,
+        projectId: String?
+    ) async -> ILSShared.PolicyEvaluationResult {
+        let policies = await ApprovalPolicyStore.shared.policiesForProject(projectId)
+        let inputDict = (toolInput.value as? [String: Any]) ?? [:]
+
+        // Evaluate policies in priority order (lowest number = highest priority).
+        for policy in policies {
+            guard policy.isEnabled else { continue }
+
+            // Check if the tool matches this policy's tool rules.
+            let toolMatches = matchesTool(toolName, rules: policy.toolRules)
+
+            // Check if path globs match (if specified).
+            let pathMatches = matchesPathGlobs(inputDict, globs: policy.pathGlobs)
+
+            // Check risk level filter (if specified).
+            let riskMatches = matchesRiskLevel(riskLevel, allowed: policy.riskLevels)
+
+            if toolMatches && pathMatches && riskMatches {
+                // Determine the action from tool rules or default action.
+                let action = actionForTool(toolName, rules: policy.toolRules, defaultAction: policy.actionType)
+
+                // Escalate auto-approve to requireConfirmation for high/critical risk levels.
+                let finalAction: PolicyAction
+                if action == .autoApprove && (riskLevel == .high || riskLevel == .critical) {
+                    finalAction = .requireConfirmation
+                } else {
+                    finalAction = action
+                }
+
+                let reasonCode = reasonCodeFor(action: finalAction)
+                Self.logger.info("Approval policy matched: '\(policy.name)' action=\(finalAction.rawValue) tool=\(toolName)")
+
+                return ILSShared.PolicyEvaluationResult(
+                    action: finalAction,
+                    reasonCode: reasonCode,
+                    policyId: policy.id,
+                    explanation: "Matched approval policy '\(policy.name)' (priority \(policy.priority))"
+                )
+            }
+        }
+
+        // No policy matched — default to always ask.
+        Self.logger.debug("No approval policy matched for tool=\(toolName), defaulting to alwaysAsk")
+        return ILSShared.PolicyEvaluationResult(
+            action: .alwaysAsk,
+            reasonCode: nil,
+            policyId: nil,
+            explanation: "No matching approval policy found. Manual approval required."
+        )
+    }
+
+    // MARK: - Approval Policy Matching Helpers
+
+    /// Check if a tool name matches any of the policy's tool rules.
+    private func matchesTool(_ toolName: String, rules: [PolicyToolRule]) -> Bool {
+        if rules.isEmpty { return true } // No rules = matches all tools
+        let lower = toolName.lowercased()
+        return rules.contains { rule in
+            rule.toolName == "*" || rule.toolName.lowercased() == lower
+        }
+    }
+
+    /// Check if any path in the tool input matches the policy's path globs.
+    private func matchesPathGlobs(_ inputDict: [String: Any], globs: [String]) -> Bool {
+        if globs.isEmpty { return true } // No globs = matches all paths
+        let pathKeys = ["file_path", "path", "destination", "file", "dir", "directory", "filepath"]
+        let paths = pathKeys.compactMap { inputDict[$0] as? String }
+        if paths.isEmpty { return true } // No path in input = not a path-based operation, matches
+        return paths.contains { path in
+            globs.contains { glob in globMatches(pattern: glob, string: path) }
+        }
+    }
+
+    /// Check if the request's risk level matches the policy's risk level filter.
+    private func matchesRiskLevel(_ riskLevel: PermissionRiskLevel, allowed: [String]) -> Bool {
+        if allowed.isEmpty { return true } // No filter = matches all risk levels
+        return allowed.contains(riskLevel.rawValue)
+    }
+
+    /// Get the action for a specific tool from tool rules, falling back to the default.
+    private func actionForTool(_ toolName: String, rules: [PolicyToolRule], defaultAction: PolicyAction) -> PolicyAction {
+        let lower = toolName.lowercased()
+        // Check for specific tool rule first
+        if let specificRule = rules.first(where: { $0.toolName.lowercased() == lower }) {
+            return specificRule.action
+        }
+        // Check for wildcard rule
+        if let wildcardRule = rules.first(where: { $0.toolName == "*" }) {
+            return wildcardRule.action
+        }
+        return defaultAction
+    }
+
+    /// Map a policy action to its corresponding denial reason code.
+    private func reasonCodeFor(action: PolicyAction) -> DenialReasonCode? {
+        switch action {
+        case .autoApprove: return .policyAutoApprove
+        case .autoDeny: return .policyViolation
+        case .requireConfirmation: return .highRiskBlocked
+        case .alwaysAsk: return nil
+        }
+    }
+
     // MARK: - Policy Matching
 
     /// Determine whether a policy matches a permission request.

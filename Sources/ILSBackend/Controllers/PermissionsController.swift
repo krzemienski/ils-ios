@@ -30,6 +30,13 @@ struct PermissionsController: RouteCollection {
     /// GET /permissions/pending
     ///
     /// Returns all pending permission requests sorted newest-first.
+    /// Each `PermissionRecord` includes policy evaluation context when available:
+    /// - `policyId`: UUID of the matching policy (if any).
+    /// - `reasonCode`: Machine-readable code explaining why this request is pending
+    ///   (e.g. "high_risk_blocked" for `requireConfirmation` actions).
+    /// - `policyAction`: The action the matching policy specified (e.g. "alwaysAsk",
+    ///   "requireConfirmation"). Requests with `autoApprove` or `autoDeny` actions
+    ///   are resolved immediately and never appear in the pending list.
     ///
     /// Query parameters:
     /// - `sessionId`: Optional UUID string — restrict results to a single session
