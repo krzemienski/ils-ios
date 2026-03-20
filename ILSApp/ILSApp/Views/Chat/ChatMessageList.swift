@@ -173,6 +173,8 @@ struct ChatMessageList: View {
                     }
                 }
                 .disabled(isLoadingMore)
+                .accessibilityLabel(isLoadingMore ? "Loading earlier messages" : "Load earlier messages")
+                .accessibilityIdentifier("load-more-button")
                 .id("load-more")
             }
 
@@ -415,6 +417,7 @@ struct ChatMessageList: View {
         .transition(.scale.combined(with: .opacity))
         .accessibilityLabel("Jump to bottom")
         .accessibilityHint("Scrolls to the most recent message")
+        .accessibilityIdentifier("jump-to-bottom-button")
     }
 
     /// Scrolls to the bottom sentinel view, using animation unless reduce-motion is enabled.
