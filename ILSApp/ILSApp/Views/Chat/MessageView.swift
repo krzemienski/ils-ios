@@ -79,6 +79,8 @@ struct MessageView: View, Equatable {
                             .strokeBorder(theme.textTertiary.opacity(0.3), lineWidth: 1)
                         : nil
                 )
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(message.isUser ? "Your message" : "Assistant message")
                 .accessibilityIdentifier(message.isUser ? "user-message-bubble" : "assistant-message-bubble")
 
                 if !message.isUser { Spacer() }
@@ -179,6 +181,9 @@ struct ToolCallView: View {
         .padding(theme.spacingSM)
         .background(theme.bgTertiary.opacity(0.5))
         .cornerRadius(theme.cornerRadius)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Tool call: \(toolCall.name)")
+        .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
     }
 }
 
@@ -204,6 +209,7 @@ struct ToolResultView: View {
                 HStack {
                     Image(systemName: result.isError ? "xmark.circle" : "checkmark.circle")
                         .foregroundColor(result.isError ? theme.error : theme.success)
+                        .accessibilityLabel(result.isError ? "Error" : "Success")
                     Text("Result")
                         .font(.system(size: theme.fontTitle3, weight: .semibold, design: theme.fontDesign))
                     Spacer()
@@ -228,6 +234,9 @@ struct ToolResultView: View {
         .padding(theme.spacingSM)
         .background(theme.bgTertiary.opacity(0.5))
         .cornerRadius(theme.cornerRadius)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Tool result\(result.isError ? ", error" : ", success")")
+        .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
     }
 }
 
@@ -308,6 +317,9 @@ struct ThinkingView: View {
             RoundedRectangle(cornerRadius: theme.cornerRadius)
                 .strokeBorder(theme.entityPlugin.opacity(0.3), lineWidth: 0.5)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("AI thinking process")
+        .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
         .onDisappear {
             // H-E1: Cancel repeatForever animation to stop GPU work after navigation.
             // ENRG-LOW-04: Removed duplicate onDisappear block.
@@ -387,6 +399,7 @@ struct MessageContentView: View {
                                 Label("Copy", systemImage: "doc.on.doc")
                                     .accessibilityHint("Copies this text segment to clipboard")
                             }
+                            .accessibilityIdentifier("copy-text-menu-item")
                         }
 
                 case .codeBlock(let codeBlock):
@@ -396,6 +409,7 @@ struct MessageContentView: View {
                         language: codeBlock.language
                     )
                     .accessibilityLabel("Code block\(codeBlock.language.map { " in \($0)" } ?? "")")
+                    .accessibilityIdentifier("code-block")
 
                 case .inlineCode(let code):
                     Text(code)
