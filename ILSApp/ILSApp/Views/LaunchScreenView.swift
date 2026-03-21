@@ -10,7 +10,9 @@ import SwiftUI
 struct LaunchScreenView: View {
     @Environment(\.theme) private var theme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var isAnimating = false
+    @State private var isVisible = false
     @State private var glowIntensity: Double = 0.3
 
     var body: some View {
@@ -150,6 +152,7 @@ struct LaunchScreenView: View {
             }
         }
         .onAppear {
+            isVisible = true
             if reduceMotion {
                 isAnimating = true
                 glowIntensity = 0.8
@@ -168,10 +171,31 @@ struct LaunchScreenView: View {
             }
         }
         .onDisappear {
+            isVisible = false
             // H-E5: Cancel repeatForever animation explicitly to stop GPU work.
             withAnimation(.linear(duration: 0.0)) {
                 isAnimating = false
                 glowIntensity = 0.3
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard !reduceMotion else { return }
+            if newPhase == .active, isVisible {
+                guard !isAnimating else { return }
+                withAnimation(.easeInOut(duration: 1.2)) {
+                    isAnimating = true
+                }
+                withAnimation(
+                    .easeInOut(duration: 2.0)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    glowIntensity = 0.8
+                }
+            } else {
+                withAnimation(.linear(duration: 0.1)) {
+                    isAnimating = false
+                    glowIntensity = 0.3
+                }
             }
         }
     }
