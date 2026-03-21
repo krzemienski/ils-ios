@@ -142,6 +142,8 @@ struct SidebarSessionRow: View {
             .padding(.vertical, theme.spacingXS + 2)
         }
         .buttonStyle(RowButtonStyle(isActive: isActive, theme: theme))
+        .pointerHover(.highlight)
+        .hoverState(cornerRadius: theme.cornerRadiusSmall)
         .accessibilityLabel("\(sessionDisplayName)\(session.projectName.map { ", \($0)" } ?? "")\(session.model.isEmpty ? "" : ", \(session.model.capitalized)"), \(relativeTime)\(syncStatus != .synced ? ", \(syncStatus.displayName)" : "")")
         .accessibilityHint("Opens this chat session")
         .accessibilityAddTraits(.isButton)
