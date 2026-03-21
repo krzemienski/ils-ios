@@ -31,6 +31,9 @@ struct SessionExportPickerSheet: View {
     @State private var exportedFileName = ""
     @State private var showShareSheet = false
 
+    /// Task handle for the current export, enabling cancellation.
+    @State private var exportTask: Task<Void, Never>?
+
     // MARK: - Message Range Selection
 
     /// When `true`, export the full session. When `false`, use the selected range.
@@ -77,6 +80,12 @@ struct SessionExportPickerSheet: View {
                     formatDescriptionRow
                 }
 
+                if viewModel.isExporting {
+                    Section("Export Progress") {
+                        exportProgressRow
+                    }
+                }
+
                 Section("Message Range") {
                     Toggle("Export full session", isOn: $exportFullSession)
 
@@ -112,6 +121,7 @@ struct SessionExportPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .disabled(viewModel.isExporting)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     exportButton
@@ -136,6 +146,7 @@ struct SessionExportPickerSheet: View {
                 viewModel.configure(client: appState.apiClient)
                 rangeEnd = totalMessages
             }
+            .interactiveDismissDisabled(viewModel.isExporting)
         }
     }
 
@@ -163,9 +174,35 @@ struct SessionExportPickerSheet: View {
     }
 
     @ViewBuilder
+    private var exportProgressRow: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text("Exporting \(selectedFormat.displayName)…")
+                    .font(.subheadline)
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                Text("\(Int(viewModel.exportProgress * 100))%")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(theme.textSecondary)
+            }
+
+            ProgressView(value: viewModel.exportProgress)
+                .tint(theme.accent)
+
+            Button(role: .destructive) {
+                cancelExport()
+            } label: {
+                Label("Cancel Export", systemImage: "xmark.circle")
+                    .font(.subheadline)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
     private var exportButton: some View {
         Button {
-            Task { await triggerExport() }
+            exportTask = Task { await triggerExport() }
         } label: {
             if viewModel.isExporting {
                 ProgressView()
@@ -179,6 +216,14 @@ struct SessionExportPickerSheet: View {
     }
 
     // MARK: - Export Logic
+
+    /// Cancels the in-flight export task and resets state.
+    private func cancelExport() {
+        exportTask?.cancel()
+        exportTask = nil
+        viewModel.isExporting = false
+        viewModel.exportProgress = 0
+    }
 
     /// Converts the 1-based UI range into a 0-based `ClosedRange<Int>` for the export pipeline.
     ///
