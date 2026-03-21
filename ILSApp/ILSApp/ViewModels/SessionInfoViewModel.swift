@@ -47,6 +47,8 @@ class SessionInfoViewModel {
     var exportMarkdown = ""
     /// Binary export payload for JSON or PDF exports.
     var exportData: Data?
+    /// Pre-loaded messages passed from the caller (e.g. ChatView) to avoid redundant API fetches.
+    var preloadedMessages: [ChatMessage]?
     /// Results from the most recent integrity check.
     var integrityResults: [IntegrityCheckResult] = []
 
@@ -117,7 +119,14 @@ class SessionInfoViewModel {
         guard let client else { return }
         isExporting = true
 
-        if let range {
+        if let preloaded = preloadedMessages {
+            // Use in-memory messages — no API fetch required.
+            exportMarkdown = SessionExportService.exportMarkdown(
+                session: session,
+                messages: preloaded,
+                range: range
+            )
+        } else if let range {
             // Fetch all messages then slice to the requested range.
             do {
                 let allMessages = try await fetchAllMessages(session: session, client: client)
@@ -190,7 +199,13 @@ class SessionInfoViewModel {
         defer { isExporting = false }
 
         do {
-            let allMessages = try await fetchAllMessages(session: session, client: client)
+            let allMessages: [ChatMessage]
+            if let preloaded = preloadedMessages {
+                allMessages = preloaded
+                exportProgress = 0.8
+            } else {
+                allMessages = try await fetchAllMessages(session: session, client: client)
+            }
             exportProgress = 0.8
 
             // Render PDF off the main actor — PDF rendering is CPU-intensive.

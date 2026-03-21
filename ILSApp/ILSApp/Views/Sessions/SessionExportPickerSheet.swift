@@ -15,8 +15,13 @@ import ILSShared
 /// ## Topics
 /// ### Inputs
 /// - ``session`` — the ``ChatSession`` to export
+/// - ``messages`` — optional in-memory messages from the caller to avoid redundant API fetches
 struct SessionExportPickerSheet: View {
     let session: ChatSession
+    /// Pre-loaded messages from the caller (e.g. ``ChatView``). When provided, these are
+    /// passed to the export pipeline to skip redundant API fetches and enable accurate
+    /// range selection based on already-loaded messages.
+    var messages: [ChatMessage]? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -53,8 +58,9 @@ struct SessionExportPickerSheet: View {
     }
 
     /// Total number of messages in the session (minimum 1 for UI purposes).
+    /// Uses the count of pre-loaded messages when available, falling back to the session's `messageCount`.
     private var totalMessages: Int {
-        max(session.messageCount, 1)
+        max(messages?.count ?? session.messageCount, 1)
     }
 
     /// Number of messages in the selected range.
@@ -144,6 +150,7 @@ struct SessionExportPickerSheet: View {
             }
             .task {
                 viewModel.configure(client: appState.apiClient)
+                viewModel.preloadedMessages = messages
                 rangeEnd = totalMessages
             }
             .interactiveDismissDisabled(viewModel.isExporting)
