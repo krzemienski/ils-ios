@@ -180,19 +180,30 @@ struct SessionExportPickerSheet: View {
 
     // MARK: - Export Logic
 
+    /// Converts the 1-based UI range into a 0-based `ClosedRange<Int>` for the export pipeline.
+    ///
+    /// Returns `nil` when exporting the full session.
+    private var exportRange: ClosedRange<Int>? {
+        guard !exportFullSession else { return nil }
+        let lower = max(rangeStart - 1, 0)
+        let upper = max(rangeEnd - 1, lower)
+        return lower...upper
+    }
+
     private func triggerExport() async {
         exportedFileURL = nil
+        let range = exportRange
 
         switch selectedFormat {
         case .markdown:
             exportedFileName = "\(sessionName).md"
-            await viewModel.exportSession(session: session)
+            await viewModel.exportSession(session: session, range: range)
             guard viewModel.errorMessage == nil else { return }
             showShareSheet = true
 
         case .json:
             exportedFileName = "\(sessionName).json"
-            await viewModel.exportJSON(session: session)
+            await viewModel.exportJSON(session: session, range: range)
             guard viewModel.errorMessage == nil, let data = viewModel.exportData else { return }
             exportedFileURL = writeToShareExports(data: data, fileName: exportedFileName)
             guard exportedFileURL != nil else { return }
@@ -200,7 +211,7 @@ struct SessionExportPickerSheet: View {
 
         case .pdf:
             exportedFileName = "\(sessionName).pdf"
-            await viewModel.exportPDF(session: session)
+            await viewModel.exportPDF(session: session, range: range)
             guard viewModel.errorMessage == nil, let data = viewModel.exportData else { return }
             exportedFileURL = writeToShareExports(data: data, fileName: exportedFileName)
             guard exportedFileURL != nil else { return }

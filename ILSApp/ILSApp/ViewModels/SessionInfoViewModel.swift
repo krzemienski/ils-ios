@@ -108,13 +108,34 @@ class SessionInfoViewModel {
         return false
     }
 
-    func exportSession(session: ChatSession) async {
+    /// Export the session as Markdown, storing the result in ``exportMarkdown``.
+    ///
+    /// - Parameters:
+    ///   - session: The session to export.
+    ///   - range: Optional 0-based closed range of message indices. When `nil`, all messages are exported.
+    func exportSession(session: ChatSession, range: ClosedRange<Int>? = nil) async {
         guard let client else { return }
         isExporting = true
-        exportMarkdown = await SessionExportService.exportMarkdown(
-            session: session,
-            apiClient: client
-        )
+
+        if let range {
+            // Fetch all messages then slice to the requested range.
+            do {
+                let allMessages = try await fetchAllMessages(session: session, client: client)
+                exportMarkdown = SessionExportService.exportMarkdown(
+                    session: session,
+                    messages: allMessages,
+                    range: range
+                )
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        } else {
+            exportMarkdown = await SessionExportService.exportMarkdown(
+                session: session,
+                apiClient: client
+            )
+        }
+
         isExporting = false
     }
 
@@ -123,15 +144,24 @@ class SessionInfoViewModel {
     /// Export the session as pretty-printed JSON, storing the result in ``exportData``.
     ///
     /// Fetches a `ChatExport` from the backend and encodes it to UTF-8 JSON bytes.
-    func exportJSON(session: ChatSession) async {
+    /// When a `range` is provided, adds `offset` and `limit` query parameters to the
+    /// export endpoint so only the requested slice of messages is returned.
+    ///
+    /// - Parameters:
+    ///   - session: The session to export.
+    ///   - range: Optional 0-based closed range of message indices.
+    func exportJSON(session: ChatSession, range: ClosedRange<Int>? = nil) async {
         guard let client else { return }
         isExporting = true
         defer { isExporting = false }
 
         do {
-            let response: APIResponse<ChatExport> = try await client.get(
-                "/sessions/\(session.id.uuidString)/export?format=json"
-            )
+            var path = "/sessions/\(session.id.uuidString)/export?format=json"
+            if let range {
+                path += "&offset=\(range.lowerBound)&limit=\(range.count)"
+            }
+
+            let response: APIResponse<ChatExport> = try await client.get(path)
             if let chatExport = response.data {
                 let encoder = JSONEncoder()
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -149,7 +179,11 @@ class SessionInfoViewModel {
     ///
     /// Fetches all messages via paginated API calls (supporting 1000+ messages),
     /// then renders the PDF on a background thread to avoid blocking the main actor.
-    func exportPDF(session: ChatSession) async {
+    ///
+    /// - Parameters:
+    ///   - session: The session to export.
+    ///   - range: Optional 0-based closed range of message indices. When `nil`, all messages are exported.
+    func exportPDF(session: ChatSession, range: ClosedRange<Int>? = nil) async {
         guard let client else { return }
         isExporting = true
         exportProgress = 0
@@ -161,8 +195,9 @@ class SessionInfoViewModel {
 
             // Render PDF off the main actor — PDF rendering is CPU-intensive.
             let sessionCopy = session
+            let rangeCopy = range
             let data = try await Task.detached(priority: .userInitiated) {
-                return SessionExportService.exportPDF(session: sessionCopy, messages: allMessages)
+                return SessionExportService.exportPDF(session: sessionCopy, messages: allMessages, range: rangeCopy)
             }.value
 
             exportData = data
