@@ -1,4 +1,5 @@
 import Foundation
+import ILSShared
 
 /// HTTP API client for the ILS backend.
 ///
@@ -71,6 +72,24 @@ actor APIClient {
     /// Keychain key for persisting the API key (migrated from UserDefaults).
     private static let apiKeyKeychainKey = "ils_api_key"
 
+    // MARK: - Scoped Token Storage
+
+    /// Keychain key prefix for scoped tokens. Suffixed with backend identifier.
+    private static let readTokenPrefix = "ils_read_token_"
+    private static let writeTokenPrefix = "ils_write_token_"
+    private static let adminTokenPrefix = "ils_admin_token_"
+
+    /// Backend identifier for scoping tokens (defaults to baseURL host).
+    private let backendId: String
+
+    /// Notification posted when the backend returns 401 Unauthorized.
+    /// Observers should prompt the user to re-authenticate or re-pair.
+    nonisolated static let authenticationRequiredNotification = Notification.Name("ilsAuthenticationRequired")
+
+    /// Notification posted when the backend returns 403 Forbidden.
+    /// Observers can inform the user of insufficient permissions.
+    nonisolated static let authorizationDeniedNotification = Notification.Name("ilsAuthorizationDenied")
+
     /// NSCache-backed entry storing the decoded value to avoid re-decoding on cache hits.
     private final class CacheEntryObject: NSObject {
         let value: Any
@@ -106,6 +125,8 @@ actor APIClient {
 
     init(baseURL: String = AppConstants.defaultServerURL) {
         self.baseURL = baseURL
+        // Derive a stable backend identifier from the host for scoped token keys
+        self.backendId = URL(string: baseURL)?.host ?? "localhost"
 
         // Read configured cache size from UserDefaults, or use default
         let configuredSize = UserDefaults.standard.integer(forKey: AppConstants.cacheConfigKey)
@@ -190,11 +211,58 @@ actor APIClient {
     }
 
     /// Apply authorization header to a request if an API key is configured.
+    /// AUTH-001: Selects scoped token based on HTTP method when available.
+    /// GET/HEAD/OPTIONS use the read token; POST/PUT/PATCH/DELETE use the write token.
+    /// Falls back to the master API key if no scoped tokens are stored.
     private func applyAuth(to request: inout URLRequest) {
         loadAPIKeyIfNeeded()
+
+        let method = request.httpMethod ?? "GET"
+        let isReadOnly = ["GET", "HEAD", "OPTIONS"].contains(method.uppercased())
+
+        // Prefer scoped tokens over master key for least-privilege access
+        if isReadOnly {
+            let readKey = APIClient.readTokenPrefix + backendId
+            if let readToken = KeychainService.loadSync(key: readKey) {
+                request.setValue("Bearer \(readToken)", forHTTPHeaderField: "Authorization")
+                return
+            }
+        } else {
+            let writeKey = APIClient.writeTokenPrefix + backendId
+            if let writeToken = KeychainService.loadSync(key: writeKey) {
+                request.setValue("Bearer \(writeToken)", forHTTPHeaderField: "Authorization")
+                return
+            }
+        }
+
+        // Fall back to master API key
         if let key = apiKey, !key.isEmpty {
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         }
+    }
+
+    // MARK: - Scoped Token Management
+
+    /// Store scoped tokens received from the pairing flow or key rotation.
+    /// Persists read, write, and admin tokens in Keychain keyed by backend identifier.
+    /// - Parameter tokens: The scoped tokens to store.
+    func storeScopedTokens(_ tokens: ScopedTokens) {
+        KeychainService.saveSync(key: APIClient.readTokenPrefix + backendId, value: tokens.readToken)
+        KeychainService.saveSync(key: APIClient.writeTokenPrefix + backendId, value: tokens.writeToken)
+        KeychainService.saveSync(key: APIClient.adminTokenPrefix + backendId, value: tokens.adminToken)
+    }
+
+    /// Clear all scoped tokens for this backend.
+    /// Called during key rotation or when the user disconnects.
+    func clearScopedTokens() {
+        KeychainService.deleteSync(key: APIClient.readTokenPrefix + backendId)
+        KeychainService.deleteSync(key: APIClient.writeTokenPrefix + backendId)
+        KeychainService.deleteSync(key: APIClient.adminTokenPrefix + backendId)
+    }
+
+    /// Whether scoped tokens are available for this backend.
+    func hasScopedTokens() -> Bool {
+        return KeychainService.loadSync(key: APIClient.readTokenPrefix + backendId) != nil
     }
 
     // MARK: - Health Check
@@ -897,7 +965,27 @@ actor APIClient {
         guard (200...299).contains(httpResponse.statusCode) else {
             // Surface 401 as a specific unauthorized error for UI handling
             if httpResponse.statusCode == 401 {
+                // AUTH-002: Post notification so UI can prompt re-authentication
+                NotificationCenter.default.post(
+                    name: APIClient.authenticationRequiredNotification,
+                    object: nil,
+                    userInfo: ["statusCode": 401]
+                )
                 throw APIError.unauthorized
+            }
+            // Surface 403 as a specific forbidden error for UI handling
+            if httpResponse.statusCode == 403 {
+                // AUTH-003: Post notification so UI can inform user of insufficient permissions
+                let reason = data.flatMap { try? decoder.decode(ServerErrorBody.self, from: $0) }?.reason
+                NotificationCenter.default.post(
+                    name: APIClient.authorizationDeniedNotification,
+                    object: nil,
+                    userInfo: [
+                        "statusCode": 403,
+                        "reason": reason ?? "Insufficient permissions"
+                    ]
+                )
+                throw APIError.forbidden(reason: reason)
             }
             // CODBL-01: try? is intentional — error body decode is best-effort fallback when HTTP status != 2xx.
             // If body doesn't match ServerErrorBody, we fall through to httpError(statusCode:).
@@ -969,6 +1057,7 @@ enum APIError: Error, LocalizedError {
     case networkError(Error)
     case serverError(code: String, reason: String)
     case unauthorized
+    case forbidden(reason: String?)
 
     var errorDescription: String? {
         switch self {
@@ -978,6 +1067,8 @@ enum APIError: Error, LocalizedError {
             return "Invalid response from server"
         case .unauthorized:
             return "Invalid or missing API key. Check your API key in Settings."
+        case .forbidden(let reason):
+            return reason ?? "Access forbidden — insufficient permissions for this operation."
         case .httpError(let statusCode):
             let statusText = HTTPURLResponse.localizedString(forStatusCode: statusCode)
             switch statusCode {
@@ -1022,7 +1113,7 @@ enum APIError: Error, LocalizedError {
         case .networkError:
             // Network errors are generally retriable
             return true
-        case .invalidURL, .invalidResponse, .decodingError, .unauthorized:
+        case .invalidURL, .invalidResponse, .decodingError, .unauthorized, .forbidden:
             // These indicate a fundamental problem, not retriable
             return false
         case .serverError(let code, _):
@@ -1049,6 +1140,19 @@ enum APIError: Error, LocalizedError {
             return statusCode == 401
         case .serverError(let code, _):
             return code == "UNAUTHORIZED"
+        default:
+            return false
+        }
+    }
+
+    var isForbidden: Bool {
+        switch self {
+        case .forbidden:
+            return true
+        case .httpError(let statusCode):
+            return statusCode == 403
+        case .serverError(let code, _):
+            return code == "FORBIDDEN" || code == "INSUFFICIENT_AUTH"
         default:
             return false
         }
