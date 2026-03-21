@@ -3,75 +3,53 @@ import ILSShared
 
 /// Primary chat interface for interacting with Claude Code within a session.
 ///
-/// Displays the full conversation history, handles real-time message streaming,
-/// and provides controls for sending messages, managing the session, and viewing session info.
 /// Coordinates with ``ChatViewModel`` for message state, ``SSEClient`` for live streaming,
-/// and ``ChatMessageList`` for rendering the conversation.
-///
-/// ## Topics
-/// ### State
-/// - ``session`` - The chat session being displayed
-/// - ``viewModel`` - View model managing chat messages and streaming
-/// - ``sheets`` - Sheet and alert presentation state
-/// - ``actions`` - Transient state for in-flight user actions
-///
-/// ### View Components
-/// - ``mainContent`` - Top-level layout container
-/// - ``statusBanner`` - Connection and streaming status indicator
-/// - ``messageList`` - Scrollable message history with gesture support
-/// - ``bottomBar`` - Input bar for composing and sending messages
-///
-/// ### Actions
-/// - ``sendMessage()`` - Send the current input text to Claude
-/// - ``retryLastMessage()`` - Resend the most recent user message
-/// - ``exportSession()`` - Export the conversation as Markdown
-// TODO: SUIA-004 — Split into ChatMessageList, ChatToolbar, ChatSheets subviews
-// TODO: SUIN-006 + UXF-001 — Consolidate sheets into single SheetDestination enum to prevent conflicts
+/// ``ChatSheetCoordinator`` for modal presentation, and ``ChatToolbar`` for navigation actions.
+/// View components live in `ChatView+Components.swift`; actions in `ChatView+Actions.swift`.
 struct ChatView: View {
-    /// The chat session this view is presenting.
+
+    // MARK: - Inputs
+
     let session: ChatSession
-    /// Optional closure invoked when the user taps the back button. When non-nil a back
-    /// button replaces the hamburger menu in the toolbar leading position.
     var onBack: (() -> Void)? = nil
-    /// Optional closure invoked when the user swipes to switch to a different pinned session
-    /// (iPhone compact-width only). The caller should navigate to the provided session.
     var onSessionSwitch: ((ChatSession) -> Void)? = nil
+
+    // MARK: - Environment
+
     @Environment(AppState.self) var appState
-    @Environment(MultiSessionViewModel.self) private var multiSessionVM
-    @Environment(SessionsViewModel.self) private var sessionsVM
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    /// View model managing chat messages, streaming state, and session connectivity.
-    @State private var viewModel = ChatViewModel()
-    /// View model for checkpoint operations — injected into `viewModel` for ILS-managed sessions.
-    @State private var checkpointViewModel = CheckpointViewModel()
-    /// Incrementing this token after each Claude response causes suggestion chips to refresh.
-    @State private var promptSuggestionRefreshToken: Int = 0
+    @Environment(MultiSessionViewModel.self) var multiSessionVM
+    @Environment(SessionsViewModel.self) var sessionsVM
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(\.scenePhase) var scenePhase
+    @Environment(\.theme) var theme: ThemeSnapshot
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
-    // MARK: - Grouped State
+    // MARK: - State
 
-    /// Sheet and alert presentation state — all booleans that control modal visibility.
-    struct SheetState {
-        var showCommandPalette = false
-        var showSessionInfo = false
-        var showErrorAlert = false
-        var showForkAlert = false
-        var showDeleteConfirmation = false
-        var showExportSheet = false
-        var showDeleteSessionConfirmation = false
-        var showAdvancedOptions = false
-        var isRenaming = false
-        var showSearch = false
-        var showContextWindowDetail = false
-        var showQuickReplyTemplates = false
-        var showSessionMemory = false
-        /// Shown after a > 20% context token drop is detected, indicating Claude Code compacted the session.
-        var showPostCompactionRecovery = false
-        var showAttachmentPicker = false
-    }
+    @State var viewModel = ChatViewModel()
+    @State var checkpointViewModel = CheckpointViewModel()
+    @State var promptSuggestionRefreshToken: Int = 0
+    /// Single active sheet or alert destination — drives ``ChatSheetCoordinator``.
+    @State var sheetDestination: ChatSheetDestination?
+    @State var inputText = ""
+    @State var searchDebounceTask: Task<Void, Never>?
+    @State var pendingAttachments: [MessageAttachment] = []
+    @State var isUserScrolledUp = false
+    @State var showJumpToBottom = false
+    @State var chatOptionsConfig = ChatOptionsConfig()
+    @State var draftPersistTask: Task<Void, Never>?
+    @State var showSearch = false
+    #if os(iOS)
+    @State var speechService = SpeechRecognitionService()
+    #endif
+    @FocusState var isInputFocused: Bool
+    @AppStorage("showContextWindowBar") var showContextWindowBar: Bool = true
+    @AppStorage("notif_contextCompactionAlerts") var notifContextCompactionAlerts: Bool = true
 
-    /// Transient action state — data associated with in-flight user actions.
+    // MARK: - Transient Action State
+
     struct ActionState {
-        var errorId: UUID?
         var forkedSession: ChatSession?
         var navigateToForked: ChatSession?
         var navigateToRelated: ChatSession?
@@ -126,185 +104,24 @@ struct ChatView: View {
     // MARK: - Body
 
     var body: some View {
-        chatContentFinal
-    }
-
-    // Split the body to help the Swift type-checker with the large modifier chain.
-
-    private var chatContentBase: some View {
         mainContent
             .background(theme.bgPrimary)
             .navigationTitle(session.displayName)
             #if os(iOS)
             .inlineNavigationBarTitle()
             #endif
-            .toolbar { toolbarContent }
-            .sheet(isPresented: $sheets.showCommandPalette) {
-                CommandPaletteView { command in
-                    inputText = command
-                    sheets.showCommandPalette = false
-                    isInputFocused = true
-                }
-                .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(isPresented: $sheets.showSessionInfo) {
-                SessionInfoView(session: session)
-                    .environment(appState)
-                    .presentationBackground(theme.bgPrimary)
-            }
-            .task {
-                await setupChatView()
-            }
-    }
-
-    private var chatContentWithAlerts: some View {
-        chatContentBase
-            .alert("Connection Error", isPresented: $sheets.showErrorAlert) {
-                Button("OK", role: .cancel) {}
-                Button("Retry") {
-                    retryLastMessage()
-                }
-            } message: {
-                Text(viewModel.error?.localizedDescription ?? "An error occurred while connecting to Claude.")
-            }
-            .alert("Session Forked", isPresented: $sheets.showForkAlert) {
-                Button("Open Fork") {
-                    actions.navigateToForked = actions.forkedSession
-                }
-                Button("Stay Here", role: .cancel) {}
-            } message: {
-                if let forked = actions.forkedSession {
-                    Text("Created new session: \(forked.name ?? "Unnamed")")
-                }
-            }
-            .alert("Delete Message", isPresented: $sheets.showDeleteConfirmation) {
-                Button("Delete", role: .destructive) {
-                    if let msg = actions.messageToDelete {
-                        viewModel.deleteMessage(msg)
-                        actions.messageToDelete = nil
-                    }
-                }
-                Button("Cancel", role: .cancel) {
-                    actions.messageToDelete = nil
-                }
-            } message: {
-                Text("Are you sure you want to delete this message?")
-            }
-            .alert("Rename Session", isPresented: $sheets.isRenaming) {
-                TextField("Session name", text: $actions.renameText)
-                Button("Rename") {
-                    Task {
-                        await viewModel.renameSession(name: actions.renameText)
-                    }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Enter a new name for this session")
-            }
-            .alert("Delete Session", isPresented: $sheets.showDeleteSessionConfirmation) {
-                Button("Delete", role: .destructive) {
-                    Task {
-                        if await viewModel.deleteSession() {
-                            dismiss()
-                        }
-                    }
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This will permanently delete this session and all its messages.")
-            }
-    }
-
-    private var chatContentWithSheets: some View {
-        chatContentWithAlerts
-            .sheet(isPresented: $sheets.showExportSheet) {
-                SessionExportPickerSheet(session: session)
-                    .environment(appState)
-            }
-            .sheet(isPresented: $sheets.showAdvancedOptions) {
-                AdvancedOptionsSheet(config: $chatOptionsConfig)
-                    .presentationDetents([.large])
-                    .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(isPresented: $sheets.showQuickReplyTemplates) {
-                NavigationStack {
-                    QuickReplyTemplatesSheet { template in
-                        applyTemplate(template)
-                    }
-                }
-                .presentationBackground(theme.bgPrimary)
-            }
-            .sheet(isPresented: $sheets.showContextWindowDetail) {
-                if let usedTokens = viewModel.contextTokensUsed,
-                   let windowSize = viewModel.contextWindowSize {
-                    ContextWindowDetailSheet(
-                        usedTokens: usedTokens,
-                        contextWindowSize: windowSize,
-                        inputTokens: viewModel.contextInputTokens,
-                        outputTokens: viewModel.contextOutputTokens,
-                        cacheReadTokens: viewModel.contextCacheReadTokens,
-                        cacheCreateTokens: viewModel.contextCacheCreateTokens,
-                        onForkSession: {
-                            sheets.showContextWindowDetail = false
-                            Task { await viewModel.performFork() }
-                        },
-                        onDismiss: { sheets.showContextWindowDetail = false }
-                    )
-                }
-            }
-            .sheet(item: $viewModel.pendingPermissionRequest) { request in
-                PermissionRequestModal(request: request) { decision in
-                    viewModel.respondToPermission(requestId: request.requestId, decision: decision)
-                }
-                .presentationDetents([.medium])
-                .presentationBackground(theme.bgPrimary)
-            }
-    }
-
-    /// Navigation destinations and onChange handlers split from chatContentWithSheets for type-checker.
-    private var chatContentWithNavigation: some View {
-        chatContentWithSheets
-            .navigationDestination(item: $actions.navigateToForked) { session in
-                ChatView(session: session)
-            }
-            .navigationDestination(item: $actions.navigateToRelated) { session in
-                ChatView(session: session)
-            }
+            .toolbar { chatToolbar }
+            .chatSheets(destination: $sheetDestination, context: sheetContext)
+            .navigationDestination(item: $actions.navigateToForked) { ChatView(session: $0) }
+            .navigationDestination(item: $actions.navigateToRelated) { ChatView(session: $0) }
             .navigationDestination(item: $actions.navigateToForkTree) { sess in
-                SessionForkTreeView(initialSession: sess) { navigated in
-                    actions.navigateToRelated = navigated
-                }
-                .environment(appState)
+                SessionForkTreeView(initialSession: sess) { actions.navigateToRelated = $0 }
+                    .environment(appState)
             }
-            .onChange(of: viewModel.forkResult) { _, forked in
-                if let forked {
-                    actions.forkedSession = forked
-                    sheets.showForkAlert = true
-                    viewModel.forkResult = nil
-                }
-            }
-            .onChange(of: viewModel.error?.localizedDescription) { _, newValue in
-                if newValue != nil {
-                    actions.errorId = UUID()
-                    sheets.showErrorAlert = true
-                }
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
-                    Task {
-                        await viewModel.refreshMessages()
-                    }
-                    #if os(iOS)
-                    SessionMonitorService.shared.removeSession(session.id)
-                    #endif
-                }
-                #if os(iOS)
-                if newPhase == .background && viewModel.isStreaming {
-                    SessionMonitorService.shared.addSession(session, apiClient: appState.apiClient)
-                    SessionMonitorService.shared.scheduleBackgroundTask()
-                }
-                #endif
-            }
+            .onChangeHandlers(for: self)
+            .onDisappear(perform: handleDisappear)
+            .overlay { keyboardShortcutsOverlay }
+            .task { await setupChatView() }
     }
 
     /// Connection and streaming lifecycle modifiers split from chatContentWithNavigation for type-checker.
@@ -1292,6 +1109,73 @@ struct ChatView: View {
     }
 
 }
+
+// MARK: - Change Handlers Modifiers (split to avoid type-checker complexity)
+
+private struct ChatViewChangeHandlersA: ViewModifier {
+    let view: ChatView
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: view.viewModel.forkResult) { _, forked in
+                if let forked {
+                    view.actions.forkedSession = forked
+                    view.sheetDestination = .forkAlert
+                    view.viewModel.forkResult = nil
+                }
+            }
+            .onChange(of: view.viewModel.error?.localizedDescription) { _, val in
+                if val != nil { view.sheetDestination = .errorAlert }
+            }
+            .onChange(of: view.scenePhase) { _, phase in
+                view.handleScenePhaseChange(phase)
+            }
+            .onChange(of: view.appState.serverURL) { _, _ in
+                view.viewModel.configure(
+                    client: view.appState.apiClient,
+                    sseClient: view.appState.sseClient
+                )
+            }
+            .onChange(of: view.viewModel.isStreaming) { was, isNow in
+                if was && !isNow { view.promptSuggestionRefreshToken += 1 }
+                #if os(iOS)
+                view.handleStreamingStateChange(was: was, isNow: isNow)
+                #endif
+            }
+    }
+}
+
+private struct ChatViewChangeHandlersB: ViewModifier {
+    let view: ChatView
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: view.inputText) { _, val in
+                view.persistDraft(val)
+            }
+            .onChange(of: view.viewModel.showPostCompactionRecovery) { _, show in
+                if show { view.sheetDestination = .postCompactionRecovery }
+            }
+            .onChange(of: view.viewModel.pendingPermissionRequest?.requestId) { _, reqId in
+                if reqId != nil, let req = view.viewModel.pendingPermissionRequest {
+                    view.sheetDestination = .permissionRequest(req)
+                }
+            }
+            .onChange(of: view.viewModel.showBatchPermissionModal) { _, show in
+                if show { view.sheetDestination = .batchPermission }
+            }
+            .onChange(of: view.viewModel.searchQuery) { _, query in
+                view.debounceSearch(query)
+            }
+    }
+}
+
+private extension View {
+    func onChangeHandlers(for chatView: ChatView) -> some View {
+        modifier(ChatViewChangeHandlersA(view: chatView))
+            .modifier(ChatViewChangeHandlersB(view: chatView))
+    }
+}
+
+// MARK: - Preview
 
 #Preview {
     NavigationStack {

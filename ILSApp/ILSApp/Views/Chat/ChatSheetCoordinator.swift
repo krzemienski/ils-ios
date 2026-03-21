@@ -299,10 +299,10 @@ struct ChatSheetCoordinator: ViewModifier {
                 ContextWindowDetailSheet(
                     usedTokens: usedTokens,
                     contextWindowSize: windowSize,
-                    inputTokens: context.contextInputTokens,
-                    outputTokens: context.contextOutputTokens,
-                    cacheReadTokens: context.contextCacheReadTokens,
-                    cacheCreateTokens: context.contextCacheCreateTokens,
+                    inputTokens: context.contextInputTokens ?? 0,
+                    outputTokens: context.contextOutputTokens ?? 0,
+                    cacheReadTokens: context.contextCacheReadTokens ?? 0,
+                    cacheCreateTokens: context.contextCacheCreateTokens ?? 0,
                     onForkSession: {
                         self.destination = nil
                         context.onForkFromContextDetail()
