@@ -179,6 +179,8 @@ func configure(_ app: Application) async throws {
     app.migrations.add(AddInterruptionReasonToSessions())
     // v6.5 — Approval policy guardrails
     app.migrations.add(CreateApprovalPolicies())
+    // v6.6 — Extended performance indexes for pagination & filtering
+    app.migrations.add(AddExtendedDatabaseIndexes())
 
     // Run migrations
     try await app.autoMigrate()
