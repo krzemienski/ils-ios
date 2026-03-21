@@ -617,7 +617,7 @@ struct SidebarRootView: View {
 
     @ViewBuilder
     private var unifiedSessionsScreen: some View {
-        UnifiedSessionsView(onSessionSelected: { tagged in
+        SessionsContainerView(onSessionSelected: { tagged in
             navigateToChat(tagged.session)
         })
     }
