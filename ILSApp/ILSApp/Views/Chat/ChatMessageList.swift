@@ -78,8 +78,24 @@ struct ChatMessageList: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// On regular (iPad) size class, caps message content at a readable max width.
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// Adaptive layout size class driven by actual window width, not just system size class.
+    /// Properly reflects iPad multitasking widths (1/3 Split View, Slide Over, etc.).
+    @Environment(\.layoutSizeClass) private var layoutSizeClass
+
+    /// Maximum readable content width based on the adaptive layout size class.
+    /// - narrow (< 500pt): no cap — use full available width
+    /// - regular (500–900pt): 700pt cap for comfortable reading
+    /// - wide (> 900pt): 800pt cap matching typical desktop reading width
+    private var maxContentWidth: CGFloat {
+        switch layoutSizeClass {
+        case .narrow:
+            return .infinity
+        case .regular:
+            return 700
+        case .wide:
+            return 800
+        }
+    }
 
     /// The message currently being bookmarked — non-nil triggers `BookmarkMessageSheet`.
     @State private var messageToBookmark: ChatMessage?
@@ -93,9 +109,10 @@ struct ChatMessageList: View {
         ScrollViewReader { proxy in
             ScrollView {
                 messagesContent
-                    // IPAD-CW: Cap readable content width at 800pt on regular (iPad) size class
-                    // and center it. On compact (iPhone) size class this is a no-op.
-                    .frame(maxWidth: horizontalSizeClass == .regular ? 800 : .infinity)
+                    // IPAD-CW: Cap readable content width based on adaptive layout class.
+                    // Scales from full-width at narrow (Slide Over, 1/3 Split) to 800pt
+                    // at wide (full-screen iPad). Centers within the scroll view.
+                    .frame(maxWidth: maxContentWidth)
                     .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)

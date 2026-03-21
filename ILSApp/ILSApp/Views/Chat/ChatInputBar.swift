@@ -111,6 +111,16 @@ struct ChatInputBar: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Adaptive layout size class driven by actual window width.
+    /// At narrow widths (Slide Over, 1/3 Split View) secondary buttons are hidden
+    /// to maximise text field space.
+    @Environment(\.layoutSizeClass) private var layoutSizeClass
+
+    /// Whether there is enough horizontal space to show secondary toolbar buttons
+    /// (help, options). Hidden at narrow widths to give the text field more room.
+    private var showSecondaryButtons: Bool {
+        layoutSizeClass != .narrow
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -159,8 +169,12 @@ struct ChatInputBar: View {
             HStack(spacing: theme.spacingSM) {
                 commandPaletteButton
                 attachmentButton
-                optionsButton
-                helpButton
+                // IPAD-NARROW: Hide secondary buttons at narrow widths (Slide Over,
+                // 1/3 Split View) so the text field gets more horizontal space.
+                if showSecondaryButtons {
+                    optionsButton
+                    helpButton
+                }
                 textField
                 #if os(iOS)
                 if let onVoiceCommandToggle {
