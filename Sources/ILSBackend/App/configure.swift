@@ -81,8 +81,13 @@ func configure(_ app: Application) async throws {
     // Structured error middleware (replaces Vapor's default ErrorMiddleware)
     app.middleware.use(ILSErrorMiddleware())
 
-    // API key authentication middleware (opt-in via ILS_API_KEY env var)
-    app.middleware.use(APIKeyMiddleware())
+    // SEC-007: API key authentication middleware (zero-trust, always-on).
+    // Priority: 1) ILS_API_KEY env var, 2) ~/.ils/api_key file, 3) auto-generate new key.
+    // The storage service is an actor singleton — safe for concurrent access.
+    let apiKeyStorage = APIKeyStorageService.shared
+    let apiKey = try await apiKeyStorage.loadOrGenerateKey()
+    app.middleware.use(APIKeyMiddleware(apiKey: apiKey))
+    app.storage[APIKeyStorageKey.self] = apiKeyStorage
 
     // Request validation middleware (Content-Type enforcement, JSON validation, suspicious header rejection)
     app.middleware.use(RequestValidationMiddleware())
@@ -213,7 +218,7 @@ func configure(_ app: Application) async throws {
     // Set ILS_LAN_ENABLED=true to bind 0.0.0.0 for LAN/fleet/remote access.
     // When LAN-enabled, access control relies on:
     //   - RateLimitMiddleware (per-IP request throttling)
-    //   - APIKeyMiddleware (opt-in via ILS_API_KEY env var)
+    //   - APIKeyMiddleware (always-on, zero-trust authentication)
     //   - Cloudflare tunnel for internet-facing scenarios
     // Do NOT remove the default localhost binding — it protects dev environments.
     let hostname = Environment.get("ILS_LAN_ENABLED") == "true" ? "0.0.0.0" : "127.0.0.1"
@@ -224,6 +229,11 @@ func configure(_ app: Application) async throws {
     app.http.server.configuration.responseCompression = .enabled
 
     app.logger.info("ILS Backend starting on http://\(hostname):\(port)")
+
+    // SEC-007: Log masked API key on startup for operator verification.
+    if let masked = await apiKeyStorage.maskedKey() {
+        app.logger.info("API key active: \(masked)")
+    }
 
     // Bonjour/mDNS auto-discovery — publish _ils._tcp so iOS clients can find the backend
     // BonjourPublisherService is @MainActor so NetService runs on the main RunLoop.
@@ -239,4 +249,11 @@ func configure(_ app: Application) async throws {
 
 private struct BonjourPublisherKey: StorageKey {
     typealias Value = BonjourPublisherService
+}
+
+// MARK: - API Key Storage Key
+
+/// Storage key for accessing `APIKeyStorageService` from controllers via `app.storage`.
+struct APIKeyStorageKey: StorageKey {
+    typealias Value = APIKeyStorageService
 }
