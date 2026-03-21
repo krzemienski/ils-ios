@@ -23,7 +23,11 @@ final class BonjourPublisherService: NSObject {
     // MARK: - Public API
 
     /// Start publishing the Bonjour service on the given port.
-    func start(port: Int) {
+    ///
+    /// - Parameters:
+    ///   - port: The TCP port the backend is listening on.
+    ///   - authRequired: Whether API key authentication is required. Defaults to `true`.
+    func start(port: Int, authRequired: Bool = true) {
         guard !isPublishing else { return }
 
         let hostname = Self.localHostname()
@@ -36,7 +40,12 @@ final class BonjourPublisherService: NSObject {
             port: Int32(port)
         )
 
-        let txtData = Self.buildTXTRecord(hostname: hostname, port: port, version: Self.version)
+        let txtData = Self.buildTXTRecord(
+            hostname: hostname,
+            port: port,
+            version: Self.version,
+            authRequired: authRequired
+        )
         service.setTXTRecord(txtData)
 
         service.schedule(in: .main, forMode: .common)
@@ -65,11 +74,13 @@ final class BonjourPublisherService: NSObject {
             .replacingOccurrences(of: ".local", with: "")
     }
 
-    private static func buildTXTRecord(hostname: String, port: Int, version: String) -> Data {
+    private static func buildTXTRecord(hostname: String, port: Int, version: String, authRequired: Bool) -> Data {
         let dict: [String: Data] = [
             "hostname": Data(hostname.utf8),
             "port": Data(String(port).utf8),
-            "version": Data(version.utf8)
+            "version": Data(version.utf8),
+            "auth": Data((authRequired ? "required" : "none").utf8),
+            "pair": Data("/api/v1/pairing/qr".utf8)
         ]
         return NetService.data(fromTXTRecord: dict)
     }

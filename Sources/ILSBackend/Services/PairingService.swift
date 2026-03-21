@@ -30,20 +30,27 @@ actor PairingService {
     /// Generate a new QR pairing token and return the response payload.
     ///
     /// The `qrData` field in the response is the JSON-encoded `QRPairingPayload`
-    /// string ready to be encoded into a QR image.
-    func generateToken() throws -> QRPairingTokenResponse {
+    /// string ready to be encoded into a QR image. Includes scoped read/write tokens
+    /// from `APIKeyStorageService` when available, allowing paired devices to use
+    /// least-privilege authentication.
+    func generateToken() async throws -> QRPairingTokenResponse {
         // Evict expired tokens before generating a new one.
         evictExpiredTokens()
 
         let tokenUUID = UUID()
         let expiresAt = Date(timeIntervalSinceNow: tokenTTL)
 
+        // Fetch scoped tokens from APIKeyStorageService if available.
+        let scopedTokens = try? await APIKeyStorageService.shared.scopedTokens()
+
         let payload = QRPairingPayload(
             url: backendURL(),
             apiKey: apiKey(),
             backendVersion: backendVersion(),
             expiresAt: expiresAt,
-            tunnelURL: nil
+            tunnelURL: nil,
+            readToken: scopedTokens?.readToken,
+            writeToken: scopedTokens?.writeToken
         )
 
         // Encode the payload to JSON — this becomes the QR code data.

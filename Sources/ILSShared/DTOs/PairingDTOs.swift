@@ -14,13 +14,27 @@ public struct QRPairingPayload: Codable, Sendable {
     public let expiresAt: Date
     /// Optional tunnel URL if a tunnel is active.
     public let tunnelURL: String?
+    /// Optional scoped read-only token (derived from master key via HMAC-SHA256).
+    public let readToken: String?
+    /// Optional scoped read-write token (derived from master key via HMAC-SHA256).
+    public let writeToken: String?
 
-    public init(url: String, apiKey: String, backendVersion: String, expiresAt: Date, tunnelURL: String? = nil) {
+    public init(
+        url: String,
+        apiKey: String,
+        backendVersion: String,
+        expiresAt: Date,
+        tunnelURL: String? = nil,
+        readToken: String? = nil,
+        writeToken: String? = nil
+    ) {
         self.url = url
         self.apiKey = apiKey
         self.backendVersion = backendVersion
         self.expiresAt = expiresAt
         self.tunnelURL = tunnelURL
+        self.readToken = readToken
+        self.writeToken = writeToken
     }
 }
 
