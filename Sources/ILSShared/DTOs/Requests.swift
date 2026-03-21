@@ -718,6 +718,10 @@ public struct ChatExportSession: Codable, Sendable {
     public let totalCostUSD: Double?
     /// Name of the project this session is associated with, if any.
     public let projectName: String?
+    /// Total duration of the session in seconds.
+    public let durationSeconds: Double?
+    /// Total number of tokens used across all messages in the session.
+    public let totalTokens: Int?
 
     /// Creates a chat export session metadata value.
     /// - Parameters:
@@ -729,6 +733,8 @@ public struct ChatExportSession: Codable, Sendable {
     ///   - messageCount: Total number of messages in the session.
     ///   - totalCostUSD: Cumulative API cost in USD.
     ///   - projectName: Name of the associated project, if any.
+    ///   - durationSeconds: Total duration of the session in seconds.
+    ///   - totalTokens: Total number of tokens used in the session.
     public init(
         id: UUID,
         name: String?,
@@ -737,7 +743,9 @@ public struct ChatExportSession: Codable, Sendable {
         lastActiveAt: Date,
         messageCount: Int,
         totalCostUSD: Double?,
-        projectName: String?
+        projectName: String?,
+        durationSeconds: Double? = nil,
+        totalTokens: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -747,6 +755,8 @@ public struct ChatExportSession: Codable, Sendable {
         self.messageCount = messageCount
         self.totalCostUSD = totalCostUSD
         self.projectName = projectName
+        self.durationSeconds = durationSeconds
+        self.totalTokens = totalTokens
     }
 }
 
@@ -756,6 +766,10 @@ public struct ChatExportMessage: Codable, Sendable {
     public let role: MessageRole
     /// Text content of the message.
     public let content: String
+    /// JSON-encoded tool invocation requests (if any).
+    public let toolCalls: String?
+    /// JSON-encoded tool execution results (if any).
+    public let toolResults: String?
     /// Timestamp when the message was created.
     public let createdAt: Date
 
@@ -763,10 +777,14 @@ public struct ChatExportMessage: Codable, Sendable {
     /// - Parameters:
     ///   - role: Role of the message author.
     ///   - content: Text content of the message.
+    ///   - toolCalls: Optional JSON-encoded tool calls.
+    ///   - toolResults: Optional JSON-encoded tool results.
     ///   - createdAt: Timestamp when the message was created.
-    public init(role: MessageRole, content: String, createdAt: Date) {
+    public init(role: MessageRole, content: String, toolCalls: String? = nil, toolResults: String? = nil, createdAt: Date) {
         self.role = role
         self.content = content
+        self.toolCalls = toolCalls
+        self.toolResults = toolResults
         self.createdAt = createdAt
     }
 }
