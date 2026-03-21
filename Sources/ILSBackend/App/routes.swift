@@ -58,6 +58,7 @@ func routes(_ app: Application) throws {
     try admin.register(collection: TunnelController())
     try admin.register(collection: DataErasureController())
     try admin.register(collection: PairingController())
+    try admin.register(collection: AuthController())
 
     // Security abuse log endpoint (admin-only)
     admin.get("security", "abuse-log") { req async throws -> Response in
