@@ -51,6 +51,8 @@ struct HomeView: View {
     @State private var showNewSessionSheet = false
     /// Text binding for the searchable modifier on recent sessions.
     @State private var sessionSearchText = ""
+    /// The session pending deletion confirmation from a context menu action.
+    @State private var sessionToDelete: ChatSession?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -65,6 +67,9 @@ struct HomeView: View {
     var onNavigate: ((ActiveScreen) -> Void)?
     /// Called to navigate directly to a specific ``BrowserSegment`` (Skills, MCP, Plugins).
     var onNavigateToBrowser: ((BrowserSegment) -> Void)?
+
+    /// Shared bookmark manager for toggling session bookmarks from context menus.
+    private var bookmarksManager: SessionBookmarksManager { SessionBookmarksManager.shared }
 
     var body: some View {
         ScrollView {
@@ -167,6 +172,20 @@ struct HomeView: View {
         }
         .onChange(of: appState.isConnected) { _, connected in
             CreateSessionTip.isConnected = connected
+        }
+        .alert("Delete Session", isPresented: Binding(
+            get: { sessionToDelete != nil },
+            set: { if !$0 { sessionToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let session = sessionToDelete {
+                    Task { await sessionsVM.deleteSession(session) }
+                }
+                sessionToDelete = nil
+            }
+            Button("Cancel", role: .cancel) { sessionToDelete = nil }
+        } message: {
+            Text("This will permanently delete this session and all its messages.")
         }
     }
 
@@ -352,6 +371,43 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .shimmerIfActive(isRefreshing)
+                    .contextMenu {
+                        Button {
+                            Task { await bookmarksManager.toggleBookmark(session: session) }
+                        } label: {
+                            let isBookmarked = bookmarksManager.isBookmarked(sessionId: session.id)
+                            Label(
+                                isBookmarked ? "Remove Bookmark" : "Bookmark",
+                                systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
+                            )
+                        }
+
+                        let isPinned = multiSessionVM.isPinned(session)
+                        Button {
+                            if isPinned {
+                                multiSessionVM.unpinSession(session)
+                            } else {
+                                multiSessionVM.pinSession(session)
+                            }
+                        } label: {
+                            Label(
+                                isPinned ? "Unpin from Split View" : "Pin to Split View",
+                                systemImage: isPinned ? "pin.slash" : "pin"
+                            )
+                        }
+
+                        Button {
+                            SessionExporter.share(session)
+                        } label: {
+                            Label("Export", systemImage: "square.and.arrow.up")
+                        }
+
+                        Button(role: .destructive) {
+                            sessionToDelete = session
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
             }
         } else if isSearching {

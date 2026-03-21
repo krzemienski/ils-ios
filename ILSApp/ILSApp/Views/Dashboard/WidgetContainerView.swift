@@ -81,6 +81,19 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
                 editModeOverlay
             }
         }
+        .contextMenu {
+            Button {
+                Task { await viewModel.loadContent() }
+            } label: {
+                Label("Refresh", systemImage: "arrow.clockwise")
+            }
+
+            if !isEditMode {
+                Button(role: .destructive, action: onRemove) {
+                    Label("Remove Widget", systemImage: "trash")
+                }
+            }
+        }
         .task {
             await viewModel.loadContent()
             // Read the user-configured refresh interval (default 30 s)
