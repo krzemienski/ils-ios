@@ -131,6 +131,7 @@ struct KanbanColumnView: View {
                 ForEach(items) { item in
                     KanbanSessionCardView(
                         item: item,
+                        column: column,
                         onTap: { onCardTapped?(item) },
                         onOpenChat: { onOpenChat?(item) },
                         onApprove: { onApprovePermission?(item) },

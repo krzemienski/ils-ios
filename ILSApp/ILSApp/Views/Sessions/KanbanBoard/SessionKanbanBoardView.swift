@@ -152,6 +152,7 @@ struct SessionKanbanBoardView: View {
                     ForEach(items) { item in
                         KanbanSessionCardView(
                             item: item,
+                            column: column,
                             onTap: { onSessionSelected?(item) },
                             onOpenChat: { onSessionSelected?(item) },
                             onApprove: { onSessionSelected?(item) },

@@ -25,6 +25,10 @@ struct KanbanSessionCardView: View {
     @Environment(\.theme) private var theme: ThemeSnapshot
 
     let item: KanbanBoardItem
+    /// The actual column this card is displayed in, as assigned by the parent view.
+    /// This is authoritative — it accounts for pending-permission state that
+    /// ``KanbanBoardItem/column`` does not.
+    let column: KanbanColumn
 
     /// Called when the user taps the card body (not a quick-action button).
     var onTap: (() -> Void)?
@@ -194,7 +198,7 @@ struct KanbanSessionCardView: View {
                 }
 
                 // Show Approve for sessions in the waitingForApproval column
-                if item.column == .waitingForApproval {
+                if column == .waitingForApproval {
                     quickActionButton("Approve", icon: "checkmark.circle", tint: .orange, action: onApprove)
                 }
 
@@ -216,7 +220,7 @@ struct KanbanSessionCardView: View {
     /// Status dot matching the session's lifecycle state.
     private func statusDot(for tagged: TaggedSession) -> some View {
         let color: Color = {
-            switch item.column {
+            switch column {
             case .active: return .green
             case .waitingForApproval: return .orange
             case .paused: return .yellow
@@ -357,7 +361,8 @@ struct KanbanSessionCardView: View {
                 backendId: UUID(),
                 backendName: "Work Mac",
                 backendColorHex: "#4A90E2"
-            ))
+            )),
+            column: .active
         )
 
         KanbanSessionCardView(
@@ -372,7 +377,8 @@ struct KanbanSessionCardView: View {
                 backendId: UUID(),
                 backendName: "Home Mac",
                 backendColorHex: "#7ED321"
-            ))
+            )),
+            column: .completed
         )
     }
     .padding()
