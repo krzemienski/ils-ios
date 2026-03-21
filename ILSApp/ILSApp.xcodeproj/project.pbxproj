@@ -24,6 +24,7 @@
 		0219F1ACA70FDF8C1B1AA73C /* SessionExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E32DD92F87322D4834E67C /* SessionExporter.swift */; };
 		021CE9A40CA38D09371544DD /* GhostProtocolTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADD83017F56B561B81A06BB /* GhostProtocolTheme.swift */; };
 		0221D6435E5A81ABB9009818 /* MacChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869B654B4F7CD919CFF60F91 /* MacChatView.swift */; };
+		E7F8A9B0C1D2E3F405162738 /* MacSessionExportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869706152 /* MacSessionExportSheet.swift */; };
 		0225E7F25803E1514F00780E /* MidnightTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE193B8BF8C7258B6DDE90D /* MidnightTheme.swift */; };
 		023A3B6DE4DF37F470EB65AC /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3E667C92D5B2A3F254C5A5 /* SyntaxHighlighter.swift */; };
 		025049AA4A5926FD4D1A6F7B /* MemoryPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0DAD288105951801975063 /* MemoryPerformanceTests.swift */; };
@@ -1337,6 +1338,7 @@
 		867E2895E67823690EB50D63 /* WorkflowsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkflowsListView.swift; sourceTree = "<group>"; };
 		868AEE9CAC1117D583F22E86 /* ILSWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ILSWidgets.entitlements; sourceTree = "<group>"; };
 		869B654B4F7CD919CFF60F91 /* MacChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacChatView.swift; sourceTree = "<group>"; };
+		F1E2D3C4B5A6978869706152 /* MacSessionExportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSessionExportSheet.swift; sourceTree = "<group>"; };
 		87BBB3407D22A2279F4D8250 /* Scenario10_DashboardAndAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scenario10_DashboardAndAnalytics.swift; sourceTree = "<group>"; };
 		8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HooksViewModel.swift; sourceTree = "<group>"; };
 		8A19DDEE21F00B1FCCC932DB /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
@@ -2288,6 +2290,7 @@
 				82AEBBE8BF02440C900E63E3 /* MacAutomationRulesView.swift */,
 				D24840A13648ADDEB1E5117D /* MacBackendSettingsView.swift */,
 				869B654B4F7CD919CFF60F91 /* MacChatView.swift */,
+				F1E2D3C4B5A6978869706152 /* MacSessionExportSheet.swift */,
 				539D04AB39A919A399C23320 /* MacContentView.swift */,
 				F0B4BF71D7F947143FA895AC /* MacProjectsListView.swift */,
 				70013A66E71AB8C4A7D7A7CF /* MacRuleEditorView.swift */,
@@ -3738,6 +3741,7 @@
 				D5A53E1BB53C45A1737F26F6 /* MacAutomationRulesView.swift in Sources */,
 				D3436BD45002F7ADECEB2CB1 /* MacBackendSettingsView.swift in Sources */,
 				0221D6435E5A81ABB9009818 /* MacChatView.swift in Sources */,
+				E7F8A9B0C1D2E3F405162738 /* MacSessionExportSheet.swift in Sources */,
 				9D3460E0164ED35EF5FB5F39 /* MacContentView.swift in Sources */,
 				A4EDEE8198F803F4DF97D6E8 /* MacProjectsListView.swift in Sources */,
 				13FDAEEB43E34DD37CBC09B5 /* MacRuleEditorView.swift in Sources */,

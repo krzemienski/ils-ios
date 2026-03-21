@@ -20,7 +20,7 @@ struct MacChatView: View {
     @State private var showJumpToBottom = false
     @State private var isRenaming = false
     @State private var renameText = ""
-    @State private var isExporting = false
+    @State private var showExportSheet = false
     @State private var showDeleteSessionConfirmation = false
     @State private var showAdvancedOptions = false
     @State private var showSearch = false
@@ -208,6 +208,12 @@ struct MacChatView: View {
                 )
                 .frame(minWidth: 400, minHeight: 300)
                 .presentationBackground(theme.bgPrimary)
+            }
+            .sheet(isPresented: $showExportSheet) {
+                MacSessionExportSheet(session: session, messages: viewModel.messages)
+                    .environment(appState)
+                    .frame(minWidth: 500, minHeight: 400)
+                    .presentationBackground(theme.bgPrimary)
             }
             .sheet(item: $viewModel.pendingPermissionRequest) { request in
                 PermissionRequestModal(request: request) { decision in
@@ -520,13 +526,13 @@ struct MacChatView: View {
             .accessibilityLabel("Search messages")
             .accessibilityIdentifier("search-messages-button")
 
-            // Export button with macOS save panel
+            // Export button with format picker sheet
             Button {
-                Task { await exportSession() }
+                showExportSheet = true
             } label: {
                 Label("Export", systemImage: "square.and.arrow.up")
             }
-            .help("Export session as Markdown")
+            .help("Export session")
             .keyboardShortcut("e", modifiers: [.command])
 
             // Session info button
@@ -646,42 +652,8 @@ struct MacChatView: View {
         }
     }
 
-    private func exportSession() async {
-        isExporting = true
-        var md = "# Session: \(session.name ?? "Unnamed")\n\n"
-        md += "Model: \(session.model.capitalized)\n"
-        md += "Status: \(session.status.rawValue.capitalized)\n"
-        md += "Created: \(session.createdAt.formatted())\n"
-        md += "Last Active: \(session.lastActiveAt.formatted())\n"
-        if let cost = session.totalCostUSD {
-            md += "Cost: $\(String(format: "%.4f", cost))\n"
-        }
-        md += "\n---\n\n"
-
-        for message in viewModel.messages {
-            let role = message.isUser ? "User" : "Assistant"
-            md += "## \(role)\n\n\(message.text)\n\n"
-        }
-
-        // Use NSSavePanel for macOS
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [.plainText]
-        savePanel.nameFieldStringValue = "\(session.name ?? "session").md"
-        savePanel.canCreateDirectories = true
-        savePanel.isExtensionHidden = false
-        savePanel.title = "Export Session"
-        savePanel.message = "Choose where to save the exported session"
-
-        let response = await savePanel.begin()
-        if response == .OK, let url = savePanel.url {
-            do {
-                try md.write(to: url, atomically: true, encoding: .utf8)
-            } catch {
-                print("Error saving file: \(error)")
-            }
-        }
-
-        isExporting = false
+    private func exportSession() {
+        showExportSheet = true
     }
 
 }
