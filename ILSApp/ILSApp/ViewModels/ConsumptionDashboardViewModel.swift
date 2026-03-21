@@ -60,6 +60,8 @@ final class ConsumptionDashboardViewModel {
     private var hasNotifiedBurnRate = false
     /// Prevents duplicate notifications for the same exhaustion crossing.
     private var hasNotifiedExhaustion = false
+    /// Prevents duplicate notifications for the same daily-limit crossing.
+    private var hasNotifiedDailyLimit = false
 
     // MARK: - Init
 
@@ -223,16 +225,19 @@ final class ConsumptionDashboardViewModel {
 
     // MARK: - Alert Notifications
 
-    /// Evaluates whether a consumption notification should be sent based on burn rate
-    /// and projected exhaustion thresholds. Fires at most one notification per crossing.
+    /// Evaluates whether a consumption notification should be sent based on burn rate,
+    /// daily consumption limit, and projected exhaustion thresholds.
+    /// Fires at most one notification per crossing.
     private func checkAndScheduleConsumptionAlert() {
         guard consumptionAlertsEnabled else {
             hasNotifiedBurnRate = false
             hasNotifiedExhaustion = false
+            hasNotifiedDailyLimit = false
             return
         }
 
-        guard let burnRate = consumptionData?.burnRate else { return }
+        guard let consumptionData else { return }
+        let burnRate = consumptionData.burnRate
 
         // Check burn rate threshold
         if burnRate.messagesPerHour >= burnRateWarningThreshold {
@@ -252,6 +257,21 @@ final class ConsumptionDashboardViewModel {
             hasNotifiedBurnRate = false
         }
 
+        // Check daily consumption limit against today's message count
+        let todayMessages = todayMessageCount(from: consumptionData)
+        if todayMessages >= dailyConsumptionLimit {
+            if !hasNotifiedDailyLimit {
+                hasNotifiedDailyLimit = true
+                scheduleConsumptionNotification(
+                    title: "Daily Consumption Limit Reached",
+                    body: "You've sent \(todayMessages) messages today, reaching your \(dailyConsumptionLimit)-message daily limit.",
+                    identifier: "consumption.dailyLimit.threshold"
+                )
+            }
+        } else {
+            hasNotifiedDailyLimit = false
+        }
+
         // Check exhaustion warning
         if let hoursRemaining = burnRate.projectedHoursRemaining,
            hoursRemaining <= Double(exhaustionWarningHours) {
@@ -269,6 +289,23 @@ final class ConsumptionDashboardViewModel {
         } else {
             hasNotifiedExhaustion = false
         }
+    }
+
+    /// Returns the message count for today by checking the last entry in the daily consumption array.
+    /// Falls back to 0 if today's data is not available.
+    private func todayMessageCount(from data: ConsumptionDashboardResponse) -> Int {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
+        let todayStr = formatter.string(from: Date())
+
+        // Check the last daily entry (which should be today for any period)
+        if let todayEntry = data.dailyConsumption.last, todayEntry.date == todayStr {
+            return todayEntry.messageCount
+        }
+
+        // Fall back to searching all entries
+        return data.dailyConsumption.first { $0.date == todayStr }?.messageCount ?? 0
     }
 
     /// Requests notification permission (if not yet granted) and fires an immediate local notification.

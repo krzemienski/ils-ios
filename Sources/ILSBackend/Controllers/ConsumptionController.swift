@@ -137,12 +137,11 @@ struct ConsumptionController: RouteCollection {
         }
     }
 
-    /// Build top sessions sorted by estimated consumption
+    /// Build top sessions sorted by estimated token consumption
     private func buildTopSessions(sessions: [ChatSession], limit: Int) async -> [SessionConsumption] {
-        let sorted = sessions.sorted { $0.messageCount > $1.messageCount }
-        let top = sorted.prefix(limit)
-        var result: [SessionConsumption] = []
-        for session in top {
+        // Compute token estimates for all sessions first
+        var sessionEstimates: [(session: ChatSession, totalTokens: Int, inputTokens: Int, outputTokens: Int, cost: Double)] = []
+        for session in sessions {
             let tokens = await consumptionService.estimateTokens(
                 messageCount: session.messageCount, model: session.model
             )
@@ -150,16 +149,23 @@ struct ConsumptionController: RouteCollection {
             let cost = await consumptionService.computeCost(
                 inputTokens: tokens.input, outputTokens: tokens.output, model: session.model
             )
-            result.append(SessionConsumption(
-                sessionId: session.id.uuidString,
-                sessionName: session.name ?? "Session \(session.id.uuidString.prefix(8))",
-                model: session.model,
-                estimatedTokens: totalTokens,
-                estimatedCostUSD: round(cost * 100) / 100,
-                messageCount: session.messageCount
-            ))
+            sessionEstimates.append((session, totalTokens, tokens.input, tokens.output, cost))
         }
-        return result
+
+        // Sort by estimated token consumption (descending)
+        let sorted = sessionEstimates.sorted { $0.totalTokens > $1.totalTokens }
+        let top = sorted.prefix(limit)
+
+        return top.map { entry in
+            SessionConsumption(
+                sessionId: entry.session.id.uuidString,
+                sessionName: entry.session.name ?? "Session \(entry.session.id.uuidString.prefix(8))",
+                model: entry.session.model,
+                estimatedTokens: entry.totalTokens,
+                estimatedCostUSD: round(entry.cost * 100) / 100,
+                messageCount: entry.session.messageCount
+            )
+        }
     }
 
     /// Build rate limit status from message history
