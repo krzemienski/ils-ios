@@ -108,6 +108,7 @@
 		1BD7B651932533AEFCE5026C /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 5BCDD3C9C6928A463043C42F /* Citadel */; };
 		1C4288F6BD1A14FB37DD2EA1 /* ChatMessageList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18502885F5B6E45B14619177 /* ChatMessageList.swift */; };
 		1C52E92CB4A14057B21AD1E3 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C8646B6438456F56EB8A6B /* AlertThreshold.swift */; };
+		A1B2C3D4E5F60001KANBAN01 /* KanbanColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000KANBAN00 /* KanbanColumn.swift */; };
 		1C96CC761FDDA31A22D7728F /* FuzzyMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A99408995D3473EB8DBDBE0 /* FuzzyMatcher.swift */; };
 		1CBB9F38CB8BEEA61EFEAB1D /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */; };
 		1D33BC6A88F0C7C226592126 /* LargeSessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75431682EF2696B21794FFF /* LargeSessionWidget.swift */; };
@@ -715,6 +716,7 @@
 		BECE5E1F55D2499F216F29D1 /* TunnelSetupWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E4B3E9DDA01D8935B6DF923 /* TunnelSetupWizardView.swift */; };
 		BF22FED6AADD022BF7383E5C /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E0C37CFBA96AE22BE7F52B4 /* OnboardingWizardView.swift */; };
 		BF5CCC22055DFE4703825983 /* AlertThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C8646B6438456F56EB8A6B /* AlertThreshold.swift */; };
+		A1B2C3D4E5F60002KANBAN02 /* KanbanColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60000KANBAN00 /* KanbanColumn.swift */; };
 		BF64675176F1C9AA4255EBDD /* SessionRecordingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F248F9EE757F68605D70ABDB /* SessionRecordingViewModel.swift */; };
 		BF733927A6B9F3B4BEB875B6 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CA914CC9CC730BF84E8A34 /* ToolCallAccordion.swift */; };
 		BFC1BD3E7E6F94F5B12F06E0 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B7AA21B4A73C7E651752C /* StatCard.swift */; };
@@ -1302,6 +1304,7 @@
 		907CC36D7F4D7D26C53BC875 /* WidgetSizeSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSizeSelector.swift; sourceTree = "<group>"; };
 		90DAB167FF129AA2D9E4A38D /* KeyboardShortcutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutStore.swift; sourceTree = "<group>"; };
 		92C8646B6438456F56EB8A6B /* AlertThreshold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThreshold.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60000KANBAN00 /* KanbanColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanColumn.swift; sourceTree = "<group>"; };
 		92DA7EA27E512C2573284699 /* SystemMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessageView.swift; sourceTree = "<group>"; };
 		94106F11E55BF921CAA0A564 /* AlertThresholdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdManager.swift; sourceTree = "<group>"; };
 		948140787A5BDADAC7635EC4 /* CyberpunkTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyberpunkTheme.swift; sourceTree = "<group>"; };
@@ -2627,6 +2630,7 @@
 				2780D1E0A8A2C4ABA22E249E /* Documentation.swift */,
 				D9F34C6B00D971A8FBAE4995 /* HookExecutionEntry.swift */,
 				C28D64369CB35AEA4B5FDB37 /* HookTemplate.swift */,
+				A1B2C3D4E5F60000KANBAN00 /* KanbanColumn.swift */,
 				03CB8F6664C4D2492BF097ED /* PermissionHistory.swift */,
 				BB81FCE73319B9D152032132 /* QuickReplyTemplate.swift */,
 				D7818C4A8D6E1CBC640502AB /* SessionFilter.swift */,
@@ -2937,6 +2941,7 @@
 				0AF85229F311A27F4C4D0D35 /* AgentTeamsListView.swift in Sources */,
 				806F094DF973250947C104A9 /* AlertHistoryView.swift in Sources */,
 				BF5CCC22055DFE4703825983 /* AlertThreshold.swift in Sources */,
+				A1B2C3D4E5F60002KANBAN02 /* KanbanColumn.swift in Sources */,
 				284AECF9967348E09DFE6D27 /* AlertThresholdManager.swift in Sources */,
 				03C776870DD1C02257E65800 /* AlertThresholdSettingsView.swift in Sources */,
 				31AF8385503F4BD63E02A996 /* AnalyticsView.swift in Sources */,
@@ -3385,6 +3390,7 @@
 				7032D6514C652C6659D7AAC1 /* AgentTeamsListView.swift in Sources */,
 				E5E51360ED2FF636C00B44DF /* AlertHistoryView.swift in Sources */,
 				1C52E92CB4A14057B21AD1E3 /* AlertThreshold.swift in Sources */,
+				A1B2C3D4E5F60001KANBAN01 /* KanbanColumn.swift in Sources */,
 				58C6DC2C1108D4592DA61F1C /* AlertThresholdManager.swift in Sources */,
 				ABB5002EEEC64396D794BCCF /* AlertThresholdSettingsView.swift in Sources */,
 				1FC0FC8AE58CF5C296EB554B /* AnalyticsView.swift in Sources */,
