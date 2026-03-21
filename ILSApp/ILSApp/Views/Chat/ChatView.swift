@@ -100,11 +100,25 @@ struct ChatView: View {
     /// Service managing speech recognition for voice input (iOS only).
     #if os(iOS)
     @State private var speechService = SpeechRecognitionService()
+    /// Interpreter for matching voice transcriptions to predefined commands.
+    @State private var voiceCommandInterpreter = VoiceCommandInterpreter()
+    /// Executor for running matched voice commands with confirmation flows.
+    @State private var voiceCommandExecutor = VoiceCommandExecutor()
+    /// Whether voice input is in command mode (true) or dictation mode (false).
+    @State private var isVoiceCommandMode = false
+    /// The most recent voice command match result from the interpreter.
+    @State private var voiceCommandMatchResult: VoiceCommandMatch?
+    /// Whether the voice command overlay is currently visible.
+    @State private var showVoiceCommandOverlay = false
     #endif
     @FocusState private var isInputFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
+    #if os(iOS)
+    /// Master toggle — when false, the voice command mode button is hidden and command mode is disabled.
+    @AppStorage("voiceCommandsEnabled") private var voiceCommandsEnabled: Bool = true
+    #endif
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
     @AppStorage("notif_contextCompactionAlerts") private var notifContextCompactionAlerts: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -450,7 +464,11 @@ struct ChatView: View {
                     audioLevel: CGFloat(speechService.audioLevel),
                     onDone: { text in
                         speechService.stopRecording()
-                        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        if isVoiceCommandMode {
+                            processVoiceCommand(trimmed)
+                        } else {
                             if inputText.isEmpty {
                                 inputText = text
                             } else {
@@ -467,6 +485,33 @@ struct ChatView: View {
             }
             #endif
 
+            #if os(iOS)
+            if showVoiceCommandOverlay {
+                VoiceCommandOverlay(
+                    executionState: voiceCommandExecutor.executionState,
+                    matchResult: voiceCommandMatchResult,
+                    onConfirm: {
+                        Task { await voiceCommandExecutor.confirm() }
+                    },
+                    onCancel: {
+                        voiceCommandExecutor.cancel()
+                        dismissVoiceCommandOverlay()
+                    },
+                    onDismiss: {
+                        dismissVoiceCommandOverlay()
+                    },
+                    onSelectCommand: { command in
+                        voiceCommandMatchResult = nil
+                        Task { await executeVoiceCommand(command) }
+                    },
+                    onRetry: { command in
+                        Task { await retryVoiceCommand(command) }
+                    }
+                )
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            #endif
+
                 quickReplyToolbar
 
                 bottomBar
@@ -474,6 +519,7 @@ struct ChatView: View {
         }
         #if os(iOS)
         .animation(.easeInOut(duration: 0.25), value: speechService.isRecording)
+        .animation(.easeInOut(duration: 0.25), value: showVoiceCommandOverlay)
         #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if horizontalSizeClass == .compact {
@@ -821,6 +867,8 @@ struct ChatView: View {
             onAdvancedOptions: { sheets.showAdvancedOptions = true },
             onVoiceInput: { toggleVoiceInput() },
             isRecording: speechService.isRecording,
+            onVoiceCommandToggle: voiceCommandsEnabled ? { toggleVoiceCommandMode() } : nil,
+            isVoiceCommandMode: voiceCommandsEnabled && isVoiceCommandMode,
             attachments: $pendingAttachments,
             onAttachmentTap: { sheets.showAttachmentPicker = true },
             session: session,
@@ -1059,6 +1107,95 @@ struct ChatView: View {
                 try? await speechService.startRecording()
             }
         }
+    }
+
+    /// Toggle voice command mode on or off.
+    ///
+    /// When enabled, voice transcriptions are routed through the ``VoiceCommandInterpreter``
+    /// instead of being inserted as text into the input field.
+    /// Respects the ``voiceCommandsEnabled`` master toggle.
+    private func toggleVoiceCommandMode() {
+        guard voiceCommandsEnabled else { return }
+        isVoiceCommandMode.toggle()
+        if !isVoiceCommandMode {
+            // Reset voice command state when exiting command mode
+            dismissVoiceCommandOverlay()
+        }
+    }
+
+    /// Process a voice transcription as a command by routing it through the interpreter.
+    ///
+    /// Confidence-based routing:
+    /// - **Exact match** with confidence ≥ high threshold → auto-execute.
+    /// - **Exact match** with confidence < high threshold → confirm before executing.
+    /// - **Fuzzy match** with confidence ≥ high threshold → auto-execute.
+    /// - **Fuzzy match** with confidence < high threshold → confirm before executing.
+    /// - **Ambiguous** → show disambiguation UI.
+    /// - **No match** → show suggestions.
+    private func processVoiceCommand(_ transcription: String) {
+        let context = VoiceCommandContext(
+            hasPendingPermissions: viewModel.pendingPermissionRequests.count > 0,
+            pendingPermissionCount: viewModel.pendingPermissionRequests.count,
+            activeScreen: .chat(session)
+        )
+        let match = voiceCommandInterpreter.interpret(transcription, context: context)
+        voiceCommandMatchResult = match
+
+        let highThreshold = voiceCommandInterpreter.highConfidenceThreshold
+
+        switch match {
+        case .exact(let command, let confidence):
+            // Exact matches below high confidence still get confirmation
+            let needsConfirmation = confidence < highThreshold
+            Task { await executeVoiceCommand(command, forceConfirmation: needsConfirmation) }
+        case .fuzzy(let command, let confidence):
+            // Fuzzy matches below high confidence always require confirmation
+            let needsConfirmation = confidence < highThreshold
+            Task { await executeVoiceCommand(command, forceConfirmation: needsConfirmation) }
+        case .ambiguous, .noMatch:
+            // Show overlay with disambiguation or suggestions
+            showVoiceCommandOverlay = true
+        }
+    }
+
+    /// Execute a matched voice command through the executor.
+    ///
+    /// - Parameters:
+    ///   - command: The voice command to execute.
+    ///   - forceConfirmation: When true, the executor will prompt for confirmation
+    ///     even for non-destructive commands (used for medium-confidence matches).
+    private func executeVoiceCommand(_ command: VoiceCommand, forceConfirmation: Bool = false) async {
+        let context = VoiceCommandExecutionContext(
+            chatViewModel: viewModel,
+            appState: appState,
+            apiClient: appState.apiClient,
+            sessionId: session.id
+        )
+        showVoiceCommandOverlay = true
+        await voiceCommandExecutor.execute(command, context: context, forceConfirmation: forceConfirmation)
+
+        // Auto-dismiss on completion after the overlay handles its own timing
+        if case .completed = voiceCommandExecutor.executionState {
+            // The overlay auto-dismisses via its own timer
+        }
+    }
+
+    /// Dismiss the voice command overlay and reset match state.
+    private func dismissVoiceCommandOverlay() {
+        showVoiceCommandOverlay = false
+        voiceCommandMatchResult = nil
+        voiceCommandExecutor.reset()
+    }
+
+    /// Retry a previously failed voice command.
+    private func retryVoiceCommand(_ command: VoiceCommand) async {
+        let context = VoiceCommandExecutionContext(
+            chatViewModel: viewModel,
+            appState: appState,
+            apiClient: viewModel.apiClient,
+            sessionId: session.id
+        )
+        await voiceCommandExecutor.retry(command, context: context)
     }
     #endif
 

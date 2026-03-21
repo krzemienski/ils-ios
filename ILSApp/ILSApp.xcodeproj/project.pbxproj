@@ -933,6 +933,24 @@
 		4B9489E6E39CCC9FB6837ED2 /* SessionRecoveryBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A786E1D5782D1FFE8C699B2A /* SessionRecoveryBannerView.swift */; };
 		6AAB27237EED153B1560E056 /* RecoveryTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBC1128205B869677B79CBB /* RecoveryTimelineView.swift */; };
 		EC305281F4D9F1A4701A919C /* RecoveryTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBC1128205B869677B79CBB /* RecoveryTimelineView.swift */; };
+		VC07A2B2C2D2E2F202020202 /* ApprovePermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC07A1B1C1D1E1F101010101 /* ApprovePermissionIntent.swift */; };
+		VC07A3B3C3D3E3F303030303 /* ApprovePermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC07A1B1C1D1E1F101010101 /* ApprovePermissionIntent.swift */; };
+		VC08A2B2C2D2E2F202020202 /* DenyPermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC08A1B1C1D1E1F101010101 /* DenyPermissionIntent.swift */; };
+		VC08A3B3C3D3E3F303030303 /* DenyPermissionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC08A1B1C1D1E1F101010101 /* DenyPermissionIntent.swift */; };
+		VC09A2B2C2D2E2F202020202 /* SummarizeStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC09A1B1C1D1E1F101010101 /* SummarizeStatusIntent.swift */; };
+		VC09A3B3C3D3E3F303030303 /* SummarizeStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC09A1B1C1D1E1F101010101 /* SummarizeStatusIntent.swift */; };
+		VC01A2B2C2D2E2F202020202 /* VoiceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC01A1B1C1D1E1F101010101 /* VoiceCommand.swift */; };
+		VC01A3B3C3D3E3F303030303 /* VoiceCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC01A1B1C1D1E1F101010101 /* VoiceCommand.swift */; };
+		VC03A2B2C2D2E2F202020202 /* VoiceCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC03A1B1C1D1E1F101010101 /* VoiceCommandExecutor.swift */; };
+		VC03A3B3C3D3E3F303030303 /* VoiceCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC03A1B1C1D1E1F101010101 /* VoiceCommandExecutor.swift */; };
+		VC02A2B2C2D2E2F202020202 /* VoiceCommandInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC02A1B1C1D1E1F101010101 /* VoiceCommandInterpreter.swift */; };
+		VC02A3B3C3D3E3F303030303 /* VoiceCommandInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC02A1B1C1D1E1F101010101 /* VoiceCommandInterpreter.swift */; };
+		VC05A2B2C2D2E2F202020202 /* VoiceCommandOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC05A1B1C1D1E1F101010101 /* VoiceCommandOverlay.swift */; };
+		VC05A3B3C3D3E3F303030303 /* VoiceCommandOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC05A1B1C1D1E1F101010101 /* VoiceCommandOverlay.swift */; };
+		VC04A2B2C2D2E2F202020202 /* VoiceCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC04A1B1C1D1E1F101010101 /* VoiceCommandQueue.swift */; };
+		VC04A3B3C3D3E3F303030303 /* VoiceCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC04A1B1C1D1E1F101010101 /* VoiceCommandQueue.swift */; };
+		VC06A2B2C2D2E2F202020202 /* VoiceCommandSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC06A1B1C1D1E1F101010101 /* VoiceCommandSettingsView.swift */; };
+		VC06A3B3C3D3E3F303030303 /* VoiceCommandSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = VC06A1B1C1D1E1F101010101 /* VoiceCommandSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1470,6 +1488,15 @@
 		A511E1494F345065B5D00DE9 /* SessionRecoveryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecoveryViewModel.swift; sourceTree = "<group>"; };
 		A786E1D5782D1FFE8C699B2A /* SessionRecoveryBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRecoveryBannerView.swift; sourceTree = "<group>"; };
 		ABBC1128205B869677B79CBB /* RecoveryTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryTimelineView.swift; sourceTree = "<group>"; };
+		VC07A1B1C1D1E1F101010101 /* ApprovePermissionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovePermissionIntent.swift; sourceTree = "<group>"; };
+		VC08A1B1C1D1E1F101010101 /* DenyPermissionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DenyPermissionIntent.swift; sourceTree = "<group>"; };
+		VC09A1B1C1D1E1F101010101 /* SummarizeStatusIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizeStatusIntent.swift; sourceTree = "<group>"; };
+		VC01A1B1C1D1E1F101010101 /* VoiceCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommand.swift; sourceTree = "<group>"; };
+		VC03A1B1C1D1E1F101010101 /* VoiceCommandExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandExecutor.swift; sourceTree = "<group>"; };
+		VC02A1B1C1D1E1F101010101 /* VoiceCommandInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandInterpreter.swift; sourceTree = "<group>"; };
+		VC05A1B1C1D1E1F101010101 /* VoiceCommandOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandOverlay.swift; sourceTree = "<group>"; };
+		VC04A1B1C1D1E1F101010101 /* VoiceCommandQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandQueue.swift; sourceTree = "<group>"; };
+		VC06A1B1C1D1E1F101010101 /* VoiceCommandSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCommandSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1829,6 +1856,7 @@
 				16685751B7DF3CF00F7D974C /* TunnelSettingsView.swift */,
 				8E4B3E9DDA01D8935B6DF923 /* TunnelSetupWizardView.swift */,
 				6C1D291C17D21D9A4EF75B99 /* VersionMonitorView.swift */,
+				VC06A1B1C1D1E1F101010101 /* VoiceCommandSettingsView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -2112,8 +2140,10 @@
 		B28E52062E84098B69EE3AD1 /* Intents */ = {
 			isa = PBXGroup;
 			children = (
+				VC07A1B1C1D1E1F101010101 /* ApprovePermissionIntent.swift */,
 				954E6D750513A449ED0100A2 /* CodingFocusFilter.swift */,
 				D63AEED3E1B1D8AFF74CB2E2 /* CreateSessionIntent.swift */,
+				VC08A1B1C1D1E1F101010101 /* DenyPermissionIntent.swift */,
 				3F8EACDD38F5933A4E5C6866 /* GetSessionInfoIntent.swift */,
 				0F87651787EF8FF1E2AC96E2 /* ILSShortcuts.swift */,
 				F20BF929C13E2F7A26E7799C /* ListProjectsIntent.swift */,
@@ -2122,6 +2152,7 @@
 				8FBE2F67BABBBDBFE88BCA02 /* SendMessageIntent.swift */,
 				EAB16073F4EF7ED850213059 /* SessionEntity.swift */,
 				DFB062D4AD1927E72C26655E /* SessionSnippetView.swift */,
+				VC09A1B1C1D1E1F101010101 /* SummarizeStatusIntent.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -2250,6 +2281,9 @@
 				E6B4EA2BD747D96F04E8EFD9 /* SubscriptionManager.swift */,
 				54FC9BF3A364E02B5D4DBAAC /* SyncCoordinator.swift */,
 				66D1968D94BA6425D3F89B98 /* TerminalWebSocketClient.swift */,
+				VC03A1B1C1D1E1F101010101 /* VoiceCommandExecutor.swift */,
+				VC02A1B1C1D1E1F101010101 /* VoiceCommandInterpreter.swift */,
+				VC04A1B1C1D1E1F101010101 /* VoiceCommandQueue.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -2525,6 +2559,7 @@
 				92DA7EA27E512C2573284699 /* SystemMessageView.swift */,
 				530271C787670A7135EEB2CB /* TypingIndicatorBubble.swift */,
 				01E4831811A063D5D1AF7D61 /* UserMessageCard.swift */,
+				VC05A1B1C1D1E1F101010101 /* VoiceCommandOverlay.swift */,
 				742931CFC8D307683661A4E8 /* VoiceInputOverlay.swift */,
 			);
 			path = Chat;
@@ -2547,6 +2582,7 @@
 				A1C3D5E7F9B2E4A6C8D0F1E3 /* SyncStatus.swift */,
 				AFA8E77DE401528CFA32211B /* TaggedSession.swift */,
 				2DB8DF5D4A9E44970B181263 /* ThemeManifest.swift */,
+				VC01A1B1C1D1E1F101010101 /* VoiceCommand.swift */,
 				5EEC85653CDED4349865125A /* WorkflowExecution.swift */,
 				B8A191B5D1E0900CB193306A /* WorkflowNode.swift */,
 				7DAD0AAC28C8ABAB8CD7260C /* WorkflowSchedule.swift */,
@@ -2860,6 +2896,7 @@
 				08CA0507D6E3EFEEF56E4682 /* AppTheme.swift in Sources */,
 				1A4D63FED7ED5073A396AEE4 /* AppTips.swift in Sources */,
 				B64ACCD3BF169F68570BBACA /* AppleSpeechProvider.swift in Sources */,
+				VC07A2B2C2D2E2F202020202 /* ApprovePermissionIntent.swift in Sources */,
 				2DC2AEF5ECD7CF8A9C9FC7CF /* AssistantCard.swift in Sources */,
 				87F9FB81D7869689CA76C39D /* AsyncOperationBanner.swift in Sources */,
 				E6267C7B476E8E41D172B62C /* AttachmentPickerSheet.swift in Sources */,
@@ -2937,6 +2974,7 @@
 				1F17ABBE33532C19F5630AB8 /* DateFormatters.swift in Sources */,
 				C2E64FC3A6E53649A26A72BF /* DensityManager.swift in Sources */,
 				21EE15CC925C4F4E806E6FA6 /* DensityPickerView.swift in Sources */,
+				VC08A2B2C2D2E2F202020202 /* DenyPermissionIntent.swift in Sources */,
 				577899DDAB89608F256BC905 /* Documentation.swift in Sources */,
 				1D737B47BBD904BB350EF003 /* DocumentationArticleView.swift in Sources */,
 				D14CC25AF56DEA92052D37F5 /* DocumentationService.swift in Sources */,
@@ -3175,6 +3213,7 @@
 				062146CB422A72CF6170ED7D /* StatCard.swift in Sources */,
 				02DF31D5753A3D1A805198E2 /* StreamingIndicatorView.swift in Sources */,
 				B541885984979FE64644527D /* SubscriptionManager.swift in Sources */,
+				VC09A2B2C2D2E2F202020202 /* SummarizeStatusIntent.swift in Sources */,
 				A4A75413DF2AACD779252B41 /* SuggestionsViewModel.swift in Sources */,
 				19DD1967EF47D93B4E0892F5 /* SyncCoordinator.swift in Sources */,
 				023A3B6DE4DF37F470EB65AC /* SyntaxHighlighter.swift in Sources */,
@@ -3235,6 +3274,12 @@
 				895B75AB05181525D8F74B26 /* UserMessageCard.swift in Sources */,
 				5922226B3EC22F43CAB12D79 /* VersionMonitorView.swift in Sources */,
 				B739A715D9C59D482779BB11 /* VersionMonitorViewModel.swift in Sources */,
+				VC01A2B2C2D2E2F202020202 /* VoiceCommand.swift in Sources */,
+				VC03A2B2C2D2E2F202020202 /* VoiceCommandExecutor.swift in Sources */,
+				VC02A2B2C2D2E2F202020202 /* VoiceCommandInterpreter.swift in Sources */,
+				VC05A2B2C2D2E2F202020202 /* VoiceCommandOverlay.swift in Sources */,
+				VC04A2B2C2D2E2F202020202 /* VoiceCommandQueue.swift in Sources */,
+				VC06A2B2C2D2E2F202020202 /* VoiceCommandSettingsView.swift in Sources */,
 				DDC7A5E5F6945F976D80C7E3 /* VoiceInputOverlay.swift in Sources */,
 				FD23345543D373A75FAA3565 /* WelcomeCarouselView.swift in Sources */,
 				F67CF6C7C6DFE2DE29538176 /* WidgetBundle.swift in Sources */,
@@ -3289,6 +3334,7 @@
 				C7705B40D68F850DC27A725E /* AppTheme.swift in Sources */,
 				BAFCE8037388D451F1357D42 /* AppTips.swift in Sources */,
 				D9962DC530A2375830B78CAD /* AppleSpeechProvider.swift in Sources */,
+				VC07A3B3C3D3E3F303030303 /* ApprovePermissionIntent.swift in Sources */,
 				387A54319043F0DCB147EE4D /* AssistantCard.swift in Sources */,
 				572F9A1977A00216C943ABB9 /* AsyncOperationBanner.swift in Sources */,
 				57A9EDCA067C0D23ED604B50 /* AttachmentPickerSheet.swift in Sources */,
@@ -3369,6 +3415,7 @@
 				E36E7145F96E7F74A89D8C63 /* DateFormatters.swift in Sources */,
 				8B74AD4CC61DDF4D8A99B93E /* DensityManager.swift in Sources */,
 				529BA362DA9D4D5E2EAD6BB5 /* DensityPickerView.swift in Sources */,
+				VC08A3B3C3D3E3F303030303 /* DenyPermissionIntent.swift in Sources */,
 				BB8451AE5A99E8F9B9F56096 /* Documentation.swift in Sources */,
 				BD94C4C014635ACEC68935B6 /* DocumentationArticleView.swift in Sources */,
 				2E4B00C82CEE0960432DD1C8 /* DocumentationService.swift in Sources */,
@@ -3619,6 +3666,7 @@
 				BFC1BD3E7E6F94F5B12F06E0 /* StatCard.swift in Sources */,
 				04BF08BADE4A7D9A0BBEF578 /* StreamingIndicatorView.swift in Sources */,
 				0EA99231F1C3CC9117E511B1 /* SubscriptionManager.swift in Sources */,
+				VC09A3B3C3D3E3F303030303 /* SummarizeStatusIntent.swift in Sources */,
 				E4088ABA900CC88774F074E8 /* SuggestionsViewModel.swift in Sources */,
 				C2DFE4871ACAB73B9963E4C5 /* SyncCoordinator.swift in Sources */,
 				DE0C58B0013ACBFAAE12737F /* SyntaxHighlighter.swift in Sources */,
@@ -3679,6 +3727,12 @@
 				2C9CF6BB63C937DA6442373A /* UserMessageCard.swift in Sources */,
 				4C8183809528AB6141AE93FF /* VersionMonitorView.swift in Sources */,
 				ED8D5C830280169F57133204 /* VersionMonitorViewModel.swift in Sources */,
+				VC01A3B3C3D3E3F303030303 /* VoiceCommand.swift in Sources */,
+				VC03A3B3C3D3E3F303030303 /* VoiceCommandExecutor.swift in Sources */,
+				VC02A3B3C3D3E3F303030303 /* VoiceCommandInterpreter.swift in Sources */,
+				VC05A3B3C3D3E3F303030303 /* VoiceCommandOverlay.swift in Sources */,
+				VC04A3B3C3D3E3F303030303 /* VoiceCommandQueue.swift in Sources */,
+				VC06A3B3C3D3E3F303030303 /* VoiceCommandSettingsView.swift in Sources */,
 				E6EBBAF4CD45B4357494981A /* VoiceInputOverlay.swift in Sources */,
 				A42A64AD79DA7CED6F6CA1E6 /* WelcomeCarouselView.swift in Sources */,
 				69B49241EE62B52643029E85 /* WidgetBundle.swift in Sources */,

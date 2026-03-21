@@ -62,6 +62,10 @@ struct ChatInputBar: View {
     var onVoiceInput: (() -> Void)? = nil
     /// When true, the microphone button shows a recording indicator (iOS only).
     var isRecording: Bool = false
+    /// Called when the user taps the voice command mode toggle button (iOS only).
+    var onVoiceCommandToggle: (() -> Void)? = nil
+    /// When true, voice input is in command mode (interpreting commands) rather than dictation mode.
+    var isVoiceCommandMode: Bool = false
     /// Ordered list of templates to surface as quick-reply chips (pinned first, then most-used).
     /// When non-empty and ``onTemplateSelected`` is provided, a ``QuickReplyToolbar`` is shown
     /// above the input row.
@@ -159,6 +163,9 @@ struct ChatInputBar: View {
                 helpButton
                 textField
                 #if os(iOS)
+                if let onVoiceCommandToggle {
+                    voiceCommandToggleButton(action: onVoiceCommandToggle)
+                }
                 if let onVoiceInput {
                     microphoneButton(action: onVoiceInput)
                 }
@@ -339,6 +346,21 @@ struct ChatInputBar: View {
         .accessibilityIdentifier("voice-input-button")
         .accessibilityLabel(isRecording ? "Stop recording" : "Start voice input")
         .accessibilityHint(isRecording ? "Stops voice dictation" : "Starts voice dictation to compose a message")
+    }
+
+    /// Toggle button for switching between voice dictation and voice command modes.
+    private func voiceCommandToggleButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: isVoiceCommandMode ? "waveform.circle.fill" : "waveform.circle")
+                .font(.system(size: 20))
+                .foregroundStyle(isVoiceCommandMode ? theme.accent : (isDisabled ? theme.textTertiary : theme.textSecondary))
+        }
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .disabled(isDisabled)
+        .accessibilityIdentifier("voice-command-toggle")
+        .accessibilityLabel(isVoiceCommandMode ? "Voice command mode active" : "Switch to voice command mode")
+        .accessibilityHint(isVoiceCommandMode ? "Tap to switch to dictation mode" : "Tap to switch to command mode for hands-free operations")
     }
     #endif
 }
