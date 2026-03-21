@@ -35,6 +35,19 @@ enum SessionExportService {
         return md
     }
 
+    /// Build a Markdown export from a ``ChatSession`` and its local ``ChatMessage`` array,
+    /// optionally limited to a range of message indices.
+    ///
+    /// - Parameters:
+    ///   - session: The session whose metadata appears in the header.
+    ///   - messages: The full ordered list of messages.
+    ///   - range: An optional closed range of message indices to export. When `nil`, all messages are exported.
+    /// - Returns: A Markdown string representing the exported session.
+    static func exportMarkdown(session: ChatSession, messages: [ChatMessage], range: ClosedRange<Int>?) -> String {
+        let sliced = sliceMessages(messages, range: range)
+        return exportMarkdown(session: session, messages: sliced)
+    }
+
     /// Build a Markdown export from a ``ChatSession`` by fetching messages from the API.
     ///
     /// This variant is used by ``SessionInfoView``, which does not hold messages locally.
@@ -456,14 +469,43 @@ enum SessionExportService {
         }
     }
 
+    /// Build a PDF export from a ``ChatSession`` and its local ``ChatMessage`` array,
+    /// optionally limited to a range of message indices.
+    ///
+    /// - Parameters:
+    ///   - session: The session whose metadata appears in the header.
+    ///   - messages: The full ordered list of messages.
+    ///   - range: An optional closed range of message indices to export. When `nil`, all messages are exported.
+    /// - Returns: Raw PDF bytes suitable for sharing via `UIActivityViewController`.
+    static func exportPDF(session: ChatSession, messages: [ChatMessage], range: ClosedRange<Int>?) -> Data {
+        let sliced = sliceMessages(messages, range: range)
+        return exportPDF(session: session, messages: sliced)
+    }
+
 #else
     /// PDF export is not supported on macOS; returns empty `Data`.
     static func exportPDF(session: ChatSession, messages: [ChatMessage]) -> Data {
         Data()
     }
+
+    /// Range-based PDF export is not supported on macOS; returns empty `Data`.
+    static func exportPDF(session: ChatSession, messages: [ChatMessage], range: ClosedRange<Int>?) -> Data {
+        Data()
+    }
 #endif
 
     // MARK: - Private
+
+    /// Slice a message array to the given range, clamping to valid bounds.
+    ///
+    /// Returns the full array when `range` is `nil`.
+    private static func sliceMessages(_ messages: [ChatMessage], range: ClosedRange<Int>?) -> [ChatMessage] {
+        guard let range = range else { return messages }
+        let lower = max(range.lowerBound, 0)
+        let upper = min(range.upperBound, messages.count - 1)
+        guard lower <= upper, lower < messages.count else { return [] }
+        return Array(messages[lower...upper])
+    }
 
     private static func header(for session: ChatSession, totalTokens: Int? = nil) -> String {
         var md = "# Session: \(session.name ?? "Unnamed")\n\n"
