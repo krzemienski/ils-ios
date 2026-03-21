@@ -71,27 +71,30 @@ struct ProjectsController: RouteCollection {
         Self.flexibleISO8601.date(from: s) ?? Self.fallbackISO8601.date(from: s)
     }
 
-    /// List all projects discovered from `~/.claude/projects/` sessions-index files.
-    ///
-    /// Supports pagination via query parameters:
-    /// - `page`: Page number (1-based, default 1)
-    /// - `limit`: Items per page (default 50, max 200)
-    /// - `search`: Case-insensitive filter on project name
-    ///
-    /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with paginated list of Project objects
-    @Sendable
-    func index(req: Request) async throws -> APIResponse<ListResponse<Project>> {
-        var projects: [Project] = []
-        let searchTerm = req.query[String.self, at: "search"]
+    // MARK: - Cursor Helpers
 
+    /// Encode an integer offset into a base64 cursor string.
+    private func encodeCursor(_ offset: Int) -> String {
+        Data("\(offset)".utf8).base64EncodedString()
+    }
+
+    /// Decode a base64 cursor string back to an integer offset.
+    private func decodeCursor(_ cursor: String) -> Int? {
+        guard let data = Data(base64Encoded: cursor),
+              let str = String(data: data, encoding: .utf8),
+              let offset = Int(str) else { return nil }
+        return offset
+    }
+
+    // MARK: - Project Loading
+
+    /// Scan the filesystem and return all projects, filtered by optional search term.
+    private func loadProjects(req: Request, searchTerm: String?) -> [Project] {
+        var projects: [Project] = []
         let claudeProjectsDir = fileSystem.claudeProjectsPath
 
         guard FileManager.default.fileExists(atPath: claudeProjectsDir) else {
-            return APIResponse(
-                success: true,
-                data: ListResponse(items: projects)
-            )
+            return projects
         }
 
         do {
@@ -163,14 +166,67 @@ struct ProjectsController: RouteCollection {
             req.logger.error("Failed to scan Claude projects: \(error)")
         }
 
-        // Apply pagination
-        let pagination = PaginationParams(from: req)
-        let result = pagination.apply(to: projects)
+        return projects
+    }
 
-        return APIResponse(
+    /// List all projects discovered from `~/.claude/projects/` sessions-index files.
+    ///
+    /// Supports cursor-based and page-based pagination via query parameters:
+    /// - `cursor`: Opaque cursor for cursor-based pagination (base64-encoded offset).
+    ///             When provided, takes precedence over `page`.
+    /// - `page`: Page number (1-based, default 1) — ignored when `cursor` is provided
+    /// - `limit`: Items per page (default 50, max 200)
+    /// - `search`: Case-insensitive filter on project name
+    ///
+    /// Response headers:
+    /// - `X-Total-Count`: Total number of matching projects
+    /// - `X-Has-More`: "true" if additional pages exist
+    /// - `X-Next-Cursor`: Base64 cursor for the next page (omitted when no more pages)
+    ///
+    /// - Parameter req: Vapor Request
+    /// - Returns: Response with paginated list of Project objects and pagination headers
+    @Sendable
+    func index(req: Request) async throws -> Response {
+        let searchTerm = req.query[String.self, at: "search"]
+        let cursorParam = req.query[String.self, at: "cursor"]
+        let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 200)
+
+        let projects = loadProjects(req: req, searchTerm: searchTerm)
+        let total = projects.count
+
+        // Resolve offset: cursor takes precedence over page
+        let offset: Int
+        if let cursor = cursorParam, let cursorOffset = decodeCursor(cursor) {
+            offset = cursorOffset
+        } else {
+            offset = (page - 1) * limit
+        }
+
+        let start = min(offset, total)
+        let end = min(start + limit, total)
+        let pageItems = Array(projects[start..<end])
+        let hasMore = end < total
+        let nextCursor: String? = hasMore ? encodeCursor(end) : nil
+
+        let payload = APIResponse(
             success: true,
-            data: ListResponse(items: result.items, total: result.pagination.total)
+            data: PaginatedResponse(
+                items: pageItems,
+                total: total,
+                hasMore: hasMore,
+                nextCursor: nextCursor
+            )
         )
+        let response = Response(status: .ok)
+        try response.content.encode(payload, using: JSONEncoder())
+        response.headers.contentType = .json
+        response.headers.replaceOrAdd(name: "X-Total-Count", value: "\(total)")
+        response.headers.replaceOrAdd(name: "X-Has-More", value: hasMore ? "true" : "false")
+        if let nextCursor = nextCursor {
+            response.headers.replaceOrAdd(name: "X-Next-Cursor", value: nextCursor)
+        }
+        return response
     }
 
     /// Get a specific project by deterministic ID (scans filesystem with early exit).
@@ -258,8 +314,8 @@ struct ProjectsController: RouteCollection {
         }
 
         // Verify the project exists in filesystem
-        let allProjects = try await index(req: req)
-        guard allProjects.data?.items.contains(where: { $0.id == id }) == true else {
+        let allProjects = loadProjects(req: req, searchTerm: nil)
+        guard allProjects.contains(where: { $0.id == id }) else {
             throw Abort(.notFound, reason: "Project not found")
         }
 

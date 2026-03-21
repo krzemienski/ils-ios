@@ -39,6 +39,21 @@ struct PluginsController: RouteCollection {
         plugins.get(":name", "check-update", use: checkUpdate)
     }
 
+    // MARK: - Cursor Helpers
+
+    /// Encode an integer offset into a base64 cursor string.
+    private func encodeCursor(_ offset: Int) -> String {
+        Data("\(offset)".utf8).base64EncodedString()
+    }
+
+    /// Decode a base64 cursor string back to an integer offset.
+    private func decodeCursor(_ cursor: String) -> Int? {
+        guard let data = Data(base64Encoded: cursor),
+              let str = String(data: data, encoding: .utf8),
+              let offset = Int(str) else { return nil }
+        return offset
+    }
+
     /// List all installed plugins.
     ///
     /// Reads from `~/.claude/plugins/installed_plugins.json` and `~/.claude/settings.json`
@@ -46,25 +61,60 @@ struct PluginsController: RouteCollection {
     ///
     /// Query parameters:
     /// - `refresh`: If "true", bypasses the file system cache
-    /// - `page`: Page number (1-based, default 1)
+    /// - `cursor`: Opaque cursor for cursor-based pagination (base64-encoded offset).
+    ///             When provided, takes precedence over `page`.
+    /// - `page`: Page number (1-based, default 1) — ignored when `cursor` is provided
     /// - `limit`: Items per page (default 50, max 200)
     ///
+    /// Response headers:
+    /// - `X-Total-Count`: Total number of installed plugins
+    /// - `X-Has-More`: "true" if additional pages exist
+    /// - `X-Next-Cursor`: Base64 cursor for the next page (omitted when no more pages)
+    ///
     /// - Parameter req: Vapor Request
-    /// - Returns: APIResponse with list of Plugin objects
+    /// - Returns: Response with paginated list of Plugin objects and pagination headers
     @Sendable
-    func list(req: Request) async throws -> APIResponse<ListResponse<Plugin>> {
+    func list(req: Request) async throws -> Response {
         let bypassCache = req.query[Bool.self, at: "refresh"] ?? false
+        let cursorParam = req.query[String.self, at: "cursor"]
+        let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 200)
 
         let plugins = try await fileSystem.listPlugins(bypassCache: bypassCache)
+        let total = plugins.count
 
-        // Apply pagination
-        let pagination = PaginationParams(from: req)
-        let result = pagination.apply(to: plugins)
+        // Resolve offset: cursor takes precedence over page
+        let offset: Int
+        if let cursor = cursorParam, let cursorOffset = decodeCursor(cursor) {
+            offset = cursorOffset
+        } else {
+            offset = (page - 1) * limit
+        }
 
-        return APIResponse(
+        let start = min(offset, total)
+        let end = min(start + limit, total)
+        let pageItems = Array(plugins[start..<end])
+        let hasMore = end < total
+        let nextCursor: String? = hasMore ? encodeCursor(end) : nil
+
+        let payload = APIResponse(
             success: true,
-            data: ListResponse(items: result.items, total: result.pagination.total)
+            data: PaginatedResponse(
+                items: pageItems,
+                total: total,
+                hasMore: hasMore,
+                nextCursor: nextCursor
+            )
         )
+        let response = Response(status: .ok)
+        try response.content.encode(payload, using: JSONEncoder())
+        response.headers.contentType = .json
+        response.headers.replaceOrAdd(name: "X-Total-Count", value: "\(total)")
+        response.headers.replaceOrAdd(name: "X-Has-More", value: hasMore ? "true" : "false")
+        if let nextCursor = nextCursor {
+            response.headers.replaceOrAdd(name: "X-Next-Cursor", value: nextCursor)
+        }
+        return response
     }
 
     /// List available plugin marketplaces.
