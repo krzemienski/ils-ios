@@ -79,19 +79,31 @@ struct SessionsController: RouteCollection {
     ///
     /// Query parameters:
     /// - `projectId`: Filter to sessions belonging to a specific project
-    /// - `page`: Page number (1-based, default 1)
-    /// - `limit`: Items per page (1-100, default 50)
+    /// - `cursor`: Opaque cursor for cursor-based pagination (ISO8601 date of last seen item).
+    ///             When provided, returns items with `lastActiveAt` strictly before the cursor date.
+    ///             Takes precedence over `page`.
+    /// - `page`: Page number (1-based, default 1) — ignored when `cursor` is provided
+    /// - `limit`: Items per page (1-200, default 50)
     /// - `search`: Case-insensitive search across name, projectName, firstPrompt
     /// - `refresh`: If "true", bypasses the external sessions cache
+    ///
+    /// Response headers:
+    /// - `X-Total-Count`: Total number of matching sessions (ignores cursor position)
+    /// - `X-Has-More`: "true" if additional pages exist
+    /// - `X-Next-Cursor`: ISO8601 cursor for fetching the next page (omitted when no more pages)
     @Sendable
-    func list(req: Request) async throws -> APIResponse<PaginatedResponse<ChatSession>> {
+    func list(req: Request) async throws -> Response {
         let projectId = req.query[UUID.self, at: "projectId"]
         let projectName = req.query[String.self, at: "projectName"]
+        let cursorParam = req.query[String.self, at: "cursor"]
         let page = max(req.query[Int.self, at: "page"] ?? 1, 1)
-        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 100)
-        let offset = (page - 1) * limit
+        let limit = min(max(req.query[Int.self, at: "limit"] ?? 50, 1), 200)
         let search = req.query[String.self, at: "search"]
         let refresh = req.query[String.self, at: "refresh"] == "true"
+
+        // Parse cursor into a date threshold: return items with lastActiveAt < cursorDate
+        let iso8601 = ISO8601DateFormatter()
+        let cursorDate: Date? = cursorParam.flatMap { iso8601.date(from: $0) }
 
         // 1. Load all DB sessions (small set, ~51), pre-sorted by lastActiveAt descending
         var dbQuery = SessionModel.query(on: req.db)
@@ -141,40 +153,71 @@ struct SessionsController: RouteCollection {
             uniqueExternal = uniqueExternal.filter(searchFilter)
         }
 
-        // 5. Merge two pre-sorted arrays (both sorted by lastActiveAt descending).
-        //    Early exit: only merge up to (offset + limit) items for pagination.
+        // 5. Compute total across all matching items (before cursor filtering) for X-Total-Count header.
         let total = filteredDB.count + uniqueExternal.count
-        let needed = min(offset + limit, total)
+
+        // 6. Apply cursor filter: when cursor provided, only consider items strictly older than cursor.
+        //    Both arrays are already sorted descending so this trims the leading (newer) portion.
+        var cursorDB = filteredDB
+        var cursorExternal = uniqueExternal
+        let offset: Int
+        if let cursorDate = cursorDate {
+            cursorDB = cursorDB.filter { $0.lastActiveAt < cursorDate }
+            cursorExternal = cursorExternal.filter { $0.lastActiveAt < cursorDate }
+            offset = 0
+        } else {
+            offset = (page - 1) * limit
+        }
+        let cursorTotal = cursorDB.count + cursorExternal.count
+
+        // 7. Merge the two pre-sorted arrays (both sorted by lastActiveAt descending).
+        //    Early exit: only merge up to (offset + limit) items.
+        let needed = min(offset + limit, cursorTotal)
         var merged: [ChatSession] = []
         merged.reserveCapacity(needed)
         var i = 0, j = 0
-        while merged.count < needed && (i < filteredDB.count || j < uniqueExternal.count) {
-            if i >= filteredDB.count {
-                merged.append(uniqueExternal[j]); j += 1
-            } else if j >= uniqueExternal.count {
-                merged.append(filteredDB[i]); i += 1
-            } else if filteredDB[i].lastActiveAt >= uniqueExternal[j].lastActiveAt {
-                merged.append(filteredDB[i]); i += 1
+        while merged.count < needed && (i < cursorDB.count || j < cursorExternal.count) {
+            if i >= cursorDB.count {
+                merged.append(cursorExternal[j]); j += 1
+            } else if j >= cursorExternal.count {
+                merged.append(cursorDB[i]); i += 1
+            } else if cursorDB[i].lastActiveAt >= cursorExternal[j].lastActiveAt {
+                merged.append(cursorDB[i]); i += 1
             } else {
-                merged.append(uniqueExternal[j]); j += 1
+                merged.append(cursorExternal[j]); j += 1
             }
         }
 
-        // 6. Paginate from merged result
+        // 8. Paginate from merged result
         let start = min(offset, merged.count)
         let end = min(start + limit, merged.count)
-        let page_items = Array(merged[start..<end])
+        let pageItems = Array(merged[start..<end])
+        let hasMore = end < cursorTotal
 
-        return APIResponse(
+        // 9. Compute next cursor from the lastActiveAt of the last returned item
+        let nextCursor: String? = hasMore ? pageItems.last.map { iso8601.string(from: $0.lastActiveAt) } : nil
+
+        // 10. Build response with pagination headers
+        let payload = APIResponse(
             success: true,
             data: PaginatedResponse(
-                items: page_items,
+                items: pageItems,
                 total: total,
                 hasMore: end < total,
                 page: page,
-                limit: limit
+                limit: limit,
+                nextCursor: end < total ? pageItems.last?.id.uuidString : nil
             )
         )
+        let response = Response(status: .ok)
+        try response.content.encode(payload, using: JSONEncoder())
+        response.headers.contentType = .json
+        response.headers.replaceOrAdd(name: "X-Total-Count", value: "\(total)")
+        response.headers.replaceOrAdd(name: "X-Has-More", value: hasMore ? "true" : "false")
+        if let nextCursor = nextCursor {
+            response.headers.replaceOrAdd(name: "X-Next-Cursor", value: nextCursor)
+        }
+        return response
     }
 
     /// Return all projects with their session counts, sorted by most recently active.
