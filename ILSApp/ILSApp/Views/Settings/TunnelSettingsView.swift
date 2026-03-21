@@ -25,6 +25,8 @@ typealias PlatformImage = NSImage
 struct TunnelSettingsView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var viewModel = TunnelSettingsViewModel()
 
@@ -34,8 +36,13 @@ struct TunnelSettingsView: View {
     @State private var qrImage: PlatformImage?
     @State private var showSetupWizard = false
     @State private var pulseAnimation = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
     @State private var troubleshootingExpanded = false
     @State private var dnsHelperExpanded = false
+
+    private var shouldAnimatePulse: Bool {
+        !reduceMotion && !isLowPowerMode && scenePhase == .active
+    }
 
     private enum FocusedField: Hashable {
         case cfToken, cfTunnelName, cfDomain
@@ -143,8 +150,21 @@ struct TunnelSettingsView: View {
                     .fill(theme.success)
                     .frame(width: 10, height: 10)
             }
-            .onAppear { pulseAnimation = true }
+            .onAppear { startPulseIfNeeded() }
             .onDisappear { pulseAnimation = false }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    startPulseIfNeeded()
+                } else {
+                    pulseAnimation = false
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(
+                for: Notification.Name.NSProcessInfoPowerStateDidChange
+            )) { _ in
+                isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+                if isLowPowerMode { pulseAnimation = false }
+            }
         case .error:
             Image(systemName: "exclamationmark.circle.fill")
                 .foregroundStyle(theme.error)
@@ -153,6 +173,15 @@ struct TunnelSettingsView: View {
             Circle()
                 .fill(theme.textTertiary)
                 .frame(width: 10, height: 10)
+        }
+    }
+
+    // MARK: - Pulse Animation Helpers
+
+    private func startPulseIfNeeded() {
+        guard shouldAnimatePulse else { return }
+        withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+            pulseAnimation = true
         }
     }
 
