@@ -525,6 +525,7 @@ struct SidebarRootView: View {
             }
             } // end else (isRestoringSession)
         }
+        .adaptiveLayout()
         .environment(multiSessionVM)
         .environment(sessionsVM)
         .tint(theme.accent)

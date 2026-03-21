@@ -530,7 +530,6 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .hoverState(cornerRadius: theme.cornerRadiusSmall)
-        .pointerHover()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(session.displayName), \(session.messageCount) messages")
     }
@@ -761,7 +760,6 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .hoverState(cornerRadius: theme.cornerRadiusSmall)
-        .pointerHover()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Rate limit: \(summary) messages, \(Int(fraction * 100)) percent consumed")
     }
@@ -789,7 +787,6 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .hoverState(cornerRadius: theme.cornerRadiusSmall)
-        .pointerHover()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label), \(value)")
     }
@@ -843,7 +840,6 @@ struct HomeView: View {
         .background(theme.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         .hoverState(cornerRadius: theme.cornerRadiusSmall)
-        .pointerHover()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             "Session Health, average score \(Int(avgScore)), " +

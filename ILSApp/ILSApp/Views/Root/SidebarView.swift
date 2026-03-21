@@ -893,7 +893,6 @@ struct SidebarView: View {
             .contentShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
         }
         .pointerHover()
-        .hoverState(cornerRadius: theme.cornerRadiusSmall)
         .accessibilityLabel(clampedBadge > 0 ? "\(label), \(clampedBadge) unread" : label)
         .accessibilityHint("Navigate to \(label)")
         .accessibilityAddTraits(isActive ? .isSelected : [])

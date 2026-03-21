@@ -172,6 +172,6 @@ enum AdaptiveGridLayout {
         case .wide:
             count = 3
         }
-        return Array(repeating: GridItem(.flexible(), spacing: 12), count: count)
+        return Array(repeating: GridItem(.adaptive(minimum: minimum), spacing: 12), count: count)
     }
 }
