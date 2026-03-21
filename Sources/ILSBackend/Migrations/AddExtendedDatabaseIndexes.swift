@@ -7,6 +7,7 @@ import SQLKit
 /// - `sessions.created_at` — sorted queries (oldest/newest sessions)
 /// - `projects.name` — filter and search queries by project name
 /// - `projects.path` — filter and lookup queries by project path
+/// - `skills.name` — filter and search queries by skill name
 struct AddExtendedDatabaseIndexes: AsyncMigration {
     func prepare(on database: Database) async throws {
         guard let sql = database as? SQLDatabase else {
@@ -17,6 +18,7 @@ struct AddExtendedDatabaseIndexes: AsyncMigration {
         try await sql.raw("CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)").run()
         try await sql.raw("CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)").run()
         try await sql.raw("CREATE INDEX IF NOT EXISTS idx_projects_path ON projects(path)").run()
+        try await sql.raw("CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)").run()
     }
 
     func revert(on database: Database) async throws {
@@ -26,5 +28,6 @@ struct AddExtendedDatabaseIndexes: AsyncMigration {
         try await sql.raw("DROP INDEX IF EXISTS idx_sessions_created_at").run()
         try await sql.raw("DROP INDEX IF EXISTS idx_projects_name").run()
         try await sql.raw("DROP INDEX IF EXISTS idx_projects_path").run()
+        try await sql.raw("DROP INDEX IF EXISTS idx_skills_name").run()
     }
 }
