@@ -113,6 +113,7 @@
 		A1B2C3D4E5F60004KANBAN04 /* KanbanColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60011KANBAN11 /* KanbanColumnView.swift */; };
 		A1B2C3D4E5F60005KANBAN05 /* KanbanFilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60012KANBAN12 /* KanbanFilterBarView.swift */; };
 		A1B2C3D4E5F60006KANBAN06 /* SessionKanbanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60013KANBAN13 /* SessionKanbanViewModel.swift */; };
+		A1B2C3D4E5F6000BKANBAN0B /* SessionKanbanBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60014KANBAN14 /* SessionKanbanBoardView.swift */; };
 		1C96CC761FDDA31A22D7728F /* FuzzyMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A99408995D3473EB8DBDBE0 /* FuzzyMatcher.swift */; };
 		1CBB9F38CB8BEEA61EFEAB1D /* ThemeColorTokensSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */; };
 		1D33BC6A88F0C7C226592126 /* LargeSessionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75431682EF2696B21794FFF /* LargeSessionWidget.swift */; };
@@ -727,6 +728,7 @@
 		A1B2C3D4E5F60008KANBAN08 /* KanbanColumnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60011KANBAN11 /* KanbanColumnView.swift */; };
 		A1B2C3D4E5F60009KANBAN09 /* KanbanFilterBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60012KANBAN12 /* KanbanFilterBarView.swift */; };
 		A1B2C3D4E5F6000AKANBAN0A /* SessionKanbanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60013KANBAN13 /* SessionKanbanViewModel.swift */; };
+		A1B2C3D4E5F6000CKANBAN0C /* SessionKanbanBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60014KANBAN14 /* SessionKanbanBoardView.swift */; };
 		BF64675176F1C9AA4255EBDD /* SessionRecordingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F248F9EE757F68605D70ABDB /* SessionRecordingViewModel.swift */; };
 		BF733927A6B9F3B4BEB875B6 /* ToolCallAccordion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CA914CC9CC730BF84E8A34 /* ToolCallAccordion.swift */; };
 		BFC1BD3E7E6F94F5B12F06E0 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586B7AA21B4A73C7E651752C /* StatCard.swift */; };
@@ -1319,6 +1321,7 @@
 		A1B2C3D4E5F60011KANBAN11 /* KanbanColumnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanColumnView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60012KANBAN12 /* KanbanFilterBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanFilterBarView.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60013KANBAN13 /* SessionKanbanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionKanbanViewModel.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60014KANBAN14 /* SessionKanbanBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionKanbanBoardView.swift; sourceTree = "<group>"; };
 		92DA7EA27E512C2573284699 /* SystemMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessageView.swift; sourceTree = "<group>"; };
 		94106F11E55BF921CAA0A564 /* AlertThresholdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertThresholdManager.swift; sourceTree = "<group>"; };
 		948140787A5BDADAC7635EC4 /* CyberpunkTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyberpunkTheme.swift; sourceTree = "<group>"; };
@@ -1998,6 +2001,7 @@
 				A1B2C3D4E5F60010KANBAN10 /* KanbanSessionCardView.swift */,
 				A1B2C3D4E5F60011KANBAN11 /* KanbanColumnView.swift */,
 				A1B2C3D4E5F60012KANBAN12 /* KanbanFilterBarView.swift */,
+				A1B2C3D4E5F60014KANBAN14 /* SessionKanbanBoardView.swift */,
 			);
 			path = KanbanBoard;
 			sourceTree = "<group>";
@@ -2974,6 +2978,7 @@
 				A1B2C3D4E5F60008KANBAN08 /* KanbanColumnView.swift in Sources */,
 				A1B2C3D4E5F60009KANBAN09 /* KanbanFilterBarView.swift in Sources */,
 				A1B2C3D4E5F6000AKANBAN0A /* SessionKanbanViewModel.swift in Sources */,
+				A1B2C3D4E5F6000CKANBAN0C /* SessionKanbanBoardView.swift in Sources */,
 				284AECF9967348E09DFE6D27 /* AlertThresholdManager.swift in Sources */,
 				03C776870DD1C02257E65800 /* AlertThresholdSettingsView.swift in Sources */,
 				31AF8385503F4BD63E02A996 /* AnalyticsView.swift in Sources */,
@@ -3428,6 +3433,7 @@
 				A1B2C3D4E5F60004KANBAN04 /* KanbanColumnView.swift in Sources */,
 				A1B2C3D4E5F60005KANBAN05 /* KanbanFilterBarView.swift in Sources */,
 				A1B2C3D4E5F60006KANBAN06 /* SessionKanbanViewModel.swift in Sources */,
+				A1B2C3D4E5F6000BKANBAN0B /* SessionKanbanBoardView.swift in Sources */,
 				58C6DC2C1108D4592DA61F1C /* AlertThresholdManager.swift in Sources */,
 				ABB5002EEEC64396D794BCCF /* AlertThresholdSettingsView.swift in Sources */,
 				1FC0FC8AE58CF5C296EB554B /* AnalyticsView.swift in Sources */,

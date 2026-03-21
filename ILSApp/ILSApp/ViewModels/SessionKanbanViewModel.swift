@@ -60,13 +60,18 @@ final class SessionKanbanViewModel {
     private static let activePollInterval: TimeInterval = 15
     private static let idlePollInterval: TimeInterval = 60
 
+    // MARK: - Permissions
+
+    /// Session IDs (lowercased) that currently have pending permission requests.
+    @ObservationIgnored private var sessionsWithPendingPermissions: Set<String> = []
+
     // MARK: - Init
 
     /// Creates the kanban view model.
     /// - Parameters:
     ///   - manager: The backend manager for multi-backend session fetching.
     ///   - apiClient: The API client for queue item operations.
-    init(manager: BackendManager = .shared, apiClient: APIClient) {
+    init(manager: BackendManager = .shared, apiClient: APIClient = APIClient()) {
         self.manager = manager
         self.apiClient = apiClient
     }
@@ -130,7 +135,7 @@ final class SessionKanbanViewModel {
 
     /// Filtered items grouped by their kanban column.
     var columnItems: [KanbanColumn: [KanbanBoardItem]] {
-        Dictionary(grouping: filteredItems) { $0.column }
+        Dictionary(grouping: filteredItems) { columnForItem($0) }
     }
 
     /// Items for a specific column, sorted by recency.
@@ -141,8 +146,22 @@ final class SessionKanbanViewModel {
     /// Whether any items are in an active state (active, queued, or waiting).
     var hasActiveItems: Bool {
         allItems.contains { item in
-            let col = item.column
+            let col = columnForItem(item)
             return col == .active || col == .queued || col == .waitingForApproval
+        }
+    }
+
+    /// Determines the kanban column for an item, accounting for pending permissions.
+    private func columnForItem(_ item: KanbanBoardItem) -> KanbanColumn {
+        switch item {
+        case .session(let tagged):
+            let sessionId = tagged.session.id.uuidString.lowercased()
+            return KanbanColumn.column(
+                for: tagged,
+                hasPendingPermission: sessionsWithPendingPermissions.contains(sessionId)
+            )
+        case .queueItem(let queueItem):
+            return KanbanColumn.column(forQueueItem: queueItem)
         }
     }
 
@@ -167,8 +186,11 @@ final class SessionKanbanViewModel {
 
         async let sessionsResult = fetchSessions()
         async let queueResult = fetchQueueItems()
+        async let permissionsResult = fetchPendingPermissionSessionIds()
 
-        let (taggedSessions, queueItems) = await (sessionsResult, queueResult)
+        let (taggedSessions, queueItems, pendingSessionIds) = await (sessionsResult, queueResult, permissionsResult)
+
+        sessionsWithPendingPermissions = pendingSessionIds
 
         var items: [KanbanBoardItem] = []
         items.append(contentsOf: taggedSessions.map { .session($0) })
@@ -246,6 +268,23 @@ final class SessionKanbanViewModel {
             return []
         } catch {
             // Queue fetch failure is non-fatal — sessions alone are still useful.
+            return []
+        }
+    }
+
+    /// Fetches pending permission session IDs from the primary API client.
+    ///
+    /// Returns a set of lowercased session ID strings that currently have at least
+    /// one pending permission request, used to route sessions to the "Waiting for
+    /// Approval" kanban column.
+    private func fetchPendingPermissionSessionIds() async -> Set<String> {
+        do {
+            let response: APIResponse<PermissionListResponse> = try await apiClient.get("/permissions/pending")
+            guard let listResponse = response.data else { return [] }
+            let sessionIds = listResponse.items.map { $0.sessionId.lowercased() }
+            return Set(sessionIds)
+        } catch {
+            // Permission fetch failure is non-fatal — sessions still show in Active column.
             return []
         }
     }
