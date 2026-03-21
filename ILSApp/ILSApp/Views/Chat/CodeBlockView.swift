@@ -1,28 +1,5 @@
 import SwiftUI
 
-// MARK: - PreferenceKeys
-
-private struct CBContentWidthKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
-private struct CBViewWidthKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
-private struct CBScrollOffsetKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 /// View that displays a code block with syntax highlighting, line numbers, and actions
 struct CodeBlockView: View {
     let code: String
@@ -195,25 +172,17 @@ struct CodeBlockView: View {
                         .drawingGroupIfEnabled(!lowPowerMonitor.isLowPowerModeEnabled)
                 }
                 .padding(.vertical, theme.spacingSM)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear
-                            .preference(key: CBContentWidthKey.self, value: geo.size.width)
-                            .preference(key: CBScrollOffsetKey.self,
-                                        value: geo.frame(in: .named("hCodeScrollCB")).minX)
-                    }
-                )
+                .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width in
+                    contentWidth = width
+                }
+                .onGeometryChange(for: CGFloat.self, of: { $0.frame(in: .named("hCodeScrollCB")).minX }) { minX in
+                    scrollOffset = -minX
+                }
             }
             .coordinateSpace(name: "hCodeScrollCB")
-            .background(
-                GeometryReader { geo in
-                    Color.clear
-                        .preference(key: CBViewWidthKey.self, value: geo.size.width)
-                }
-            )
-            .onPreferenceChange(CBContentWidthKey.self) { contentWidth = $0 }
-            .onPreferenceChange(CBViewWidthKey.self) { viewWidth = $0 }
-            .onPreferenceChange(CBScrollOffsetKey.self) { scrollOffset = -$0 }
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width in
+                viewWidth = width
+            }
             .background(theme.bgTertiary)
             .overlay(alignment: .trailing) {
                 scrollGradientOverlay
