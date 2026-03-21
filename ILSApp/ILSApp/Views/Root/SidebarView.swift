@@ -69,6 +69,8 @@ struct SidebarView: View {
     /// Conflict resolution sheet state for sync conflicts.
     @State private var selectedConflictSession: (local: ChatSession, server: ChatSession, fields: [ConflictField])? = nil
     @State private var showConflictSheet: Bool = false
+    /// The session to present the export picker for, if any.
+    @State private var sessionToExport: ChatSession?
 
     /// Version monitor to check for Claude Code CLI updates.
     @State private var versionMonitorViewModel = VersionMonitorViewModel()
@@ -155,6 +157,11 @@ struct SidebarView: View {
                 }
                 .environment(\.theme, theme)
             }
+        }
+        .sheet(item: $sessionToExport) { session in
+            SessionExportPickerSheet(session: session)
+                .environment(appState)
+                .environment(\.theme, theme)
         }
         .task {
             templatesViewModel.configure(client: appState.apiClient)
@@ -694,7 +701,7 @@ struct SidebarView: View {
                             Label("Rename", systemImage: "pencil")
                         }
                         Button {
-                            SessionExporter.share(session)
+                            sessionToExport = session
                         } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
                         }
