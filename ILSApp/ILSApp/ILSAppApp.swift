@@ -219,6 +219,11 @@ struct ILSAppApp: App {
                         .zIndex(1)
                 }
             }
+            #if os(iOS)
+            .onAppear {
+                configureStageManagerConstraints()
+            }
+            #endif
         }
         .onChange(of: scenePhase) { _, newPhase in
             appState.handleScenePhase(newPhase)
@@ -236,6 +241,25 @@ struct ILSAppApp: App {
             }
         }
     }
+
+    // MARK: - Stage Manager Window Constraints
+
+    #if os(iOS)
+    /// Configures minimum and maximum window sizes for iPad Stage Manager.
+    /// Sets a minimum of 320×320 so the app remains usable in compact Stage Manager
+    /// tiles, and leaves maximum unconstrained (system default) so the app can
+    /// expand to full screen.
+    private func configureStageManagerConstraints() {
+        guard let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first,
+            let sizeRestrictions = windowScene.sizeRestrictions
+        else { return }
+
+        sizeRestrictions.minimumSize = CGSize(width: 320, height: 320)
+        // Maximum left at system default — no explicit cap needed.
+    }
+    #endif
 }
 
 // MARK: - Permission Notification Delegate
