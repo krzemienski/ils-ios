@@ -31,6 +31,15 @@ struct SessionExportPickerSheet: View {
     @State private var exportedFileName = ""
     @State private var showShareSheet = false
 
+    // MARK: - Message Range Selection
+
+    /// When `true`, export the full session. When `false`, use the selected range.
+    @State private var exportFullSession = true
+    /// 1-based start index for the message range.
+    @State private var rangeStart: Int = 1
+    /// 1-based end index for the message range.
+    @State private var rangeEnd: Int = 1
+
     // MARK: - Computed
 
     private var sessionName: String {
@@ -38,6 +47,16 @@ struct SessionExportPickerSheet: View {
             return "session"
         }
         return name
+    }
+
+    /// Total number of messages in the session (minimum 1 for UI purposes).
+    private var totalMessages: Int {
+        max(session.messageCount, 1)
+    }
+
+    /// Number of messages in the selected range.
+    private var selectedMessageCount: Int {
+        exportFullSession ? totalMessages : max(rangeEnd - rangeStart + 1, 0)
     }
 
     // MARK: - Body
@@ -56,6 +75,32 @@ struct SessionExportPickerSheet: View {
 
                 Section {
                     formatDescriptionRow
+                }
+
+                Section("Message Range") {
+                    Toggle("Export full session", isOn: $exportFullSession)
+
+                    if !exportFullSession {
+                        Stepper(
+                            "Start: message \(rangeStart)",
+                            value: $rangeStart,
+                            in: 1...max(rangeEnd, 1)
+                        )
+
+                        Stepper(
+                            "End: message \(rangeEnd)",
+                            value: $rangeEnd,
+                            in: max(rangeStart, 1)...totalMessages
+                        )
+                    }
+
+                    HStack {
+                        Image(systemName: "number")
+                            .foregroundStyle(theme.accent)
+                        Text("\(selectedMessageCount) message\(selectedMessageCount == 1 ? "" : "s") selected")
+                            .font(.caption)
+                            .foregroundStyle(theme.textSecondary)
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -89,6 +134,7 @@ struct SessionExportPickerSheet: View {
             }
             .task {
                 viewModel.configure(client: appState.apiClient)
+                rangeEnd = totalMessages
             }
         }
     }
