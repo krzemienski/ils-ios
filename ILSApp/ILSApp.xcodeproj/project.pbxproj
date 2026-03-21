@@ -39,6 +39,8 @@
 		BB5555555555555555555555 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
 		BB6666666666666666666666 /* QualityTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2222222222222222222222 /* QualityTrendView.swift */; };
 		CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* FeedbackViewModel.swift */; };
+		DD1111111111111111111111 /* PermissionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000000 /* PermissionViewModel.swift */; };
+		DD2222222222222222222222 /* PermissionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000000 /* PermissionViewModel.swift */; };
 		CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2222222222222222222222 /* FeedbackRatingView.swift */; };
 		CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* FeedbackDetailSheet.swift */; };
 		06AC7AF758977C86BA9CE168 /* SessionCheckpointsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448A55AEFBD34AD89EA6C69C /* SessionCheckpointsViewModel.swift */; };
@@ -1060,6 +1062,7 @@
 		1D0E33E023FE1AE0E160145C /* ThemeColorTokensSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeColorTokensSection.swift; sourceTree = "<group>"; };
 		1D10FDB4E4916DCC9E4D4216 /* MessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		AA1111111111111111111111 /* FeedbackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackViewModel.swift; sourceTree = "<group>"; };
+		DD0000000000000000000000 /* PermissionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionViewModel.swift; sourceTree = "<group>"; };
 		AA2222222222222222222222 /* FeedbackRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackRatingView.swift; sourceTree = "<group>"; };
 		AA3333333333333333333333 /* FeedbackDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackDetailSheet.swift; sourceTree = "<group>"; };
 		1D53A05E3FCA36982D2544FE /* CommandPaletteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPaletteView.swift; sourceTree = "<group>"; };
@@ -2344,6 +2347,7 @@
 				0BE74E4D4A241C8AD73EE533 /* BaseViewModel.swift */,
 				B66668AA64FB7642DA9F8489 /* ChatViewModel.swift */,
 				AA1111111111111111111111 /* FeedbackViewModel.swift */,
+				DD0000000000000000000000 /* PermissionViewModel.swift */,
 				8AE3E60652AFE81FAB1A7E84 /* CheckpointViewModel.swift */,
 				610C22D38AE8B9614B67C20C /* ConfigEditorViewModel.swift */,
 				0D9C2128D00ABE45432812A0 /* CrossSessionSearchViewModel.swift */,
@@ -3085,6 +3089,7 @@
 				E60C222F2D2BF4497246352C /* MessageSearchResultRow.swift in Sources */,
 				CF9B5946EFD233C8BEDE007E /* MessageView.swift in Sources */,
 				AA4444444444444444444444 /* FeedbackViewModel.swift in Sources */,
+				DD1111111111111111111111 /* PermissionViewModel.swift in Sources */,
 				AA5555555555555555555555 /* FeedbackRatingView.swift in Sources */,
 				AA6666666666666666666666 /* FeedbackDetailSheet.swift in Sources */,
 				4F5736F79DB3678F90F5A525 /* MetricChart.swift in Sources */,
@@ -3458,6 +3463,7 @@
 				CC3333333333333333333333 /* FeedbackDetailSheet.swift in Sources */,
 				CC2222222222222222222222 /* FeedbackRatingView.swift in Sources */,
 				CC1111111111111111111111 /* FeedbackViewModel.swift in Sources */,
+				DD2222222222222222222222 /* PermissionViewModel.swift in Sources */,
 				B7E269B484850E0EDE5DB37A /* FileBrowserView.swift in Sources */,
 				AA317934D4936BCE1D3FAFE6 /* FileBrowserViewModel.swift in Sources */,
 				BB4444444444444444444444 /* BestOfCollectionView.swift in Sources */,

@@ -41,22 +41,32 @@ class ChatViewModel {
     var streamTokenCount: Int = 0
     /// Elapsed time in seconds for the current stream.
     var streamElapsedSeconds: Double = 0
+    /// Dedicated view model for permission request state and decision forwarding.
+    var permissionViewModel = PermissionViewModel()
+
     /// All queued permission requests waiting for a user decision.
-    var pendingPermissionRequests: [PermissionRequest] = []
+    /// Forwards to ``permissionViewModel``.
+    var pendingPermissionRequests: [PermissionRequest] {
+        get { permissionViewModel.pendingPermissionRequests }
+        set { permissionViewModel.pendingPermissionRequests = newValue }
+    }
     /// Whether the batch permission modal should be shown.
-    var showBatchPermissionModal: Bool = false
+    /// Forwards to ``permissionViewModel``.
+    var showBatchPermissionModal: Bool {
+        get { permissionViewModel.showBatchPermissionModal }
+        set { permissionViewModel.showBatchPermissionModal = newValue }
+    }
     /// Project ID used for scoping auto-approve rule lookups.
-    var projectId: UUID?
+    /// Forwards to ``permissionViewModel``.
+    var projectId: UUID? {
+        get { permissionViewModel.projectId }
+        set { permissionViewModel.projectId = newValue }
+    }
     /// Pending permission request from Claude (first in queue, for backward compatibility).
+    /// Forwards to ``permissionViewModel``.
     var pendingPermissionRequest: PermissionRequest? {
-        get { pendingPermissionRequests.first }
-        set {
-            if let v = newValue {
-                pendingPermissionRequests = [v]
-            } else {
-                pendingPermissionRequests = []
-            }
-        }
+        get { permissionViewModel.pendingPermissionRequest }
+        set { permissionViewModel.pendingPermissionRequest = newValue }
     }
     /// Start time of the current stream, used for elapsed time calculations.
     /// Internal access for Live Activity extension.
@@ -142,7 +152,9 @@ class ChatViewModel {
         }
     }
 
-    var sessionId: UUID?
+    var sessionId: UUID? {
+        didSet { permissionViewModel.updateSessionId(sessionId) }
+    }
     /// For external sessions: the encoded project path (e.g. "-Users-nick-Desktop-project")
     var encodedProjectPath: String?
     /// For external sessions: the claude session ID string
@@ -244,6 +256,7 @@ class ChatViewModel {
     func configure(client: APIClient, sseClient: SSEClient) {
         self.apiClient = client
         self.sseClient = sseClient
+        permissionViewModel.configure(apiClient: client, sessionId: sessionId)
         setupBindings()
         setupOfflineQueueObserver()
         setupSyncStatusObserver()
@@ -940,91 +953,18 @@ class ChatViewModel {
         sseClient?.cancel()
     }
 
-    /// Respond to a pending permission request (allow/deny)
+    /// Respond to a pending permission request (allow/deny).
     ///
-    /// Sends the decision to the backend which forwards it to the Claude CLI process via stdin.
-    /// Route: POST /chat/permission/{sessionId}/{requestId}
+    /// Delegates to ``permissionViewModel``.
     func respondToPermission(requestId: String, decision: String) {
-        let matchingRequest = pendingPermissionRequests.first(where: { $0.requestId == requestId })
-        let toolName = matchingRequest?.toolName ?? ""
-        let toolInputSummary = matchingRequest.map { Self.formatToolInput($0.toolInput) } ?? ""
-
-        pendingPermissionRequests.removeAll { $0.requestId == requestId }
-        if pendingPermissionRequests.isEmpty {
-            showBatchPermissionModal = false
-        }
-
-        respondToPermissionAndRecord(
-            requestId: requestId,
-            decision: decision,
-            isAutoApproved: false,
-            toolName: toolName,
-            toolInputSummary: toolInputSummary
-        )
+        permissionViewModel.respondToPermission(requestId: requestId, decision: decision)
     }
 
     /// Respond to multiple pending permission requests at once.
     ///
-    /// Records each decision to history and removes the requests from the queue.
+    /// Delegates to ``permissionViewModel``.
     func respondToBatchPermissions(requestIds: [String], decision: String) {
-        for requestId in requestIds {
-            let matchingRequest = pendingPermissionRequests.first(where: { $0.requestId == requestId })
-            let toolName = matchingRequest?.toolName ?? ""
-            let toolInputSummary = matchingRequest.map { Self.formatToolInput($0.toolInput) } ?? ""
-            respondToPermissionAndRecord(
-                requestId: requestId,
-                decision: decision,
-                isAutoApproved: false,
-                toolName: toolName,
-                toolInputSummary: toolInputSummary
-            )
-        }
-        pendingPermissionRequests.removeAll { requestIds.contains($0.requestId) }
-        if pendingPermissionRequests.isEmpty {
-            showBatchPermissionModal = false
-        }
-    }
-
-    /// Core permission response logic: sends decision to backend and records to history.
-    private func respondToPermissionAndRecord(
-        requestId: String,
-        decision: String,
-        isAutoApproved: Bool = false,
-        toolName: String = "",
-        toolInputSummary: String = ""
-    ) {
-        guard let apiClient, let sessionId else { return }
-        let sessionIdString = sessionId.uuidString
-        let entry = PermissionHistoryEntry(
-            sessionId: sessionIdString,
-            toolName: toolName,
-            toolInputSummary: String(toolInputSummary.prefix(200)),
-            decision: decision,
-            isAutoApproved: isAutoApproved
-        )
-
-        Task { [weak self] in
-            _ = self  // prevent unused capture warning
-            do {
-                let body = PermissionDecision(decision: decision)
-                let _: APIResponse<AcknowledgedResponse> = try await apiClient.post(
-                    "/chat/permission/\(sessionIdString)/\(requestId)",
-                    body: body
-                )
-            } catch {
-                AppLogger.shared.warning("Permission response failed (non-fatal): \(error)", category: "chat")
-            }
-            try? await PermissionHistoryService.shared.record(entry)
-        }
-    }
-
-    /// Format an AnyCodable tool input into a searchable plain-text string.
-    private static func formatToolInput(_ toolInput: AnyCodable) -> String {
-        if let data = try? JSONEncoder().encode(toolInput),
-           let str = String(data: data, encoding: .utf8) {
-            return str
-        }
-        return ""
+        permissionViewModel.respondToBatchPermissions(requestIds: requestIds, decision: decision)
     }
 
     /// Rename the current session.
@@ -1394,7 +1334,7 @@ class ChatViewModel {
                 checkCompactionThresholds()
 
             case .permission(let permissionReq):
-                let toolInputString = Self.formatToolInput(permissionReq.toolInput)
+                let toolInputString = PermissionViewModel.formatToolInput(permissionReq.toolInput)
                 let reqProjectId = self.projectId
                 // Check auto-approve rules asynchronously (AutoApproveService is an actor)
                 Task { @MainActor [weak self] in
@@ -1405,7 +1345,7 @@ class ChatViewModel {
                         projectId: reqProjectId
                     )
                     if shouldAuto {
-                        self.respondToPermissionAndRecord(
+                        self.permissionViewModel.respondToPermissionAndRecord(
                             requestId: permissionReq.requestId,
                             decision: "allow",
                             isAutoApproved: true,
@@ -1413,8 +1353,8 @@ class ChatViewModel {
                             toolInputSummary: toolInputString
                         )
                     } else {
-                        self.pendingPermissionRequests.append(permissionReq)
-                        self.showBatchPermissionModal = true
+                        self.permissionViewModel.pendingPermissionRequests.append(permissionReq)
+                        self.permissionViewModel.showBatchPermissionModal = true
                     }
                 }
 
