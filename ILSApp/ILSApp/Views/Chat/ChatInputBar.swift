@@ -228,6 +228,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(isDisabled)
         .accessibilityLabel("Command palette")
         .accessibilityHint("Opens the command palette for slash commands")
@@ -244,6 +245,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(isDisabled)
         .accessibilityLabel("Add attachment")
         .accessibilityHint("Opens the attachment picker")
@@ -258,6 +260,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(isDisabled)
         .accessibilityLabel("Advanced options")
         .accessibilityIdentifier("advanced-options-button")
@@ -276,6 +279,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(isDisabled)
         .accessibilityLabel("Documentation")
         .accessibilityHint("Opens Claude Code documentation for slash commands")
@@ -313,6 +317,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .accessibilityIdentifier("cancel-button")
         .accessibilityLabel("Stop streaming")
         .accessibilityHint("Cancels the current response from Claude")
@@ -344,6 +349,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(text.isEmpty || isDisabled)
         .keyboardShortcut(.return, modifiers: .command)
         .accessibilityIdentifier("send-button")
@@ -361,6 +367,7 @@ struct ChatInputBar: View {
         }
         .frame(minWidth: 44, minHeight: 44)
         .contentShape(Rectangle())
+        .pointerHover()
         .disabled(isDisabled)
         .accessibilityIdentifier("voice-input-button")
         .accessibilityLabel(isRecording ? "Stop recording" : "Start voice input")

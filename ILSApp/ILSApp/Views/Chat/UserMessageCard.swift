@@ -132,6 +132,7 @@ struct UserMessageCard: View, Equatable {
         }
         .accessibilityLabel("You said: \(message.text)")
         .accessibilityHint("Long press for options")
+        .hoverState(hoveredOpacity: 0.95, cornerRadius: theme.cornerRadiusSmall)
     }
 
     // MARK: - Attachment helpers

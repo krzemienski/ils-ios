@@ -168,6 +168,7 @@ struct ToolCallView: View {
                 }
             }
             .buttonStyle(.plain)
+            .pointerHover()
 
             if isExpanded, let input = toolCall.inputPreview {
                 Text(input)
@@ -218,6 +219,7 @@ struct ToolResultView: View {
                 }
             }
             .buttonStyle(.plain)
+            .pointerHover()
 
             if isExpanded {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -291,6 +293,7 @@ struct ThinkingView: View {
                 }
             }
             .buttonStyle(.plain)
+            .pointerHover()
 
             if isExpanded {
                 Text(thinking)

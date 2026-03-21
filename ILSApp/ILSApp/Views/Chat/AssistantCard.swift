@@ -118,6 +118,7 @@ struct AssistantCard: View, Equatable {
             }
         }
         .accessibilityLabel(accessibilityLabelString)
+        .hoverState(hoveredOpacity: 0.95)
         #if os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ILSToggleExpandAllToolCalls"))) { _ in
             let newValue = (expandAllToolCalls == true) ? false : true
@@ -203,6 +204,7 @@ struct AssistantCard: View, Equatable {
                     .foregroundStyle(theme.accent)
                 }
                 .buttonStyle(.plain)
+                .pointerHover()
             }
 
             ForEach(message.toolCalls, id: \.id) { toolCall in

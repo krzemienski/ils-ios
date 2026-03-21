@@ -80,6 +80,7 @@ struct CodeBlockView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .pointerHover()
                     .accessibilityIdentifier("code-block-expand-button")
                     .accessibilityLabel(isExpanded ? "Collapse code" : "Expand code")
                 }
@@ -108,6 +109,7 @@ struct CodeBlockView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .pointerHover()
                 .accessibilityIdentifier("code-block-copy-button")
                 .accessibilityLabel(showCopyConfirmation ? "Copied to clipboard" : "Copy code")
                 .accessibilityHint("Copies the code to your clipboard")
@@ -123,6 +125,7 @@ struct CodeBlockView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .pointerHover()
                 .accessibilityIdentifier("code-block-share-button")
                 .accessibilityLabel("Share code")
             }
