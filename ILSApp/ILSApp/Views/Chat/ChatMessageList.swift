@@ -249,3 +249,25 @@ struct ChatMessageList: View {
         }
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    @Previewable @State var isUserScrolledUp = false
+    @Previewable @State var showJumpToBottom = false
+    ChatMessageList(
+        messages: [],
+        isStreaming: false,
+        isLoadingHistory: false,
+        statusText: nil,
+        currentStreamingMessage: nil,
+        isUserScrolledUp: $isUserScrolledUp,
+        showJumpToBottom: $showJumpToBottom,
+        onDeleteMessage: { _ in },
+        onRetryMessage: { _ in },
+        canLoadMore: false,
+        isLoadingMore: false,
+        onLoadMore: {},
+        sessionProjectId: nil
+    )
+}

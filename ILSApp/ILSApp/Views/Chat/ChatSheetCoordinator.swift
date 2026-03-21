@@ -375,3 +375,58 @@ extension View {
         modifier(ChatSheetCoordinator(destination: destination, context: context))
     }
 }
+
+// MARK: - Preview
+
+#Preview {
+    @Previewable @State var destination: ChatSheetDestination? = nil
+    @Previewable @State var config = ChatOptionsConfig()
+    @Previewable @State var showBatch = false
+    @Previewable @State var renameText = ""
+    let session = ChatSession(
+        id: UUID(),
+        name: "Preview Session",
+        model: "claude-sonnet-4-5",
+        permissionMode: .default,
+        status: .active,
+        messageCount: 3,
+        source: .ils,
+        createdAt: Date(),
+        lastActiveAt: Date()
+    )
+    Text("Chat Content")
+        .chatSheets(
+            destination: $destination,
+            context: ChatSheetContext(
+                session: session,
+                chatOptionsConfig: $config,
+                onCommandSelected: { _ in },
+                onTemplateApplied: { _ in },
+                onAttachmentsAdded: { _ in },
+                contextTokensUsed: nil,
+                contextWindowSize: nil,
+                contextInputTokens: nil,
+                contextOutputTokens: nil,
+                contextCacheReadTokens: nil,
+                contextCacheCreateTokens: nil,
+                onForkFromContextDetail: {},
+                onPermissionDecision: { _, _ in },
+                pendingPermissionRequests: [],
+                showBatchPermissionModal: $showBatch,
+                onBatchPermissionDecision: { _, _ in },
+                compactionTokensBefore: 0,
+                compactionTokensAfter: 0,
+                compactionSnapshot: nil,
+                onPasteSnapshot: { _ in },
+                onDismissCompaction: {},
+                errorMessage: "",
+                onRetryLastMessage: {},
+                forkedSession: nil,
+                onOpenFork: {},
+                onConfirmDeleteMessage: {},
+                renameText: $renameText,
+                onConfirmRename: {},
+                onConfirmDeleteSession: { false }
+            )
+        )
+}
