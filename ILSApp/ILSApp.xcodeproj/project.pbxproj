@@ -67,6 +67,7 @@
 		099691BB77643032E3FEB560 /* WorkflowNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A191B5D1E0900CB193306A /* WorkflowNode.swift */; };
 		09C254A1F16B2BE57601D939 /* BatchPermissionRequestModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1FD7DB9986637530FBCC4E /* BatchPermissionRequestModal.swift */; };
 		0A4721C7B80DBDAE71F8F631 /* ILSWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEEEBFCDCD0416848E38B96 /* ILSWidgetsBundle.swift */; };
+		0A5B3C8D7E9F1A2B4D6E8F01 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0A5B3C8D7E9F1A2B4D6E8F02 /* PrivacyInfo.xcprivacy */; };
 		0AE742518F7CB5849BD4713E /* NLSessionQueryParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32113FED633D3A0212A6B40F /* NLSessionQueryParser.swift */; };
 		0AF85229F311A27F4C4D0D35 /* AgentTeamsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE41ED8B341B393213181A2 /* AgentTeamsListView.swift */; };
 		0B3B614F335CB389D28016D7 /* HooksViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8911A1661FBAAAB37B3E9A26 /* HooksViewModel.swift */; };
@@ -1277,6 +1278,7 @@
 		EE15FF26AA37BB48CC93DD04 /* KeyMomentsDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyMomentsDetector.swift; sourceTree = "<group>"; };
 		BB22CC33DD44EE55FF60AA71 /* BookmarkTagsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkTagsManager.swift; sourceTree = "<group>"; };
 		6DEEEBFCDCD0416848E38B96 /* ILSWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILSWidgetsBundle.swift; sourceTree = "<group>"; };
+		0A5B3C8D7E9F1A2B4D6E8F02 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6E65F9892954F605C2737A7D /* TeamsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamsViewModel.swift; sourceTree = "<group>"; };
 		6EED52BD8671E2B365815B2F /* CheckpointBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckpointBrowserView.swift; sourceTree = "<group>"; };
 		6EFBD594B17EFBF5062CE1BA /* FeatureGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateView.swift; sourceTree = "<group>"; };
@@ -2046,6 +2048,7 @@
 				868AEE9CAC1117D583F22E86 /* ILSWidgets.entitlements */,
 				6DEEEBFCDCD0416848E38B96 /* ILSWidgetsBundle.swift */,
 				67552553BF64F8EDEA7FF7F3 /* Info.plist */,
+				0A5B3C8D7E9F1A2B4D6E8F02 /* PrivacyInfo.xcprivacy */,
 			);
 			path = ILSWidgets;
 			sourceTree = "<group>";
@@ -2747,6 +2750,7 @@
 			buildConfigurationList = 8FBB3259465D33A41FC99015 /* Build configuration list for PBXNativeTarget "ILSWidgets" */;
 			buildPhases = (
 				2734EA0D35BCC3278D618AD0 /* Sources */,
+				0A5B3C8D7E9F1A2B4D6E8F03 /* Resources */,
 				C4DEFADE6B613D69900E780D /* Frameworks */,
 			);
 			buildRules = (
@@ -2934,6 +2938,14 @@
 				8B4A8ED264C82434FB57A5CE /* checkpoint-2026-02-02T00-32-47-055Z.json in Resources */,
 				1704369786635A49766D5DC1 /* checkpoint-2026-02-13T02-32-52-924Z.json in Resources */,
 				96A01212B905EA97DB11D3D2 /* hud-state.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0A5B3C8D7E9F1A2B4D6E8F03 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A5B3C8D7E9F1A2B4D6E8F01 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
