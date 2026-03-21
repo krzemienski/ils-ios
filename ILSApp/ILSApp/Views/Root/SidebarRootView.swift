@@ -303,6 +303,20 @@ struct SidebarRootView: View {
                 connectionEvent = isConnected ? .restored : .lost
             }
         }
+        // SUIL-002: Adapt sidebar column visibility when window transitions between
+        // regular and compact size classes during iPad multitasking (Split View, Slide Over).
+        // In narrow 1/3 Split View the system reports compact width — auto-hide the sidebar
+        // so the detail content gets full space. Restore .all when returning to regular width.
+        .onChange(of: horizontalSizeClass) { _, newSizeClass in
+            if newSizeClass == .regular {
+                // Returning to regular width (e.g., exiting narrow Split View) — show sidebar
+                columnVisibility = .all
+            } else {
+                // Entering compact width (e.g., 1/3 Split View, Slide Over) — hide sidebar
+                // so detail content occupies the full narrow window
+                columnVisibility = .detailOnly
+            }
+        }
         .sheet(isPresented: Bindable(appState).showOnboarding) {
             ServerSetupSheet()
                 .environment(appState)
@@ -334,7 +348,10 @@ struct SidebarRootView: View {
     }
 
     // MARK: - iPad Layout (Persistent Sidebar)
-    // TODO: SUIL-002 — Test NavigationSplitView adaptation in iPad multitasking (1/3, 1/2, 2/3 widths)
+    // SUIL-002: NavigationSplitView configured for iPad multitasking (1/3, 1/2, 2/3 widths).
+    // Uses .balanced style for consistent sidebar/detail behavior across all Split View sizes.
+    // Column visibility adapts automatically: sidebar auto-hides when the window transitions
+    // to compact width (e.g., narrow 1/3 Split View or Slide Over) and restores when regular.
 
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -354,6 +371,7 @@ struct SidebarRootView: View {
         } detail: {
             mainContent(showHamburger: false)
         }
+        .navigationSplitViewStyle(.balanced)
     }
 
     // MARK: - iPhone Layout (Overlay Sidebar)
