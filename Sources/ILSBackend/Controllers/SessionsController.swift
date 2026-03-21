@@ -1368,6 +1368,19 @@ struct SessionsController: RouteCollection {
             .sort(\.$createdAt, .ascending)
             .all()
 
+        // Read optional offset/limit for range-based export
+        let exportOffset = req.query[Int.self, at: "offset"]
+        let exportLimit = req.query[Int.self, at: "limit"]
+
+        // Apply offset/limit slicing when range params are provided
+        var exportMessages = messageModels
+        if let off = exportOffset, off > 0 {
+            exportMessages = Array(exportMessages.dropFirst(min(off, exportMessages.count)))
+        }
+        if let lim = exportLimit, lim > 0 {
+            exportMessages = Array(exportMessages.prefix(lim))
+        }
+
         let sessionName = session.name ?? "Untitled"
         let safeFilename = sessionName
             .replacingOccurrences(of: "/", with: "-")
@@ -1379,21 +1392,21 @@ struct SessionsController: RouteCollection {
         case .json:
             return try buildJSONExport(
                 session: session,
-                messages: messageModels,
+                messages: exportMessages,
                 filename: String(safeFilename),
                 on: req
             )
         case .markdown:
             return buildMarkdownExport(
                 session: session,
-                messages: messageModels,
+                messages: exportMessages,
                 filename: String(safeFilename),
                 on: req
             )
         case .text:
             return buildTextExport(
                 session: session,
-                messages: messageModels,
+                messages: exportMessages,
                 filename: String(safeFilename),
                 on: req
             )
