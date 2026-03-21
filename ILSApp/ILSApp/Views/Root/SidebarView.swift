@@ -413,6 +413,10 @@ struct SidebarView: View {
     // MARK: - Navigation Items
 
     private var navigationItems: some View {
+        // IPAD-MULTI: Removed UIScreen.main.bounds.height which reports full screen
+        // size even in iPad Split View / Slide Over. Instead, let the ScrollView flex
+        // within the VStack using layout priority (sessions section gets priority).
+        // The ScrollView handles overflow when the window is small.
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
                 // Primary screens group
@@ -471,7 +475,9 @@ struct SidebarView: View {
             .padding(.top, theme.spacingMD)
         }
         #if os(iOS)
-        .frame(maxHeight: UIScreen.main.bounds.height * 0.45)
+        // Lower layout priority so the sessions section gets more space.
+        // The ScrollView handles overflow when the window is compact.
+        .layoutPriority(-1)
         #else
         .frame(maxHeight: 400)
         #endif
