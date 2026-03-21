@@ -1408,21 +1408,28 @@ struct SessionsController: RouteCollection {
         filename: String,
         on req: Request
     ) throws -> Response {
+        let createdAt = session.createdAt ?? Date()
+        let lastActiveAt = session.lastActiveAt ?? Date()
+        let durationSeconds = lastActiveAt.timeIntervalSince(createdAt)
+
         let exportSession = ChatExportSession(
             id: session.id ?? UUID(),
             name: session.name,
             model: session.model,
-            createdAt: session.createdAt ?? Date(),
-            lastActiveAt: session.lastActiveAt ?? Date(),
+            createdAt: createdAt,
+            lastActiveAt: lastActiveAt,
             messageCount: session.messageCount,
             totalCostUSD: session.totalCostUSD,
-            projectName: session.project?.name
+            projectName: session.project?.name,
+            durationSeconds: durationSeconds > 0 ? durationSeconds : nil
         )
 
         let exportMessages = messages.map { msg in
             ChatExportMessage(
                 role: MessageRole(rawValue: msg.role) ?? .user,
                 content: msg.content,
+                toolCalls: msg.toolCalls,
+                toolResults: msg.toolResults,
                 createdAt: msg.createdAt ?? Date()
             )
         }
