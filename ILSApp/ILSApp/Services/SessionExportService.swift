@@ -15,11 +15,21 @@ enum SessionExportService {
     ///
     /// This variant is used by ``ChatView``, which already holds messages in memory.
     static func exportMarkdown(session: ChatSession, messages: [ChatMessage]) -> String {
-        var md = header(for: session)
+        let totalTokens = messages.reduce(0) { $0 + $1.tokenCount }
+        var md = header(for: session, totalTokens: totalTokens > 0 ? totalTokens : nil)
 
         for message in messages {
             let role = message.isUser ? "User" : "Assistant"
             md += "## \(role)\n\n\(message.text)\n\n"
+
+            // Append tool calls as a bullet list under assistant messages
+            if !message.isUser && !message.toolCalls.isEmpty {
+                md += "**Tool Calls:**\n\n"
+                for toolCall in message.toolCalls {
+                    md += "- `\(toolCall.name)`\n"
+                }
+                md += "\n"
+            }
         }
 
         return md
@@ -39,6 +49,19 @@ enum SessionExportService {
                 for message in messages {
                     let role = message.role.rawValue.capitalized
                     md += "## \(role)\n\n\(message.content)\n\n"
+
+                    // Append tool calls if present on assistant messages
+                    if message.role == .assistant, let toolCallsJSON = message.toolCalls,
+                       !toolCallsJSON.isEmpty {
+                        let toolNames = parseToolNames(from: toolCallsJSON)
+                        if !toolNames.isEmpty {
+                            md += "**Tool Calls:**\n\n"
+                            for name in toolNames {
+                                md += "- `\(name)`\n"
+                            }
+                            md += "\n"
+                        }
+                    }
                 }
             }
         } catch {
@@ -233,16 +256,54 @@ enum SessionExportService {
 
     // MARK: - Private
 
-    private static func header(for session: ChatSession) -> String {
+    private static func header(for session: ChatSession, totalTokens: Int? = nil) -> String {
         var md = "# Session: \(session.name ?? "Unnamed")\n\n"
         md += "Model: \(session.model.capitalized)\n"
         md += "Status: \(session.status.rawValue.capitalized)\n"
         md += "Created: \(session.createdAt.formatted())\n"
         md += "Last Active: \(session.lastActiveAt.formatted())\n"
+
+        // Session duration derived from creation and last-active timestamps
+        let duration = session.lastActiveAt.timeIntervalSince(session.createdAt)
+        if duration > 0 {
+            md += "Duration: \(formattedDuration(duration))\n"
+        }
+
+        if let tokens = totalTokens, tokens > 0 {
+            md += "Total Tokens: \(tokens)\n"
+        }
         if let cost = session.totalCostUSD {
             md += "Cost: $\(String(format: "%.4f", cost))\n"
         }
         md += "\n---\n\n"
         return md
+    }
+
+    /// Format a time interval as a human-readable duration string.
+    private static func formattedDuration(_ interval: TimeInterval) -> String {
+        let totalSeconds = Int(interval)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
+    }
+
+    /// Extract tool names from a JSON-encoded tool-calls string.
+    ///
+    /// The JSON is expected to be an array of objects, each with a `"name"` key.
+    /// Returns an empty array if the string cannot be parsed.
+    private static func parseToolNames(from json: String) -> [String] {
+        guard let data = json.data(using: .utf8),
+              let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            return []
+        }
+        return array.compactMap { $0["name"] as? String }
     }
 }
