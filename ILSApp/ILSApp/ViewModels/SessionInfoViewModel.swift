@@ -42,6 +42,8 @@ class SessionInfoViewModel {
     var isLoading = true
     var errorMessage: String?
     var isExporting = false
+    /// Export progress from 0 (not started) to 1 (complete).
+    var exportProgress: Double = 0
     var exportMarkdown = ""
     /// Binary export payload for JSON or PDF exports.
     var exportData: Data?
@@ -52,6 +54,9 @@ class SessionInfoViewModel {
     var isUpdatingModel = false
 
     private var client: APIClient?
+
+    /// Page size used when fetching messages for export.
+    private let exportPageSize = 500
 
     func configure(client: APIClient) {
         self.client = client
@@ -142,18 +147,50 @@ class SessionInfoViewModel {
 
     /// Export the session as a PDF, storing the result in ``exportData``.
     ///
-    /// Fetches messages from the API, maps them to `ChatMessage` values, and renders
-    /// the PDF via ``SessionExportService/exportPDF(session:messages:)``.
+    /// Fetches all messages via paginated API calls (supporting 1000+ messages),
+    /// then renders the PDF on a background thread to avoid blocking the main actor.
     func exportPDF(session: ChatSession) async {
         guard let client else { return }
         isExporting = true
+        exportProgress = 0
         defer { isExporting = false }
 
         do {
+            let allMessages = try await fetchAllMessages(session: session, client: client)
+            exportProgress = 0.8
+
+            // Render PDF off the main actor — PDF rendering is CPU-intensive.
+            let sessionCopy = session
+            let data = try await Task.detached(priority: .userInitiated) {
+                return SessionExportService.exportPDF(session: sessionCopy, messages: allMessages)
+            }.value
+
+            exportData = data
+            exportProgress = 1.0
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Pagination
+
+    /// Fetch all messages for a session using paginated requests.
+    ///
+    /// Loops through pages of ``exportPageSize`` until all messages are retrieved,
+    /// updating ``exportProgress`` along the way.
+    private func fetchAllMessages(session: ChatSession, client: APIClient) async throws -> [ChatMessage] {
+        var allMessages: [ChatMessage] = []
+        var offset = 0
+        var total = Int.max
+
+        while offset < total {
             let response: APIResponse<ListResponse<Message>> = try await client.get(
-                "/sessions/\(session.id.uuidString)/messages?limit=500"
+                "/sessions/\(session.id.uuidString)/messages?limit=\(exportPageSize)&offset=\(offset)"
             )
-            let messages: [ChatMessage] = (response.data?.items ?? []).map { message in
+            let items = response.data?.items ?? []
+            total = response.data?.total ?? items.count
+
+            let mapped: [ChatMessage] = items.map { message in
                 ChatMessage(
                     id: message.id,
                     isUser: message.role == .user,
@@ -161,10 +198,19 @@ class SessionInfoViewModel {
                     timestamp: message.createdAt
                 )
             }
-            exportData = SessionExportService.exportPDF(session: session, messages: messages)
-        } catch {
-            errorMessage = error.localizedDescription
+            allMessages.append(contentsOf: mapped)
+            offset += items.count
+
+            // Update progress proportionally (fetching = 0–80%).
+            if total > 0 {
+                exportProgress = min(0.8, Double(offset) / Double(total) * 0.8)
+            }
+
+            // Guard against empty pages to prevent infinite loops.
+            if items.isEmpty { break }
         }
+
+        return allMessages
     }
 
     // MARK: - Integrity Check
