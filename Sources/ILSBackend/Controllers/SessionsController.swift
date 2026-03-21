@@ -1457,12 +1457,18 @@ struct SessionsController: RouteCollection {
         on req: Request
     ) -> Response {
         let dateFormatter = ISO8601DateFormatter()
+        let createdAt = session.createdAt ?? Date()
+        let lastActiveAt = session.lastActiveAt ?? Date()
+        let durationSeconds = lastActiveAt.timeIntervalSince(createdAt)
 
         var md = "# \(session.name ?? "Untitled Session")\n\n"
         md += "| Field | Value |\n|-------|-------|\n"
         md += "| Model | \(session.model) |\n"
-        md += "| Created | \(dateFormatter.string(from: session.createdAt ?? Date())) |\n"
-        md += "| Last Active | \(dateFormatter.string(from: session.lastActiveAt ?? Date())) |\n"
+        md += "| Created | \(dateFormatter.string(from: createdAt)) |\n"
+        md += "| Last Active | \(dateFormatter.string(from: lastActiveAt)) |\n"
+        if durationSeconds > 0 {
+            md += "| Duration | \(formatDuration(durationSeconds)) |\n"
+        }
         md += "| Messages | \(session.messageCount) |\n"
         if let cost = session.totalCostUSD {
             md += "| Cost | $\(String(format: "%.4f", cost)) |\n"
@@ -1477,6 +1483,12 @@ struct SessionsController: RouteCollection {
             let timestamp = dateFormatter.string(from: msg.createdAt ?? Date())
             md += "### \(role) — \(timestamp)\n\n"
             md += msg.content
+
+            // Append tool call summaries if present
+            if let toolCallsSummary = formatToolCallsMarkdown(msg.toolCalls) {
+                md += "\n\n" + toolCallsSummary
+            }
+
             md += "\n\n---\n\n"
         }
 
@@ -1484,6 +1496,68 @@ struct SessionsController: RouteCollection {
         response.headers.contentType = HTTPMediaType(type: "text", subType: "markdown", parameters: ["charset": "utf-8"])
         response.headers.add(name: .contentDisposition, value: "attachment; filename=\"\(filename).md\"")
         return response
+    }
+
+    /// Format a duration in seconds into a human-readable string (e.g. "2h 15m 30s").
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let totalSeconds = Int(seconds)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let secs = totalSeconds % 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m \(secs)s"
+        } else if minutes > 0 {
+            return "\(minutes)m \(secs)s"
+        } else {
+            return "\(secs)s"
+        }
+    }
+
+    /// Parse tool calls JSON and format as a Markdown collapsible details block.
+    ///
+    /// Returns `nil` if there are no tool calls to display.
+    private func formatToolCallsMarkdown(_ toolCallsJSON: String?) -> String? {
+        guard let jsonString = toolCallsJSON,
+              !jsonString.isEmpty,
+              let data = jsonString.data(using: .utf8) else {
+            return nil
+        }
+
+        // Lightweight struct to decode only the tool name from each block
+        struct ToolCallEntry: Decodable {
+            let name: String
+        }
+
+        guard let entries = try? JSONDecoder().decode([ToolCallEntry].self, from: data),
+              !entries.isEmpty else {
+            return nil
+        }
+
+        // Group and count tool calls
+        var counts: [String: Int] = [:]
+        var order: [String] = []
+        for entry in entries {
+            if counts[entry.name] == nil {
+                order.append(entry.name)
+            }
+            counts[entry.name, default: 0] += 1
+        }
+
+        var lines: [String] = []
+        lines.append("<details>")
+        lines.append("<summary>Tool calls (\(entries.count))</summary>\n")
+        for name in order {
+            let count = counts[name] ?? 1
+            if count > 1 {
+                lines.append("- `\(name)` ×\(count)")
+            } else {
+                lines.append("- `\(name)`")
+            }
+        }
+        lines.append("\n</details>")
+
+        return lines.joined(separator: "\n")
     }
 
     private func buildTextExport(
