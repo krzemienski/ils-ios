@@ -141,10 +141,10 @@ enum SessionExportService {
 
     // MARK: - PDF Export
 
+#if os(iOS)
     /// ILS accent colour used for branding elements in PDF exports.
     private static let ilsAccentColor = UIColor(red: 0.35, green: 0.47, blue: 1.0, alpha: 1.0)
 
-#if os(iOS)
     /// Build a PDF export from a ``ChatSession`` and its local ``ChatMessage`` array.
     ///
     /// Renders a US-Letter PDF with ILS branding header, accent color bar, session metadata
