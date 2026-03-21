@@ -15,6 +15,8 @@
 		401549F145DDEDBA040E58BA /* PolicyTemplatesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EFF10168F3FB222354E980 /* PolicyTemplatesSheet.swift */; };
 		5CEFFAD63CA93F5E12264F08 /* ApprovalPoliciesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */; };
 		E9BD7535156B948074A7C6AA /* ApprovalPoliciesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8822135C761BE71C5F89590C /* ApprovalPoliciesViewModel.swift */; };
+		FADE0002ADAP0002UTIL0002 /* AdaptiveLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE0001ADAP0001UTIL0001 /* AdaptiveLayout.swift */; };
+		FADE0003ADAP0003UTIL0003 /* AdaptiveLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADE0001ADAP0001UTIL0001 /* AdaptiveLayout.swift */; };
 		00027714CDB19FC4E903A9CF /* HostProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271727691548CE44BB3B10B2 /* HostProfileDetailView.swift */; };
 		004CC3EB7825943F0E092DBF /* MCPInstallWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381C5FB293E2E626743D4314 /* MCPInstallWizardView.swift */; };
 		00BC25404E69511F65542A08 /* GrammarDefinitions+Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D954D79FCDF96AF972E8CB2 /* GrammarDefinitions+Data.swift */; };
@@ -1055,6 +1057,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FADE0001ADAP0001UTIL0001 /* AdaptiveLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveLayout.swift; sourceTree = "<group>"; };
 		007DDD0D14D446906C70CCC7 /* FeatureGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureGateTests.swift; sourceTree = "<group>"; };
 		01216739F223988C1C1BF3B3 /* AddWidgetSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWidgetSheet.swift; sourceTree = "<group>"; };
 		0176FC919FBFBE7BAE3311F3 /* SessionFileBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFileBrowserView.swift; sourceTree = "<group>"; };
@@ -2146,6 +2149,7 @@
 		92D7643E99811E4C62DD60B6 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				FADE0001ADAP0001UTIL0001 /* AdaptiveLayout.swift */,
 				A4DAE82201D6AF03099AE8FF /* ANSIParser.swift */,
 				4DEE8624B9BCC400474F4F46 /* AppConstants.swift */,
 				C910E2657D214F59D1125304 /* ContentDetector.swift */,
@@ -3018,6 +3022,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				59646ABF4771ABD5F9C5BA8B /* ANSIParser.swift in Sources */,
+				FADE0002ADAP0002UTIL0002 /* AdaptiveLayout.swift in Sources */,
 				566B63F0CEDAD0931B75BC76 /* APIClient.swift in Sources */,
 				F3AE767DFC8E6026F28265A5 /* AccentButton.swift in Sources */,
 				0BF170F7477D295C764C103D /* ActiveSessionsWidget.swift in Sources */,
@@ -3501,6 +3506,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3E527357B016152AEEFA5B6C /* ANSIParser.swift in Sources */,
+				FADE0003ADAP0003UTIL0003 /* AdaptiveLayout.swift in Sources */,
 				5AB34314A4A3CD36A92275CA /* APIClient.swift in Sources */,
 				D01D9545193988FA5F386C62 /* AccentButton.swift in Sources */,
 				C80B380869A7A6604DFCAA3E /* ActiveSessionsWidget.swift in Sources */,

@@ -1,5 +1,6 @@
 import SwiftUI
 
+#if os(iOS)
 /// Adds system pointer hover highlighting via `.hoverEffect(.highlight)`.
 /// Use on interactive elements (buttons, cards, list rows) to provide
 /// automatic pointer feedback on iPad and Mac Catalyst.
@@ -11,6 +12,7 @@ struct PointerHoverModifier: ViewModifier {
             .hoverEffect(effect)
     }
 }
+#endif
 
 /// Tracks `.onHover` state and applies visual changes (background color shift,
 /// opacity) when the pointer hovers over the view. Follows the GlassCard /
@@ -39,10 +41,18 @@ struct HoverStateModifier: ViewModifier {
 // MARK: - View Extensions
 
 extension View {
+    #if os(iOS)
     /// Applies a system pointer hover effect (e.g. `.highlight`, `.lift`, `.automatic`).
     func pointerHover(_ effect: HoverEffect = .highlight) -> some View {
         modifier(PointerHoverModifier(effect: effect))
     }
+    #else
+    /// No-op on macOS since `HoverEffect` is iOS-only.
+    /// macOS already has native hover via `HoverStateModifier`.
+    func pointerHover(_ effect: Any? = nil) -> some View {
+        self
+    }
+    #endif
 
     /// Applies a custom hover state with background color shift and optional opacity change.
     func hoverState(hoveredOpacity: Double = 1.0, cornerRadius: CGFloat? = nil) -> some View {
