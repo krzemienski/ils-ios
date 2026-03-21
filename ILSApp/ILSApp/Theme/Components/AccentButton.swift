@@ -65,6 +65,7 @@ struct AccentButton: View {
             .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isLoading)
         }
+        .pointerHover(.highlight)
         .disabled(isLoading)
         .opacity(isLoading ? 0.7 : (isEnabled ? 1.0 : 0.5))
         .saturation(isEnabled ? 1.0 : 0.3)

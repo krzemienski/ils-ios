@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GlassCard: ViewModifier {
     @Environment(\.theme) private var theme
+    @State private var isHovered = false
     var padding: CGFloat?
 
     func body(content: Content) -> some View {
@@ -13,8 +14,16 @@ struct GlassCard: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: theme.cornerRadius)
-                    .stroke(theme.glassBorder, lineWidth: 0.5)
+                    .fill(theme.accent.opacity(isHovered ? 0.08 : 0))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.cornerRadius)
+                    .stroke(isHovered ? theme.accent.opacity(0.4) : theme.glassBorder, lineWidth: isHovered ? 1 : 0.5)
+            )
+            .onHover { hovering in
+                isHovered = hovering
+            }
+            .animation(.easeInOut(duration: 0.2), value: isHovered)
     }
 }
 
