@@ -148,6 +148,35 @@ struct ThemeSnapshot: Sendable {
         }
     }
 
+    // MARK: - Dynamic Type Font Properties
+
+    /// Caption font scaled with Dynamic Type using the theme's font design.
+    /// Use this instead of `.font(.system(size: theme.fontCaption))` to get proper
+    /// Dynamic Type scaling across all accessibility sizes.
+    var captionFont: Font {
+        .system(.caption, design: fontDesign)
+    }
+
+    /// Body font scaled with Dynamic Type using the theme's font design.
+    var bodyFont: Font {
+        .system(.body, design: fontDesign)
+    }
+
+    /// Title3 font scaled with Dynamic Type using the theme's font design.
+    var title3Font: Font {
+        .system(.title3, design: fontDesign)
+    }
+
+    /// Title2 font scaled with Dynamic Type using the theme's font design.
+    var title2Font: Font {
+        .system(.title2, design: fontDesign)
+    }
+
+    /// Title font scaled with Dynamic Type using the theme's font design.
+    var titleFont: Font {
+        .system(.title, design: fontDesign)
+    }
+
     // MARK: - Init from Protocol
 
     /// Creates a snapshot by copying all properties from an `AppTheme` conforming type.
