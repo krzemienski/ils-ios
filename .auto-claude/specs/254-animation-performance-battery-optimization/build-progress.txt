@@ -1,0 +1,95 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Animation Performance & Battery Optimization
+Workspace: 254-animation-performance-battery-optimization (isolated worktree)
+Started: 2026-03-21
+
+Workflow Type: simple
+Rationale: Most battery optimizations are already implemented. Only 3 animated views are missing the established scenePhase/LPM/reduceMotion guard pattern.
+
+Session 1 (Planner):
+- Deep codebase investigation completed
+- Read: StreamingIndicatorView, ThinkingSection, SystemMonitorView, ShimmerModifier,
+        CyberpunkEffects (PulsingGlow, PulsingModifier), SessionStatusBadge,
+        TypingIndicatorBubble, MessageView, MetricsWebSocketClient, SSEClient,
+        PollingManager, TeamsViewModel, TunnelSettingsView, SessionRecordingsView,
+        LaunchScreenView, ProgressRing, ConnectionBanner, StatCard
+- Created implementation_plan.json
+- Phases: 2
+- Total subtasks: 5
+- Created context.json
+
+=== INVESTIGATION FINDINGS ===
+
+ALREADY COMPLETE (no changes needed):
+  ✅ StreamingIndicatorView - full scenePhase + LPM + reduceMotion
+  ✅ ThinkingSection - full scenePhase + reduceMotion
+  ✅ SystemMonitorView - scenePhase + WebSocket pause/resume (BATT-02, BATT-03)
+  ✅ ShimmerModifier - full scenePhase + LPM + reduceMotion
+  ✅ PulsingGlow (CyberpunkEffects) - full scenePhase + LPM + reduceMotion
+  ✅ PulsingModifier (CyberpunkEffects) - full scenePhase + LPM + reduceMotion
+  ✅ SessionStatusBadge - full scenePhase + LPM + reduceMotion
+  ✅ TypingIndicatorBubble - full scenePhase + reduceMotion
+  ✅ MessageView - full scenePhase + reduceMotion
+  ✅ MetricsWebSocketClient.deinit - cancels all 4 tasks (reconnect, receive, polling, heartbeat)
+  ✅ SSEClient.deinit - cancels streamTask + removes NotificationCenter observers
+  ✅ TeamsViewModel.deinit - cancels pollingTask
+  ✅ PollingManager.deinit - cancels tasks + removes 2 NotificationCenter observers
+  ✅ PollingManager - already has exponential backoff (5s→60s with BATT-01 LPM doubling)
+  ✅ FleetViewModel - DOES NOT EXIST in codebase (spec aspirational)
+
+STILL NEEDS FIX:
+  ❌ TunnelSettingsView - pulseAnimation (repeatForever) missing scenePhase, reduceMotion, LPM guards
+  ❌ SessionRecordingsView.PulsingDot - isPulsing (repeatForever) missing onDisappear, scenePhase, reduceMotion, LPM
+  ❌ LaunchScreenView - glowIntensity (repeatForever) missing scenePhase guard (has onDisappear cancel H-E5)
+
+Phase Summary:
+- Phase 1 (Fix Remaining Unguarded Animations): 3 subtasks
+  - subtask-1-1: TunnelSettingsView pulse animation
+  - subtask-1-2: SessionRecordingsView.PulsingDot
+  - subtask-1-3: LaunchScreenView glow animation
+- Phase 2 (Full Build Verification): 2 subtasks
+  - subtask-2-1: iOS build verification
+  - subtask-2-2: macOS build verification
+
+Services Involved:
+  - ios: SwiftUI view modifications
+  - macos: Build verification (shared code compiles for macOS too)
+
+Parallelism Analysis:
+- Max parallel phases: 1 (sequential — all in same service)
+- Recommended workers: 1
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 254 --parallel 1
+
+=== END SESSION 1 ===
+
+=== SESSION 2 (Coder) ===
+
+Phase 1 - Animation Fixes: COMPLETE
+  ✅ subtask-1-1: TunnelSettingsView - added scenePhase + reduceMotion + LPM guards to pulse animation
+  ✅ subtask-1-2: SessionRecordingsView.PulsingDot - added full guard set + onDisappear cancel + onChange handlers
+  ✅ subtask-1-3: LaunchScreenView - added scenePhase guard to glowIntensity repeatForever animation
+
+Phase 2 - Build Verification:
+  subtask-2-1: iOS Build Verification
+    - Dedicated simulator 50523130-57AA-48B0-ABD0-4D59CE455F14 not available in worktree environment
+    - Built using generic/platform=iOS Simulator destination
+    - Swift compilation: 0 errors, 0 Swift-level warnings from our changes
+    - Pre-existing worktree issues: missing JSON resource files (checkpoint-*.json, hud-state.json,
+      c017e206-*.json) referenced in Xcode project but absent from worktree — not related to animation changes
+    - RESULT: Swift code compiles cleanly; build fails only on resource bundling (pre-existing)
+
+  subtask-2-2: macOS Build Verification
+    - Created local placeholder .omc JSON files (gitignored, missing from worktree)
+    - hud-state.json, checkpoint-*.json, c017e206-*.json — runtime state files not in git
+    - With placeholder files in place: BUILD SUCCEEDED (macOS)
+    - Swift compilation clean — no errors from animation performance changes
+    - #if os(iOS) guards correctly protect UIKit imports; macOS unaffected
+    - RESULT: BUILD SUCCEEDED ✅
+
+=== END SESSION 2 ===
