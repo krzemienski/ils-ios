@@ -26,6 +26,9 @@ struct BrowserView: View {
     @Environment(AppState.self) var appState
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// IPAD-MULTI: Read adaptive layout size class to adjust segmented control
+    /// and content layout for narrow iPad multitasking modes.
+    @Environment(\.layoutSizeClass) private var layoutSizeClass
 
     @State private var mcpVM = MCPViewModel()
     @State private var skillsVM = SkillsViewModel()
@@ -192,10 +195,14 @@ struct BrowserView: View {
                             .frame(width: 8, height: 8)
                         Text(seg.rawValue)
                             .font(.system(size: theme.fontCaption, weight: segment == seg ? .semibold : .regular, design: theme.fontDesign))
-                        if seg != .discover || countFor(seg) > 0 {
-                            Text("(\(countFor(seg)))")
-                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                                .foregroundStyle(theme.textTertiary)
+                        // IPAD-MULTI: Hide item counts in narrow layouts to prevent
+                        // the segmented control from overflowing horizontally.
+                        if layoutSizeClass != .narrow {
+                            if seg != .discover || countFor(seg) > 0 {
+                                Text("(\(countFor(seg)))")
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                    .foregroundStyle(theme.textTertiary)
+                            }
                         }
                     }
                     .foregroundStyle(segment == seg ? theme.textPrimary : theme.textSecondary)

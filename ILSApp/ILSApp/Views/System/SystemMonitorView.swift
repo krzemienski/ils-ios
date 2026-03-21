@@ -32,6 +32,8 @@ struct SystemMonitorView: View {
     /// Used by ``liveIndicator`` to disable the repeating pulse animation for users who prefer reduced motion.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    /// IPAD-MULTI: Read layout size class to stack Memory/Disk cards vertically in narrow modes.
+    @Environment(\.layoutSizeClass) private var layoutSizeClass
     /// View model that manages the ``MetricsWebSocketClient`` and exposes aggregated metric values.
     @State private var viewModel = SystemMetricsViewModel()
 
@@ -70,8 +72,14 @@ struct SystemMonitorView: View {
                     .accessibilityElement(children: .contain)
                 }
 
-                // Memory & Disk - 2-column grid
-                HStack(spacing: theme.spacingMD) {
+                // Memory & Disk - adaptive layout: side-by-side when space allows, stacked when narrow
+                // IPAD-MULTI: Use VStack in narrow multitasking modes so ProgressRing
+                // elements remain legible instead of being squeezed side-by-side.
+                let memoryDiskLayout = layoutSizeClass == .narrow
+                    ? AnyLayout(VStackLayout(spacing: theme.spacingMD))
+                    : AnyLayout(HStackLayout(spacing: theme.spacingMD))
+
+                memoryDiskLayout {
                     // Memory
                     VStack(spacing: theme.spacingSM) {
                         ProgressRing(

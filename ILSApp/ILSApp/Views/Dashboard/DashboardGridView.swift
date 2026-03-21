@@ -77,6 +77,9 @@ struct DashboardGridView: View {
 
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(DashboardLayoutStore.self) private var layoutStore
+    /// IPAD-MULTI: Read the adaptive layout size class so widget rows can
+    /// collapse to a single column in narrow iPad multitasking modes.
+    @Environment(\.layoutSizeClass) private var layoutSizeClass
 
     /// Tracks the widget being dragged so we can dim its tile.
     @State private var draggingWidgetID: UUID?
@@ -118,13 +121,20 @@ struct DashboardGridView: View {
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible())], spacing: theme.spacingMD) {
             ForEach(widgetRows) { row in
-                HStack(alignment: .top, spacing: theme.spacingMD) {
+                // IPAD-MULTI: In narrow multitasking modes (Slide Over, 1/3 Split),
+                // stack widgets vertically instead of side-by-side so they remain usable.
+                let useVerticalLayout = layoutSizeClass == .narrow && row.widgets.count > 1
+                let layout = useVerticalLayout
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: theme.spacingMD))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: theme.spacingMD))
+
+                layout {
                     ForEach(row.widgets) { widget in
                         widgetSlot(for: widget)
                             .opacity(draggingWidgetID == widget.id ? 0.4 : 1.0)
                             .widgetSizeSelector(
                                 widget: widget,
-                                layout: layout,
+                                layout: self.layout,
                                 layoutStore: layoutStore
                             )
                             #if os(iOS)

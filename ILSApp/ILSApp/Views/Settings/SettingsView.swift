@@ -715,14 +715,24 @@ struct SettingsView: View {
     // MARK: - iCloud Sync Section
 
     private var terminalSection: some View {
-        Section {
-            Picker("Default Shell", selection: $terminalShell) {
-                Text("zsh").tag("zsh")
-                Text("bash").tag("bash")
-                Text("fish").tag("fish")
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            Text("TERMINAL")
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textTertiary)
+                .textCase(.uppercase)
+                .kerning(1)
+                .padding(.horizontal, theme.spacingXS)
+
+            VStack(spacing: 0) {
+                Picker("Default Shell", selection: $terminalShell) {
+                    Text("zsh").tag("zsh")
+                    Text("bash").tag("bash")
+                    Text("fish").tag("fish")
+                }
+                .padding(theme.spacingMD)
             }
-        } header: {
-            Label("Terminal", systemImage: "terminal.fill")
+            .background(theme.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
     }
 
