@@ -85,8 +85,8 @@ func configure(_ app: Application) async throws {
     // Priority: 1) ILS_API_KEY env var, 2) ~/.ils/api_key file, 3) auto-generate new key.
     // The storage service is an actor singleton — safe for concurrent access.
     let apiKeyStorage = APIKeyStorageService.shared
-    let apiKey = try await apiKeyStorage.loadOrGenerateKey()
-    app.middleware.use(APIKeyMiddleware(apiKey: apiKey))
+    _ = try await apiKeyStorage.loadOrGenerateKey()
+    app.middleware.use(APIKeyMiddleware(storageService: apiKeyStorage))
     app.storage[APIKeyStorageKey.self] = apiKeyStorage
 
     // Request validation middleware (Content-Type enforcement, JSON validation, suspicious header rejection)
