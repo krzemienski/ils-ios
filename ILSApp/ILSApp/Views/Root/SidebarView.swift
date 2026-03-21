@@ -633,6 +633,12 @@ struct SidebarView: View {
                         onSessionSelected(session)
                         isSidebarOpen = false
                     }
+                    .onAppear {
+                        if sessions.last?.id == session.id,
+                           sessionsViewModel.projectHasMore[name] == true {
+                            Task { await sessionsViewModel.loadMoreForProject(name) }
+                        }
+                    }
                     .contextMenu {
                         Button {
                             Task { await bookmarksManager.toggleBookmark(session: session) }
@@ -716,18 +722,15 @@ struct SidebarView: View {
                     .listRowInsets(EdgeInsets(top: 0, leading: theme.spacingSM, bottom: 0, trailing: theme.spacingSM))
                 }
 
-                if sessionsViewModel.projectHasMore[name] == true {
-                    Button {
-                        Task { await sessionsViewModel.loadMoreForProject(name) }
-                    } label: {
-                        HStack(spacing: theme.spacingSM) {
-                            Image(systemName: "arrow.down.circle")
-                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
-                            Text("Load more...")
-                                .font(.system(size: theme.fontCaption - 1, design: theme.fontDesign))
-                        }
-                        .foregroundStyle(theme.accent)
-                        .padding(.vertical, theme.spacingXS)
+                if sessionsViewModel.projectHasMore[name] == true
+                    && sessionsViewModel.loadingProjects.contains(name) {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(theme.accent)
+                            .padding(.vertical, theme.spacingXS)
+                        Spacer()
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
