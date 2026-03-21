@@ -402,7 +402,15 @@ private struct RecordingRow: View {
 /// An animated pulsing circle used to indicate an active recording.
 private struct PulsingDot: View {
     let color: Color
+
     @State private var isPulsing = false
+    @State private var isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
+    private var shouldAnimate: Bool {
+        !reduceMotion && !isLowPowerMode && scenePhase == .active
+    }
 
     var body: some View {
         ZStack {
@@ -418,6 +426,35 @@ private struct PulsingDot: View {
                 .fill(color)
                 .frame(width: 8, height: 8)
         }
-        .onAppear { isPulsing = true }
+        .onAppear { startPulseIfNeeded() }
+        .onDisappear { isPulsing = false }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                startPulseIfNeeded()
+            } else {
+                stopPulse()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(
+            for: Notification.Name.NSProcessInfoPowerStateDidChange
+        )) { _ in
+            isLowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
+            if isLowPowerMode { stopPulse() }
+        }
+    }
+
+    private func startPulseIfNeeded() {
+        guard shouldAnimate else { return }
+        isPulsing = true
+    }
+
+    private func stopPulse() {
+        if reduceMotion || isLowPowerMode {
+            isPulsing = false
+        } else {
+            withAnimation(.default) {
+                isPulsing = false
+            }
+        }
     }
 }
