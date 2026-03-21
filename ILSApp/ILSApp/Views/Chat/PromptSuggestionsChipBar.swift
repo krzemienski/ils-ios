@@ -28,8 +28,6 @@ struct PromptSuggestionsChipBar: View {
     var refreshToken: Int = 0
 
     @State private var viewModel = SuggestionsViewModel()
-    @State private var promptSuggestions: [PromptSuggestion] = []
-    @State private var isLoading = false
     @AppStorage("showPromptSuggestions") private var showSuggestions = true
 
     @Environment(\.theme) private var theme: ThemeSnapshot
@@ -37,10 +35,10 @@ struct PromptSuggestionsChipBar: View {
     var body: some View {
         Group {
             // UXF-007: Return empty view when no suggestions to avoid wasting vertical space
-            if showSuggestions && !promptSuggestions.isEmpty && !isLoading {
+            if showSuggestions && !viewModel.promptSuggestions.isEmpty && !viewModel.isLoadingPrompts {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: theme.spacingXS) {
-                        ForEach(Array(promptSuggestions.prefix(4))) { suggestion in
+                        ForEach(Array(viewModel.promptSuggestions.prefix(4))) { suggestion in
                             chipButton(suggestion)
                         }
                     }
@@ -52,7 +50,7 @@ struct PromptSuggestionsChipBar: View {
         }
         .task(id: refreshToken) {
             viewModel.configure(client: apiClient)
-            await loadPromptSuggestions()
+            await viewModel.loadPromptSuggestions(session: session)
         }
     }
 
@@ -89,35 +87,4 @@ struct PromptSuggestionsChipBar: View {
         .accessibilityLabel("Suggestion: \(suggestion.prompt)")
     }
 
-    // MARK: - Load Suggestions
-
-    /// Fetch prompt suggestions from the backend based on the current session context.
-    private func loadPromptSuggestions() async {
-        isLoading = true
-
-        // Build context from last messages or session name
-        let context = session.firstPrompt ?? session.name ?? ""
-        let projectContext = session.projectName
-
-        var components = URLComponents()
-        components.queryItems = [
-            URLQueryItem(name: "sessionId", value: session.id.uuidString),
-            URLQueryItem(name: "context", value: context)
-        ]
-        if let projectContext {
-            components.queryItems?.append(URLQueryItem(name: "projectContext", value: projectContext))
-        }
-        let query = components.percentEncodedQuery.map { "?\($0)" } ?? ""
-
-        do {
-            let response: APIResponse<ListResponse<PromptSuggestion>> = try await apiClient.get("/suggestions/prompts\(query)")
-            if let data = response.data {
-                promptSuggestions = data.items
-            }
-        } catch {
-            AppLogger.shared.error("Failed to load prompt suggestions: \(error.localizedDescription)", category: "suggestions")
-        }
-
-        isLoading = false
-    }
 }

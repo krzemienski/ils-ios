@@ -170,6 +170,17 @@ class SuggestionsViewModel {
 
     // MARK: - Load Prompt Suggestions
 
+    /// Fetch prompt suggestions from the backend using the context of the given session.
+    /// - Parameter session: The chat session whose context drives the suggestions.
+    func loadPromptSuggestions(session: ChatSession) async {
+        let context = session.firstPrompt ?? session.name ?? ""
+        await loadPromptSuggestions(
+            sessionId: session.id,
+            context: context,
+            projectContext: session.projectName
+        )
+    }
+
     /// Fetch prompt suggestions from the backend based on session context.
     /// - Parameters:
     ///   - sessionId: Optional session ID for context-specific suggestions.
