@@ -49,6 +49,9 @@ class SSEClient {
     #if os(iOS)
     @ObservationIgnored nonisolated(unsafe) private var backgroundObserver: NSObjectProtocol?
     #endif
+    /// Keychain key for the API key — must match APIClient's key for consistency.
+    private static let apiKeyKeychainKey = "ils_api_key"
+
     // nonisolated: JSONEncoder/JSONDecoder are thread-safe for encoding/decoding. Isolated to instance lifetime.
     nonisolated private let jsonEncoder = JSONEncoder()
     nonisolated private let jsonDecoder: JSONDecoder = {
@@ -171,6 +174,9 @@ class SSEClient {
         urlRequest.httpMethod = "POST"
         urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.addValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+        // AUTH: Apply Bearer token for authenticated SSE streams.
+        applyAuth(to: &urlRequest)
 
         if let lastEventId {
             urlRequest.addValue(lastEventId, forHTTPHeaderField: "Last-Event-ID")
@@ -441,6 +447,16 @@ class SSEClient {
         lastEventId = nil
         userMessageId = nil
         assistantMessageId = nil
+    }
+
+    // MARK: - Authentication
+
+    /// Apply Bearer token authorization header if an API key is stored in Keychain.
+    /// Mirrors APIClient.applyAuth(to:) to ensure SSE streams use the same credentials.
+    private func applyAuth(to request: inout URLRequest) {
+        if let key = KeychainService.loadSync(key: SSEClient.apiKeyKeychainKey), !key.isEmpty {
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        }
     }
 
     // MARK: - Network Restoration
