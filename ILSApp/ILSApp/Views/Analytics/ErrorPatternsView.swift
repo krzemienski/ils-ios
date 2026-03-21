@@ -28,6 +28,8 @@ struct ErrorPatternsView: View {
     @State private var viewModel = ErrorPatternsViewModel()
     /// ID of the currently expanded pattern row (nil = all collapsed).
     @State private var selectedPatternID: UUID?
+    /// Pattern to present in the detail sheet (nil = no sheet).
+    @State private var detailPattern: ErrorPattern?
 
     var body: some View {
         ScrollView {
@@ -69,6 +71,9 @@ struct ErrorPatternsView: View {
             Task {
                 await viewModel.loadPatterns()
             }
+        }
+        .sheet(item: $detailPattern) { pattern in
+            ErrorPatternDetailView(pattern: pattern, viewModel: viewModel)
         }
     }
 
@@ -174,6 +179,9 @@ struct ErrorPatternsView: View {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedPatternID = selectedPatternID == pattern.id ? nil : pattern.id
                         }
+                    },
+                    onViewDetail: {
+                        detailPattern = pattern
                     },
                     onResolve: {
                         Task {
@@ -313,6 +321,8 @@ private struct ErrorPatternRow: View {
     let isExpanded: Bool
     /// Callback fired when the row header is tapped to expand/collapse.
     let onToggle: () -> Void
+    /// Callback fired when the "View Details" button is tapped to open the detail sheet.
+    let onViewDetail: () -> Void
     /// Callback fired when the "Mark Resolved" button is tapped.
     let onResolve: () -> Void
 
@@ -446,6 +456,24 @@ private struct ErrorPatternRow: View {
                     .foregroundStyle(theme.textTertiary)
             }
             .padding(.horizontal, theme.spacingMD)
+
+            // View Details button — opens the detail sheet with full
+            // occurrence history, copyable fix prompts, and apply-fix action
+            Button(action: onViewDetail) {
+                HStack(spacing: theme.spacingXS) {
+                    Image(systemName: "arrow.up.right.square")
+                    Text("View Details & Apply Fix")
+                }
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.accent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, theme.spacingXS)
+                .background(theme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadiusSmall))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, theme.spacingMD)
+            .accessibilityLabel("View full details and apply suggested fix for this error pattern")
 
             // Resolve button (only for unresolved patterns)
             if !pattern.isResolved {
