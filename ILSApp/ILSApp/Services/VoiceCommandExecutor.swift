@@ -85,18 +85,42 @@ final class VoiceCommandExecutor {
     /// Maximum retries before suggesting the user seek alternative action.
     private static let maxRetries = 3
 
+    /// Whether haptic feedback is enabled for voice command events.
+    /// Reads from the user preference set in Voice Command Settings.
+    private var hapticEnabled: Bool {
+        // Default to true when the key has never been set (UserDefaults.bool returns false for missing keys)
+        UserDefaults.standard.object(forKey: "voiceCommandHapticFeedback") == nil
+            ? true
+            : UserDefaults.standard.bool(forKey: "voiceCommandHapticFeedback")
+    }
+
+    /// Fire a haptic notification if the user has haptic feedback enabled.
+    private func fireHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        guard hapticEnabled else { return }
+        HapticManager.notification(type)
+    }
+
+    /// Fire a haptic selection if the user has haptic feedback enabled.
+    private func fireHapticSelection() {
+        guard hapticEnabled else { return }
+        HapticManager.selection()
+    }
+
     // MARK: - Execution
 
     /// Execute a voice command.
     ///
     /// If the command requires confirmation (destructive actions), the executor transitions
     /// to `.confirming` state and waits for ``confirm()`` or ``cancel()``.
-    /// Non-destructive commands are dispatched immediately.
+    /// Non-destructive commands are dispatched immediately unless `forceConfirmation` is true.
     ///
     /// - Parameters:
     ///   - command: The voice command to execute.
     ///   - context: Execution context containing view model and app state references.
-    func execute(_ command: VoiceCommand, context: VoiceCommandExecutionContext) async {
+    ///   - forceConfirmation: When true, always prompt for confirmation even if the command
+    ///     does not normally require it. Used for medium-confidence fuzzy matches to prevent
+    ///     accidental execution of misrecognized commands.
+    func execute(_ command: VoiceCommand, context: VoiceCommandExecutionContext, forceConfirmation: Bool = false) async {
         AppLogger.shared.info(
             "Voice command received: \(command.id) (\(command.displayName))",
             category: "voice-commands"
@@ -105,10 +129,10 @@ final class VoiceCommandExecutor {
         // Check user preference for always-confirm
         let alwaysConfirm = UserDefaults.standard.bool(forKey: "voiceCommandAlwaysConfirm")
 
-        if command.requiresConfirmation || command.isDestructive || alwaysConfirm {
+        if command.requiresConfirmation || command.isDestructive || alwaysConfirm || forceConfirmation {
             executionState = .confirming(command)
             pendingContext = context
-            HapticManager.notification(.warning)
+            fireHaptic(.warning)
             AppLogger.shared.info(
                 "Awaiting confirmation for: \(command.id)",
                 category: "voice-commands"
@@ -136,7 +160,7 @@ final class VoiceCommandExecutor {
         guard case .confirming = executionState else { return }
         executionState = .idle
         pendingContext = nil
-        HapticManager.selection()
+        fireHapticSelection()
         AppLogger.shared.info("Voice command confirmation cancelled", category: "voice-commands")
     }
 
@@ -163,7 +187,7 @@ final class VoiceCommandExecutor {
                 command,
                 "Failed \(failures) times. Try a different approach or check the app state."
             )
-            HapticManager.notification(.error)
+            fireHaptic(.error)
             AppLogger.shared.warning(
                 "Voice command retry limit reached for: \(command.id)",
                 category: "voice-commands"
@@ -194,7 +218,7 @@ final class VoiceCommandExecutor {
             lastResult = result
             executionState = .completed(command, result)
             consecutiveFailures[actionKey] = 0
-            HapticManager.notification(.success)
+            fireHaptic(.success)
             recordLog(command: command, success: true)
             AppLogger.shared.info(
                 "Voice command completed: \(command.id) — \(result)",
@@ -211,7 +235,7 @@ final class VoiceCommandExecutor {
             let failures = (consecutiveFailures[actionKey] ?? 0) + 1
             consecutiveFailures[actionKey] = failures
             executionState = .failed(command, message)
-            HapticManager.notification(.error)
+            fireHaptic(.error)
             recordLog(command: command, success: false)
             AppLogger.shared.error(
                 "Voice command failed: \(command.id) — \(message) (failure #\(failures))",

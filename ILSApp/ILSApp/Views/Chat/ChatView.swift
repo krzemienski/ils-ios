@@ -115,6 +115,10 @@ struct ChatView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.theme) private var theme: ThemeSnapshot
     @Environment(\.dismiss) private var dismiss
+    #if os(iOS)
+    /// Master toggle — when false, the voice command mode button is hidden and command mode is disabled.
+    @AppStorage("voiceCommandsEnabled") private var voiceCommandsEnabled: Bool = true
+    #endif
     @AppStorage("showContextWindowBar") private var showContextWindowBar: Bool = true
     @AppStorage("notif_contextCompactionAlerts") private var notifContextCompactionAlerts: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -863,8 +867,8 @@ struct ChatView: View {
             onAdvancedOptions: { sheets.showAdvancedOptions = true },
             onVoiceInput: { toggleVoiceInput() },
             isRecording: speechService.isRecording,
-            onVoiceCommandToggle: { toggleVoiceCommandMode() },
-            isVoiceCommandMode: isVoiceCommandMode,
+            onVoiceCommandToggle: voiceCommandsEnabled ? { toggleVoiceCommandMode() } : nil,
+            isVoiceCommandMode: voiceCommandsEnabled && isVoiceCommandMode,
             attachments: $pendingAttachments,
             onAttachmentTap: { sheets.showAttachmentPicker = true },
             session: session,
@@ -1109,7 +1113,9 @@ struct ChatView: View {
     ///
     /// When enabled, voice transcriptions are routed through the ``VoiceCommandInterpreter``
     /// instead of being inserted as text into the input field.
+    /// Respects the ``voiceCommandsEnabled`` master toggle.
     private func toggleVoiceCommandMode() {
+        guard voiceCommandsEnabled else { return }
         isVoiceCommandMode.toggle()
         if !isVoiceCommandMode {
             // Reset voice command state when exiting command mode
@@ -1118,6 +1124,14 @@ struct ChatView: View {
     }
 
     /// Process a voice transcription as a command by routing it through the interpreter.
+    ///
+    /// Confidence-based routing:
+    /// - **Exact match** with confidence ≥ high threshold → auto-execute.
+    /// - **Exact match** with confidence < high threshold → confirm before executing.
+    /// - **Fuzzy match** with confidence ≥ high threshold → auto-execute.
+    /// - **Fuzzy match** with confidence < high threshold → confirm before executing.
+    /// - **Ambiguous** → show disambiguation UI.
+    /// - **No match** → show suggestions.
     private func processVoiceCommand(_ transcription: String) {
         let context = VoiceCommandContext(
             hasPendingPermissions: viewModel.pendingPermissionRequests.count > 0,
@@ -1127,9 +1141,17 @@ struct ChatView: View {
         let match = voiceCommandInterpreter.interpret(transcription, context: context)
         voiceCommandMatchResult = match
 
+        let highThreshold = voiceCommandInterpreter.highConfidenceThreshold
+
         switch match {
-        case .exact(let command, _), .fuzzy(let command, _):
-            Task { await executeVoiceCommand(command) }
+        case .exact(let command, let confidence):
+            // Exact matches below high confidence still get confirmation
+            let needsConfirmation = confidence < highThreshold
+            Task { await executeVoiceCommand(command, forceConfirmation: needsConfirmation) }
+        case .fuzzy(let command, let confidence):
+            // Fuzzy matches below high confidence always require confirmation
+            let needsConfirmation = confidence < highThreshold
+            Task { await executeVoiceCommand(command, forceConfirmation: needsConfirmation) }
         case .ambiguous, .noMatch:
             // Show overlay with disambiguation or suggestions
             showVoiceCommandOverlay = true
@@ -1137,7 +1159,12 @@ struct ChatView: View {
     }
 
     /// Execute a matched voice command through the executor.
-    private func executeVoiceCommand(_ command: VoiceCommand) async {
+    ///
+    /// - Parameters:
+    ///   - command: The voice command to execute.
+    ///   - forceConfirmation: When true, the executor will prompt for confirmation
+    ///     even for non-destructive commands (used for medium-confidence matches).
+    private func executeVoiceCommand(_ command: VoiceCommand, forceConfirmation: Bool = false) async {
         let context = VoiceCommandExecutionContext(
             chatViewModel: viewModel,
             appState: appState,
@@ -1145,7 +1172,7 @@ struct ChatView: View {
             sessionId: session.id
         )
         showVoiceCommandOverlay = true
-        await voiceCommandExecutor.execute(command, context: context)
+        await voiceCommandExecutor.execute(command, context: context, forceConfirmation: forceConfirmation)
 
         // Auto-dismiss on completion after the overlay handles its own timing
         if case .completed = voiceCommandExecutor.executionState {

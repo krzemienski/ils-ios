@@ -82,6 +82,8 @@ enum VoiceCommandQueueError: LocalizedError {
     case commandNotFound(String)
     /// The queue is full.
     case queueFull
+    /// Offline queueing is disabled in user settings.
+    case queueDisabled
 
     var errorDescription: String? {
         switch self {
@@ -91,6 +93,8 @@ enum VoiceCommandQueueError: LocalizedError {
             return "Command '\(id)' not found in catalog."
         case .queueFull:
             return "Voice command queue is full. Please wait for pending commands to execute."
+        case .queueDisabled:
+            return "Offline voice command queueing is disabled in settings."
         }
     }
 }
@@ -163,6 +167,14 @@ actor VoiceCommandQueue {
     ///   - parameters: Optional key-value parameters for the command.
     /// - Throws: `VoiceCommandQueueError` if the command cannot be queued.
     func enqueue(_ command: VoiceCommand, parameters: [String: String] = [:]) throws {
+        // Check user preference for offline queueing
+        let offlineEnabled = UserDefaults.standard.object(forKey: "voiceCommandOfflineQueue") == nil
+            ? true
+            : UserDefaults.standard.bool(forKey: "voiceCommandOfflineQueue")
+        guard offlineEnabled else {
+            throw VoiceCommandQueueError.queueDisabled
+        }
+
         guard command.offlineCapable else {
             throw VoiceCommandQueueError.notOfflineCapable
         }

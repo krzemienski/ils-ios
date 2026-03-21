@@ -39,6 +39,8 @@ struct VoiceCommandSettingsView: View {
 
             offlineQueueSection
 
+            commandCatalogSection
+
             Text("Voice commands let you control the app hands-free using speech recognition. Adjust confidence thresholds to fine-tune matching accuracy.")
                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
@@ -214,6 +216,87 @@ struct VoiceCommandSettingsView: View {
                 .tint(theme.accent)
                 .padding(theme.spacingMD)
                 .accessibilityLabel("Enable offline voice command queue")
+            }
+            .modifier(GlassCard())
+        }
+        .disabled(!voiceCommandsEnabled)
+        .opacity(voiceCommandsEnabled ? 1 : 0.5)
+    }
+
+    // MARK: - Command Catalog Section
+
+    /// Groups commands by category for the catalog display.
+    private var commandsByCategory: [(VoiceCommandCategory, [VoiceCommand])] {
+        VoiceCommandCategory.allCases.compactMap { category in
+            let commands = VoiceCommandCatalog.commands(for: category)
+            return commands.isEmpty ? nil : (category, commands)
+        }
+    }
+
+    private var commandCatalogSection: some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionLabel("Available Commands")
+
+            VStack(spacing: 0) {
+                ForEach(Array(commandsByCategory.enumerated()), id: \.offset) { index, group in
+                    let (category, commands) = group
+
+                    if index > 0 {
+                        Divider().background(theme.bgTertiary)
+                    }
+
+                    VStack(alignment: .leading, spacing: theme.spacingXS) {
+                        // Category header
+                        HStack(spacing: theme.spacingXS) {
+                            Image(systemName: category.icon)
+                                .font(.system(size: 12, design: theme.fontDesign))
+                                .foregroundStyle(theme.accent)
+                            Text(category.displayName)
+                                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                                .foregroundStyle(theme.textSecondary)
+                        }
+
+                        // Command list
+                        ForEach(commands, id: \.id) { command in
+                            HStack(spacing: theme.spacingSM) {
+                                Image(systemName: command.icon)
+                                    .font(.system(size: 14, design: theme.fontDesign))
+                                    .foregroundStyle(theme.accent)
+                                    .frame(width: 20, height: 20)
+
+                                VStack(alignment: .leading, spacing: 1) {
+                                    HStack(spacing: theme.spacingXS) {
+                                        Text(command.displayName)
+                                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
+                                            .foregroundStyle(theme.textPrimary)
+
+                                        if command.isDestructive {
+                                            Image(systemName: "exclamationmark.triangle.fill")
+                                                .font(.system(size: 10, design: theme.fontDesign))
+                                                .foregroundStyle(theme.error)
+                                        }
+                                    }
+
+                                    Text("Say: \"\(command.phrases.first ?? command.displayName)\"")
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textTertiary)
+                                        .lineLimit(1)
+                                }
+
+                                Spacer()
+
+                                if command.offlineCapable {
+                                    Image(systemName: "wifi.slash")
+                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .foregroundStyle(theme.textTertiary)
+                                }
+                            }
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel("\(command.displayName): say \(command.phrases.first ?? command.displayName)")
+                        }
+                    }
+                    .padding(theme.spacingMD)
+                }
             }
             .modifier(GlassCard())
         }
