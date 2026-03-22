@@ -15,10 +15,20 @@ struct AddExtendedDatabaseIndexes: AsyncMigration {
             return
         }
 
-        try await sql.raw("CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)").run()
-        try await sql.raw("CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)").run()
-        try await sql.raw("CREATE INDEX IF NOT EXISTS idx_projects_path ON projects(path)").run()
-        try await sql.raw("CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)").run()
+        // Each index is wrapped in do/catch because the table may not exist yet
+        // (sessions/projects are created by external Claude Code data, not by ILS migrations).
+        for statement in [
+            "CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at)",
+            "CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)",
+            "CREATE INDEX IF NOT EXISTS idx_projects_path ON projects(path)",
+            "CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)",
+        ] {
+            do {
+                try await sql.raw(SQLQueryString(statement)).run()
+            } catch {
+                database.logger.info("AddExtendedDatabaseIndexes: skipping index — \(error.localizedDescription)")
+            }
+        }
     }
 
     func revert(on database: Database) async throws {
