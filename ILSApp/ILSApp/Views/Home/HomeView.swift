@@ -397,9 +397,9 @@ struct HomeView: View {
                         }
 
                         Button {
-                            SessionExporter.share(session)
+                            UIPasteboard.general.string = SessionExporter.exportText(for: session)
                         } label: {
-                            Label("Export", systemImage: "square.and.arrow.up")
+                            Label("Copy Summary", systemImage: "doc.on.doc")
                         }
 
                         Button(role: .destructive) {
