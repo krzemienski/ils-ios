@@ -19,12 +19,12 @@ func routes(_ app: Application) throws {
     try readRoutes.register(collection: UsageController())
     try readRoutes.register(collection: ConsumptionController())
     try readRoutes.register(collection: ActivityFeedController())
-    try readRoutes.register(collection: RecordingController())
     try readRoutes.register(collection: AnalyticsController(fileSystem: fileSystem))
     try readRoutes.register(collection: ErrorPatternsController())
 
     // Write routes (require at least write-level authorization for mutations)
     let writeRoutes = api.grouped(AuthorizationMiddleware(minimumLevel: .write))
+    try writeRoutes.register(collection: RecordingController())
     try writeRoutes.register(collection: ProjectsController(fileSystem: fileSystem))
     try writeRoutes.register(collection: SessionsController(fileSystem: fileSystem))
     try writeRoutes.register(collection: ChatController())
