@@ -1,0 +1,318 @@
+{
+  "version": "1.3",
+  "schemaVersion": "1.0",
+  "generatedBy": "ecc-tools",
+  "generatedAt": "2026-03-22T14:39:42.974Z",
+  "repo": "https://github.com/krzemienski/ils-ios",
+  "profiles": {
+    "requested": "full",
+    "recommended": "full",
+    "effective": "research",
+    "requestedAlias": "full",
+    "recommendedAlias": "full",
+    "effectiveAlias": "research"
+  },
+  "requestedProfile": "full",
+  "profile": "research",
+  "recommendedProfile": "full",
+  "effectiveProfile": "research",
+  "tier": "pro",
+  "requestedComponents": [
+    "repo-baseline",
+    "workflow-automation",
+    "security-audits",
+    "research-tooling",
+    "team-rollout",
+    "governance-controls"
+  ],
+  "selectedComponents": [
+    "repo-baseline",
+    "workflow-automation",
+    "security-audits",
+    "research-tooling",
+    "team-rollout"
+  ],
+  "requestedAddComponents": [],
+  "requestedRemoveComponents": [],
+  "blockedRemovalComponents": [],
+  "tierFilteredComponents": [
+    "governance-controls"
+  ],
+  "requestedRootPackages": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync",
+    "enterprise-controls"
+  ],
+  "selectedRootPackages": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "requestedPackages": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync",
+    "enterprise-controls"
+  ],
+  "requestedAddPackages": [],
+  "requestedRemovePackages": [],
+  "selectedPackages": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "packages": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "blockedRemovalPackages": [],
+  "tierFilteredRootPackages": [
+    "enterprise-controls"
+  ],
+  "tierFilteredPackages": [
+    "enterprise-controls"
+  ],
+  "conflictingPackages": [],
+  "dependencyGraph": {
+    "runtime-core": [],
+    "workflow-pack": [
+      "runtime-core"
+    ],
+    "agentshield-pack": [
+      "workflow-pack"
+    ],
+    "research-pack": [
+      "workflow-pack"
+    ],
+    "team-config-sync": [
+      "runtime-core"
+    ]
+  },
+  "resolutionOrder": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "requestedModules": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync",
+    "enterprise-controls"
+  ],
+  "selectedModules": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "modules": [
+    "runtime-core",
+    "workflow-pack",
+    "agentshield-pack",
+    "research-pack",
+    "team-config-sync"
+  ],
+  "managedFiles": [
+    ".claude/skills/ils-ios/SKILL.md",
+    ".agents/skills/ils-ios/SKILL.md",
+    ".agents/skills/ils-ios/agents/openai.yaml",
+    ".claude/identity.json",
+    ".codex/config.toml",
+    ".codex/AGENTS.md",
+    ".codex/agents/explorer.toml",
+    ".codex/agents/reviewer.toml",
+    ".codex/agents/docs-researcher.toml",
+    ".claude/homunculus/instincts/inherited/ils-ios-instincts.yaml",
+    ".claude/rules/ils-ios-guardrails.md",
+    ".claude/research/ils-ios-research-playbook.md",
+    ".claude/team/ils-ios-team-config.json",
+    ".claude/commands/feature-development.md",
+    ".claude/commands/add-accessibility-attributes-to-views.md",
+    ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+  ],
+  "packageFiles": {
+    "runtime-core": [
+      ".claude/skills/ils-ios/SKILL.md",
+      ".agents/skills/ils-ios/SKILL.md",
+      ".agents/skills/ils-ios/agents/openai.yaml",
+      ".claude/identity.json",
+      ".codex/config.toml",
+      ".codex/AGENTS.md",
+      ".codex/agents/explorer.toml",
+      ".codex/agents/reviewer.toml",
+      ".codex/agents/docs-researcher.toml",
+      ".claude/homunculus/instincts/inherited/ils-ios-instincts.yaml"
+    ],
+    "agentshield-pack": [
+      ".claude/rules/ils-ios-guardrails.md"
+    ],
+    "research-pack": [
+      ".claude/research/ils-ios-research-playbook.md"
+    ],
+    "team-config-sync": [
+      ".claude/team/ils-ios-team-config.json"
+    ],
+    "workflow-pack": [
+      ".claude/commands/feature-development.md",
+      ".claude/commands/add-accessibility-attributes-to-views.md",
+      ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+    ]
+  },
+  "moduleFiles": {
+    "runtime-core": [
+      ".claude/skills/ils-ios/SKILL.md",
+      ".agents/skills/ils-ios/SKILL.md",
+      ".agents/skills/ils-ios/agents/openai.yaml",
+      ".claude/identity.json",
+      ".codex/config.toml",
+      ".codex/AGENTS.md",
+      ".codex/agents/explorer.toml",
+      ".codex/agents/reviewer.toml",
+      ".codex/agents/docs-researcher.toml",
+      ".claude/homunculus/instincts/inherited/ils-ios-instincts.yaml"
+    ],
+    "agentshield-pack": [
+      ".claude/rules/ils-ios-guardrails.md"
+    ],
+    "research-pack": [
+      ".claude/research/ils-ios-research-playbook.md"
+    ],
+    "team-config-sync": [
+      ".claude/team/ils-ios-team-config.json"
+    ],
+    "workflow-pack": [
+      ".claude/commands/feature-development.md",
+      ".claude/commands/add-accessibility-attributes-to-views.md",
+      ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+    ]
+  },
+  "files": [
+    {
+      "moduleId": "runtime-core",
+      "path": ".claude/skills/ils-ios/SKILL.md",
+      "description": "Repository-specific Claude Code skill generated from git history."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".agents/skills/ils-ios/SKILL.md",
+      "description": "Codex-facing copy of the generated repository skill."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".agents/skills/ils-ios/agents/openai.yaml",
+      "description": "Codex skill metadata so the repo skill appears cleanly in the skill interface."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".claude/identity.json",
+      "description": "Suggested identity.json baseline derived from repository conventions."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".codex/config.toml",
+      "description": "Repo-local Codex MCP and multi-agent baseline aligned with ECC defaults."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".codex/AGENTS.md",
+      "description": "Codex usage guide that points at the generated repo skill and workflow bundle."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".codex/agents/explorer.toml",
+      "description": "Read-only explorer role config for Codex multi-agent work."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".codex/agents/reviewer.toml",
+      "description": "Read-only reviewer role config focused on correctness and security."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".codex/agents/docs-researcher.toml",
+      "description": "Read-only docs researcher role config for API verification."
+    },
+    {
+      "moduleId": "runtime-core",
+      "path": ".claude/homunculus/instincts/inherited/ils-ios-instincts.yaml",
+      "description": "Continuous-learning instincts derived from repository patterns."
+    },
+    {
+      "moduleId": "agentshield-pack",
+      "path": ".claude/rules/ils-ios-guardrails.md",
+      "description": "Repository guardrails distilled from analysis for security and workflow review."
+    },
+    {
+      "moduleId": "research-pack",
+      "path": ".claude/research/ils-ios-research-playbook.md",
+      "description": "Research workflow playbook for source attribution and long-context tasks."
+    },
+    {
+      "moduleId": "team-config-sync",
+      "path": ".claude/team/ils-ios-team-config.json",
+      "description": "Team config scaffold that points collaborators at the shared ECC bundle."
+    },
+    {
+      "moduleId": "workflow-pack",
+      "path": ".claude/commands/feature-development.md",
+      "description": "Workflow command scaffold for feature-development."
+    },
+    {
+      "moduleId": "workflow-pack",
+      "path": ".claude/commands/add-accessibility-attributes-to-views.md",
+      "description": "Workflow command scaffold for add-accessibility-attributes-to-views."
+    },
+    {
+      "moduleId": "workflow-pack",
+      "path": ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md",
+      "description": "Workflow command scaffold for implement-responsive-layout-for-ipad-multitasking."
+    }
+  ],
+  "workflows": [
+    {
+      "command": "feature-development",
+      "path": ".claude/commands/feature-development.md"
+    },
+    {
+      "command": "add-accessibility-attributes-to-views",
+      "path": ".claude/commands/add-accessibility-attributes-to-views.md"
+    },
+    {
+      "command": "implement-responsive-layout-for-ipad-multitasking",
+      "path": ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+    }
+  ],
+  "adapters": {
+    "claudeCode": {
+      "skillPath": ".claude/skills/ils-ios/SKILL.md",
+      "identityPath": ".claude/identity.json",
+      "commandPaths": [
+        ".claude/commands/feature-development.md",
+        ".claude/commands/add-accessibility-attributes-to-views.md",
+        ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+      ]
+    },
+    "codex": {
+      "configPath": ".codex/config.toml",
+      "agentsGuidePath": ".codex/AGENTS.md",
+      "skillPath": ".agents/skills/ils-ios/SKILL.md"
+    }
+  }
+}
