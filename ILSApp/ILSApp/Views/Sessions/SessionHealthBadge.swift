@@ -33,7 +33,7 @@ struct SessionHealthBadge: View {
             // Colour-coded indicator dot
             Circle()
                 .fill(dotColor)
-                .frame(width: 7, height: 7)
+                .frame(width: 8, height: 8)
 
             // Numeric score
             Text(scoreText)

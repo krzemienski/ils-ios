@@ -184,7 +184,7 @@ struct PermissionInboxView: View {
                     Image(systemName: selectedIds.contains(record.requestId)
                           ? "checkmark.circle.fill"
                           : "circle")
-                        .font(.system(size: 22, design: theme.fontDesign))
+                        .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                         .foregroundStyle(selectedIds.contains(record.requestId)
                                          ? theme.accent
                                          : theme.textTertiary)
@@ -256,6 +256,7 @@ struct PermissionInboxView: View {
                 selectedPermission = record
             }
         }
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Toolbar

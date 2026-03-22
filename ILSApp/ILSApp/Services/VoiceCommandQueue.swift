@@ -404,7 +404,8 @@ actor VoiceCommandQueue {
 
     /// File URL for persisting the voice command queue.
     private static var queueFileURL: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         let dir = appSupport.appendingPathComponent("ILS", isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

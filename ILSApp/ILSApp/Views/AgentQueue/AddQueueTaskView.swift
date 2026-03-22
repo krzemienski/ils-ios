@@ -444,7 +444,7 @@ struct AddQueueTaskView: View {
             Group {
                 if isSubmitting {
                     ProgressView()
-                        .tint(.white)
+                        .tint(theme.textOnAccent)
                 } else {
                     Text("Add to Queue")
                         .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
@@ -453,7 +453,7 @@ struct AddQueueTaskView: View {
             .frame(maxWidth: .infinity)
             .padding(theme.spacingMD)
             .background(canSubmit ? theme.accent : theme.accent.opacity(0.4))
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.textOnAccent)
             .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
         }
         .disabled(!canSubmit)

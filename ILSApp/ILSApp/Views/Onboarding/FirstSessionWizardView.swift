@@ -199,7 +199,7 @@ struct FirstSessionWizardView: View {
         } label: {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: template.icon)
-                    .font(.system(size: 22, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                     .foregroundStyle(isSelected ? theme.accent : theme.textSecondary)
                     .frame(width: 40, height: 40)
                     .background(
@@ -282,7 +282,7 @@ struct FirstSessionWizardView: View {
         } label: {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: "bubble.left.and.text.bubble.right")
-                    .font(.system(size: 22, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                     .foregroundStyle(isSelected ? theme.accent : theme.textSecondary)
                     .frame(width: 40, height: 40)
                     .background(
@@ -336,7 +336,7 @@ struct FirstSessionWizardView: View {
         } label: {
             HStack(spacing: theme.spacingMD) {
                 Image(systemName: "folder.fill")
-                    .font(.system(size: 22, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                     .foregroundStyle(isSelected ? theme.accent : theme.textSecondary)
                     .frame(width: 40, height: 40)
                     .background(

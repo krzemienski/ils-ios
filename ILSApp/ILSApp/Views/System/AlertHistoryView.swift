@@ -101,7 +101,7 @@ struct AlertHistoryView: View {
                             y: .value("Alerts", item.count)
                         )
                         .foregroundStyle(by: .value("Metric", item.metricType.displayName))
-                        .cornerRadius(3)
+                        .cornerRadius(theme.cornerRadiusSmall)
                     }
                     .chartXAxis {
                         AxisMarks(values: .stride(by: .day)) { _ in

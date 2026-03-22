@@ -98,9 +98,9 @@ struct QRScannerView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.cyan.opacity(0),
-                                    Color.cyan.opacity(0.8),
-                                    Color.cyan.opacity(0)
+                                    theme.accent.opacity(0),
+                                    theme.accent.opacity(0.8),
+                                    theme.accent.opacity(0)
                                 ],
                                 startPoint: .leading,
                                 endPoint: .trailing
@@ -176,7 +176,7 @@ struct QRScannerView: View {
             path.addLine(to: CGPoint(x: 0, y: 0))
             path.addLine(to: CGPoint(x: bracketLength, y: 0))
         }
-        .stroke(Color.cyan, style: StrokeStyle(lineWidth: thickness, lineCap: .round, lineJoin: .round))
+        .stroke(theme.accent, style: StrokeStyle(lineWidth: thickness, lineCap: .round, lineJoin: .round))
         .frame(width: bracketLength, height: bracketLength)
         .rotationEffect(.degrees(rotation))
         .offset(x: x, y: y)
@@ -191,8 +191,8 @@ struct QRScannerView: View {
                 dismiss()
             } label: {
                 Text("Cancel")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white)
+                    .font(.system(size: theme.fontBody, weight: .medium))
+                    .foregroundStyle(theme.textOnAccent)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -210,11 +210,11 @@ struct QRScannerView: View {
     private var bottomHint: some View {
         VStack(spacing: 8) {
             Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 28))
+                .font(.system(size: theme.fontTitle1))
                 .foregroundStyle(.white.opacity(0.7))
 
             Text("Align the QR code from your\nTunnel Settings screen")
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: theme.fontBody, weight: .medium))
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
         }
@@ -226,9 +226,9 @@ struct QRScannerView: View {
     private var requestingPermissionView: some View {
         VStack(spacing: 20) {
             ProgressView()
-                .tint(.white)
+                .tint(theme.textOnAccent)
             Text("Requesting camera access…")
-                .font(.system(size: 15))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(.white.opacity(0.7))
         }
     }
@@ -243,11 +243,11 @@ struct QRScannerView: View {
 
             VStack(spacing: 10) {
                 Text("Camera Access Required")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: theme.fontTitle3, weight: .semibold))
+                    .foregroundStyle(theme.textOnAccent)
 
                 Text("Allow camera access in Settings to scan QR codes from your Tunnel Settings screen.")
-                    .font(.system(size: 14))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -259,8 +259,8 @@ struct QRScannerView: View {
                 }
             } label: {
                 Label("Open Settings", systemImage: "gear")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .font(.system(size: theme.fontBody, weight: .semibold))
+                    .foregroundStyle(theme.textPrimary)
                     .frame(height: 48)
                     .frame(maxWidth: .infinity)
                     .background(Color.white)
@@ -273,7 +273,7 @@ struct QRScannerView: View {
                 dismiss()
             } label: {
                 Text("Cancel")
-                    .font(.system(size: 15))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(.white.opacity(0.6))
             }
             .accessibilityLabel("Cancel")

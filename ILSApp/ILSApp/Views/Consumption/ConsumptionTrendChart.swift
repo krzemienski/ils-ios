@@ -89,7 +89,7 @@ struct ConsumptionTrendChart: View {
                         x: .value("Date", point.date),
                         y: .value("Tokens", point.tokens)
                     )
-                    .foregroundStyle(.red)
+                    .foregroundStyle(theme.error)
                     .symbolSize(40)
                 }
             }

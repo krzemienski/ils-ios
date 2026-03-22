@@ -249,7 +249,7 @@ struct VoiceCommandSettingsView: View {
                         // Category header
                         HStack(spacing: theme.spacingXS) {
                             Image(systemName: category.icon)
-                                .font(.system(size: 12, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.accent)
                             Text(category.displayName)
                                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
@@ -260,7 +260,7 @@ struct VoiceCommandSettingsView: View {
                         ForEach(commands, id: \.id) { command in
                             HStack(spacing: theme.spacingSM) {
                                 Image(systemName: command.icon)
-                                    .font(.system(size: 14, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                     .foregroundStyle(theme.accent)
                                     .frame(width: 20, height: 20)
 

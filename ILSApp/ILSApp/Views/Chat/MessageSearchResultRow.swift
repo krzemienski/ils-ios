@@ -15,7 +15,7 @@ struct MessageSearchResultRow: View {
         HStack(alignment: .top, spacing: theme.spacingSM) {
             // Role icon
             Image(systemName: roleIconName)
-                .font(.system(size: 14, design: theme.fontDesign))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(roleIconColor)
                 .frame(width: 20, alignment: .center)
                 .padding(.top, 1)

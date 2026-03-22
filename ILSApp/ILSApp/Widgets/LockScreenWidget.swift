@@ -68,7 +68,7 @@ private struct RectangularLockScreenView: View {
                 HStack(spacing: 4) {
                     Circle()
                         .fill(entry.isConnected ? Color.green : Color.red)
-                        .frame(width: 7, height: 7)
+                        .frame(width: 8, height: 8)
                     Text(entry.isConnected ? "Connected" : "Offline")
                         .font(.footnote.weight(.semibold))
                         .lineLimit(1)

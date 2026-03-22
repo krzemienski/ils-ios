@@ -248,12 +248,12 @@ struct QuickReplyTemplatesSettingsView: View {
             // Lock icon for built-ins; chevron for custom
             if template.isBuiltIn {
                 Image(systemName: "lock")
-                    .font(.system(size: 12))
+                    .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textTertiary)
                     .accessibilityLabel("Built-in template, read-only")
             } else {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold))
                     .foregroundStyle(theme.textTertiary)
                     .accessibilityHidden(true)
             }
@@ -266,6 +266,7 @@ struct QuickReplyTemplatesSettingsView: View {
             editingTemplate = template
             showingEditSheet = true
         }
+        .accessibilityAddTraits(.isButton)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(template.isBuiltIn
             ? "\(template.name), built-in, read-only"
@@ -298,7 +299,7 @@ struct QuickReplyTemplatesSettingsView: View {
                 } label: {
                     Label("Edit", systemImage: "pencil")
                 }
-                .tint(.blue)
+                .tint(theme.accent)
             }
         }
         .contextMenu {
@@ -353,7 +354,7 @@ struct QuickReplyTemplatesSettingsView: View {
                         .frame(width: 20)
 
                     Image(systemName: template.category.systemImage)
-                        .font(.system(size: 14))
+                        .font(.system(size: theme.fontBody))
                         .foregroundStyle(theme.accent)
                         .accessibilityHidden(true)
 

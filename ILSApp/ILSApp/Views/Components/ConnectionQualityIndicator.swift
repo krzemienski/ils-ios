@@ -57,8 +57,8 @@ struct ConnectionQualityIndicator: View {
     private var dotColor: Color {
         switch quality {
         case .excellent: return theme.success
-        case .good:      return Color.yellow
-        case .fair:      return Color.orange
+        case .good:      return theme.warning
+        case .fair:      return theme.warning.opacity(0.8)
         case .poor:      return theme.error
         case .offline:   return theme.textTertiary
         }

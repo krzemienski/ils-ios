@@ -114,9 +114,9 @@ struct SidebarSessionRow: View {
                 if bookmarkCount > 0 {
                     HStack(spacing: 2) {
                         Image(systemName: "bookmark.fill")
-                            .font(.system(size: 9, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         Text("\(bookmarkCount)")
-                            .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
+                            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     }
                     .foregroundStyle(theme.accent)
                     .padding(.horizontal, 5)
@@ -136,6 +136,8 @@ struct SidebarSessionRow: View {
                             onConflictTap?()
                         }
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Sync conflict — tap to resolve")
                 }
             }
             .padding(.horizontal, theme.spacingSM)

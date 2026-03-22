@@ -218,7 +218,7 @@ struct SessionSuggestionsWidget: View {
                 .rotationEffect(.degrees(-90))
 
             Text("\(percent)%")
-                .font(.system(size: 8, weight: .semibold, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
         }
         .frame(width: 36, height: 36)

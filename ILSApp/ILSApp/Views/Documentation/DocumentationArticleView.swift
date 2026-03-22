@@ -123,7 +123,7 @@ struct DocumentationArticleView: View {
             // Header row with copy button
             HStack {
                 Text("EXAMPLE")
-                    .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
                     .tracking(1)
                 Spacer()
@@ -132,7 +132,7 @@ struct DocumentationArticleView: View {
                 } label: {
                     HStack(spacing: theme.spacingXS) {
                         Image(systemName: showCopiedToast ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 13, weight: .medium, design: theme.fontDesign))
+                            .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         Text(showCopiedToast ? "Copied" : "Copy")
                             .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     }

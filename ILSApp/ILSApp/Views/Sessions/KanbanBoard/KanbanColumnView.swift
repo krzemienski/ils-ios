@@ -116,7 +116,7 @@ struct KanbanColumnView: View {
             // Item count badge
             Text("\(items.count)")
                 .font(.system(size: theme.fontCaption, weight: .bold, design: theme.fontDesign))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textOnAccent)
                 .frame(minWidth: 22, minHeight: 22)
                 .background(column.color)
                 .clipShape(Circle())

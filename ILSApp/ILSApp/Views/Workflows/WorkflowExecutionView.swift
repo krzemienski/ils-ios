@@ -395,7 +395,7 @@ struct WorkflowExecutionView: View {
                     Text("Cancel")
                 }
                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textOnAccent)
                 .frame(maxWidth: .infinity)
                 .padding(theme.spacingMD)
                 .background(theme.error)

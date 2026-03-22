@@ -411,7 +411,7 @@ struct AlertThresholdSettingsView: View {
                             Text("Snooze")
                                 .font(.system(size: theme.fontBody, design: theme.fontDesign))
                             Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 11, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                         }
                         .foregroundStyle(theme.accent)
                     }

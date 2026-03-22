@@ -109,7 +109,7 @@ struct ActivityEventRow: View {
                 if !event.isRead {
                     Circle()
                         .fill(theme.accent)
-                        .frame(width: 7, height: 7)
+                        .frame(width: 8, height: 8)
                         .padding(.top, 5)
                 }
             }

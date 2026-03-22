@@ -272,7 +272,7 @@ struct ContextWindowDetailSheet: View {
                 .frame(width: 8, height: 8)
 
             Image(systemName: systemImage)
-                .font(.system(size: 13))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(color)
                 .frame(width: 20, alignment: .center)
 
@@ -316,7 +316,7 @@ struct ContextWindowDetailSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(theme.spacingMD)
                     .background(progressColor)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             }
             .buttonStyle(.plain)
@@ -354,7 +354,7 @@ struct ContextWindowDetailSheet: View {
     private func snapshotHistoryRow(snapshot: ContextSnapshot) -> some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: "scissors")
-                .font(.system(size: 13))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(theme.warning)
                 .frame(width: 20, alignment: .center)
 
@@ -395,7 +395,7 @@ struct ContextWindowDetailSheet: View {
         VStack(spacing: theme.spacingXS) {
             HStack(spacing: theme.spacingXS) {
                 Image(systemName: "cpu")
-                    .font(.system(size: 11))
+                    .font(.system(size: theme.fontCaption))
                     .foregroundStyle(theme.textTertiary)
                 Text("Max context: \(formatTokens(contextWindowSize)) tokens")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
@@ -406,7 +406,7 @@ struct ContextWindowDetailSheet: View {
             if cacheReadTokens > 0 && percent > 0.90 {
                 HStack(spacing: theme.spacingXS) {
                     Image(systemName: "scissors")
-                        .font(.system(size: 11))
+                        .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.warning)
                     Text("Conversation history may be truncated")
                         .font(.system(size: theme.fontCaption, design: theme.fontDesign))

@@ -89,10 +89,10 @@ struct MessageBookmarkRowView: View {
     private var roleBadge: some View {
         Text(roleName)
             .font(.system(size: theme.fontCaption - 1, weight: .semibold, design: theme.fontDesign))
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.textOnAccent)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(roleBadgeColor.cornerRadius(4))
+            .background(roleBadgeColor.cornerRadius(theme.cornerRadiusSmall))
             .fixedSize()
     }
 
@@ -104,7 +104,7 @@ struct MessageBookmarkRowView: View {
                     .foregroundStyle(theme.textSecondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(theme.bgSecondary.cornerRadius(4))
+                    .background(theme.bgSecondary.cornerRadius(theme.cornerRadiusSmall))
             }
 
             if bookmark.tags.count > 4 {

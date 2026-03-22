@@ -145,11 +145,11 @@ struct TunnelSetupWizardView: View {
 
                                 if isDone {
                                     Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .bold))
+                                        .font(.system(size: theme.fontCaption, weight: .bold))
                                         .foregroundStyle(theme.textOnAccent)
                                 } else {
                                     Text("\(index + 1)")
-                                        .font(.system(size: 12, weight: .semibold, design: theme.fontDesign))
+                                        .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                                         .foregroundStyle(isActive ? theme.textOnAccent : theme.textTertiary)
                                 }
                             }
@@ -269,7 +269,7 @@ struct TunnelSetupWizardView: View {
                         if isCheckingPrereqs {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .tint(.white)
+                                .tint(theme.textOnAccent)
                         } else {
                             Image(systemName: "arrow.clockwise")
                         }
@@ -385,7 +385,7 @@ struct TunnelSetupWizardView: View {
         } label: {
             HStack(alignment: .top, spacing: theme.spacingMD) {
                 Image(systemName: icon)
-                    .font(.system(size: 22))
+                    .font(.system(size: theme.fontTitle2))
                     .foregroundStyle(isSelected ? theme.accent : theme.textTertiary)
                     .frame(width: 28)
 
@@ -821,7 +821,7 @@ struct TunnelSetupWizardView: View {
                         if isLaunching {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .tint(.white)
+                                .tint(theme.textOnAccent)
                         } else {
                             Image(systemName: "play.fill")
                         }
@@ -945,7 +945,7 @@ struct TunnelSetupWizardView: View {
     private func stepHeader(icon: String, title: String, subtitle: String) -> some View {
         HStack(alignment: .top, spacing: theme.spacingMD) {
             Image(systemName: icon)
-                .font(.system(size: 28))
+                .font(.system(size: theme.fontTitle1))
                 .foregroundStyle(theme.accent)
                 .frame(width: 36)
 

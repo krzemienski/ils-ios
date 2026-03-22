@@ -219,7 +219,7 @@ struct ActiveSessionsWidget: View {
                 // Active status indicator
                 Circle()
                     .fill(theme.success)
-                    .frame(width: 7, height: 7)
+                    .frame(width: 8, height: 8)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -257,7 +257,7 @@ struct ActiveSessionsWidget: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Active Sessions")
@@ -284,7 +284,7 @@ struct ActiveSessionsWidget: View {
         HStack(spacing: theme.spacingSM) {
             Circle()
                 .fill(theme.bgTertiary)
-                .frame(width: 7, height: 7)
+                .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 4) {
                 RoundedRectangle(cornerRadius: 3)

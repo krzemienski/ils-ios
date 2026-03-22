@@ -138,7 +138,7 @@ struct SkillUsageView: View {
                 HStack(spacing: 4) {
                     ForEach(1...5, id: \.self) { star in
                         Image(systemName: Double(star) <= rating ? "star.fill" : "star")
-                            .font(.system(size: 9))
+                            .font(.system(size: theme.fontCaption))
                             .foregroundStyle(Double(star) <= rating ? theme.warning : theme.textTertiary)
                     }
                     Text(String(format: "%.1f avg effectiveness", rating))

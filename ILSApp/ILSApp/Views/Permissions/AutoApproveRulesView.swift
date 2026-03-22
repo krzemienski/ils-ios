@@ -325,7 +325,7 @@ struct AutoApproveRulesView: View {
                     if matchCount > 0 {
                         Text("\(matchCount)")
                             .font(.system(size: theme.fontCaption, weight: .bold, design: theme.fontDesign))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textOnAccent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(rule.action == .allow ? theme.success : theme.error)
@@ -491,7 +491,7 @@ struct AutoApproveRulesView: View {
                         Text("Create Rule")
                             .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, theme.spacingMD)
                     .background(theme.accent)

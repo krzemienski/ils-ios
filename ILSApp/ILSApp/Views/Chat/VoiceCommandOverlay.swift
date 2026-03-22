@@ -168,7 +168,7 @@ struct VoiceCommandOverlay: View {
                         Text("Confirm")
                     }
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, theme.spacingSM)
                     .background(
@@ -293,7 +293,7 @@ struct VoiceCommandOverlay: View {
                             Text("Try Again")
                         }
                         .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
                         .background(
@@ -328,7 +328,7 @@ struct VoiceCommandOverlay: View {
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold, design: theme.fontDesign))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .accessibilityLabel("Dismiss suggestions")
@@ -363,7 +363,7 @@ struct VoiceCommandOverlay: View {
 
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold, design: theme.fontDesign))
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.textTertiary)
                 }
                 .accessibilityLabel("Dismiss")
@@ -418,7 +418,7 @@ struct VoiceCommandOverlay: View {
 
             if command.isDestructive {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 12, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.error)
             }
         }
@@ -431,7 +431,7 @@ struct VoiceCommandOverlay: View {
     private func commandRow(_ command: VoiceCommand) -> some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: command.icon)
-                .font(.system(size: 14, design: theme.fontDesign))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.accent)
                 .frame(width: 24, height: 24)
 
@@ -448,7 +448,7 @@ struct VoiceCommandOverlay: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(.horizontal, theme.spacingSM)

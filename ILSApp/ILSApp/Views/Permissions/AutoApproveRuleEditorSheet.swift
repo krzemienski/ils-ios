@@ -107,19 +107,19 @@ struct AutoApproveRuleEditorSheet: View {
             Picker("Action", selection: $selectedAction) {
                 Label {
                     Text("Allow")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(theme.success)
                 } icon: {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(theme.success)
                 }
                 .tag(PermissionPolicyAction.allow)
 
                 Label {
                     Text("Deny")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(theme.error)
                 } icon: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(theme.error)
                 }
                 .tag(PermissionPolicyAction.deny)
             }
@@ -141,11 +141,11 @@ struct AutoApproveRuleEditorSheet: View {
         case .deny:
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(theme.warning)
                     .font(.system(size: theme.fontCaption))
                 Text("Matching requests will be silently blocked. Use with caution.")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(theme.warning)
             }
         }
     }

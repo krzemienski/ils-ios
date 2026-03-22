@@ -388,6 +388,8 @@ struct SidebarRootView: View {
                     .onTapGesture {
                         closeSidebar()
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Close sidebar")
                     .transition(.opacity)
             }
 

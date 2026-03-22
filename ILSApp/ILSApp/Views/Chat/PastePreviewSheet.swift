@@ -112,7 +112,7 @@ struct PastePreviewSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 4)
                 .background(theme.accent.opacity(0.1))
-                .cornerRadius(8)
+                .cornerRadius(theme.cornerRadius)
             }
         }
         .padding(.top, 8)
@@ -132,7 +132,7 @@ struct PastePreviewSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
                     .background(theme.bgSecondary)
-                    .cornerRadius(8)
+                    .cornerRadius(theme.cornerRadius)
             }
             .frame(maxHeight: 200)
         }
@@ -154,8 +154,8 @@ struct PastePreviewSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(theme.accent)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+                .foregroundColor(theme.textOnAccent)
+                .cornerRadius(theme.cornerRadiusLarge)
             }
             .accessibilityLabel("Insert formatted \(contentTypeLabel.lowercased())")
 
@@ -173,7 +173,7 @@ struct PastePreviewSheet: View {
                 .padding()
                 .background(theme.bgSecondary)
                 .foregroundColor(theme.textPrimary)
-                .cornerRadius(12)
+                .cornerRadius(theme.cornerRadiusLarge)
             }
             .accessibilityLabel("Insert plain text without formatting")
         }

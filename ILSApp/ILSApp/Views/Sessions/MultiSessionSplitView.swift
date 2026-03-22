@@ -110,6 +110,8 @@ struct MultiSessionSplitView: View {
                         onUnpin: { multiSessionVM.unpinSession(session) }
                     )
                     .onTapGesture { activePane = index }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Switch to session pane \(index + 1)")
                 }
             }
 
@@ -122,6 +124,7 @@ struct MultiSessionSplitView: View {
                     onUnpin: { multiSessionVM.unpinSession(visible[0]) }
                 )
                 .onTapGesture { activePane = 0 }
+                .accessibilityAddTraits(.isButton)
 
                 VStack(spacing: gap) {
                     ForEach(Array(visible.dropFirst().enumerated()), id: \.element.id) { index, session in
@@ -131,6 +134,7 @@ struct MultiSessionSplitView: View {
                             onUnpin: { multiSessionVM.unpinSession(session) }
                         )
                         .onTapGesture { activePane = index + 1 }
+                        .accessibilityAddTraits(.isButton)
                     }
                 }
             }
@@ -152,6 +156,7 @@ struct MultiSessionSplitView: View {
                     )
                     .frame(height: cellHeight)
                     .onTapGesture { activePane = index }
+                    .accessibilityAddTraits(.isButton)
                 }
             }
         }

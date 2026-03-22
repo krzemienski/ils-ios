@@ -113,6 +113,8 @@ struct SessionCheckpointsView: View {
                         checkpointToRestore = checkpoint
                         showRestoreAlert = true
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Restore checkpoint")
             }
             .onDelete { offsets in
                 let toDelete = offsets.map { viewModel.checkpoints[$0] }
@@ -130,7 +132,7 @@ struct SessionCheckpointsView: View {
         HStack(spacing: 12) {
             // Checkpoint type indicator
             Image(systemName: checkpoint.isAutomatic ? "clock.arrow.circlepath" : "bookmark.fill")
-                .font(.system(size: 16))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(checkpoint.isAutomatic ? theme.textSecondary : theme.accent)
                 .frame(width: 24)
 

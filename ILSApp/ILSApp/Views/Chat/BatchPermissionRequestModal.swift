@@ -181,7 +181,7 @@ struct BatchPermissionRequestModal: View {
                 toggleSelection(for: request.id)
             } label: {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                     .foregroundStyle(isSelected ? theme.accent : theme.textTertiary)
             }
             .buttonStyle(.plain)
@@ -214,6 +214,7 @@ struct BatchPermissionRequestModal: View {
         .onTapGesture {
             toggleSelection(for: request.id)
         }
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Action Buttons

@@ -45,7 +45,7 @@ struct VoiceInputOverlay: View {
                     .frame(width: 8, height: 8)
 
                 Text(formattedDuration)
-                    .font(.system(size: 14, weight: .medium, design: theme.fontDesign).monospacedDigit())
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign).monospacedDigit())
                     .foregroundStyle(theme.textSecondary)
 
                 Spacer()
@@ -54,7 +54,7 @@ struct VoiceInputOverlay: View {
             // Transcription text
             ScrollView {
                 Text(transcribedText.isEmpty ? "Listening…" : transcribedText)
-                    .font(.system(size: 16, design: theme.fontDesign))
+                    .font(.system(size: theme.fontBody, design: theme.fontDesign))
                     .foregroundStyle(transcribedText.isEmpty ? theme.textTertiary : theme.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -64,7 +64,7 @@ struct VoiceInputOverlay: View {
             HStack(spacing: theme.spacingMD) {
                 Button(action: onCancel) {
                     Text("Cancel")
-                        .font(.system(size: 16, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundStyle(theme.textSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
@@ -80,8 +80,8 @@ struct VoiceInputOverlay: View {
                     onDone(transcribedText)
                 } label: {
                     Text("Done")
-                        .font(.system(size: 16, weight: .semibold, design: theme.fontDesign))
-                        .foregroundStyle(.white)
+                        .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
+                        .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
                         .background(

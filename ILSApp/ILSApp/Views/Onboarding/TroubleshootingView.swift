@@ -189,7 +189,7 @@ struct TroubleshootingView: View {
         } label: {
             HStack(spacing: theme.spacingSM) {
                 Image(systemName: "questionmark.circle.fill")
-                    .font(.system(size: 18, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle3, design: theme.fontDesign))
                     .foregroundStyle(theme.warning)
 
                 Text("Troubleshooting Tips")

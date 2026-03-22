@@ -640,8 +640,10 @@ class ThemeEditorViewModel {
 
             // Write to Caches (survives backgrounding, unlike tmp/)
             let fileName = "\(name.isEmpty ? "theme" : name.replacingOccurrences(of: " ", with: "_")).json"
-            let exportDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-                .appendingPathComponent("ThemeExports", isDirectory: true)
+            guard let cacheBase = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+                return
+            }
+            let exportDir = cacheBase.appendingPathComponent("ThemeExports", isDirectory: true)
             try FileManager.default.createDirectory(at: exportDir, withIntermediateDirectories: true)
             // STOR-HIGH: Exclude export cache from iCloud/iTunes backup
             var resourceValues = URLResourceValues()

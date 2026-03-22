@@ -184,7 +184,7 @@ struct BackendConnectionsView: View {
                     if backend.id == viewModel.activeBackendId {
                         Text("Active")
                             .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textOnAccent)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
                             .background(theme.accent)

@@ -95,7 +95,7 @@ struct PostCompactionRecoverySheet: View {
                     .frame(width: 52, height: 52)
 
                 Image(systemName: "scissors")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: theme.fontTitle2, weight: .semibold))
                     .foregroundStyle(theme.warning)
             }
 
@@ -178,7 +178,7 @@ struct PostCompactionRecoverySheet: View {
     ) -> some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: systemImage)
-                .font(.system(size: 15))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(color)
                 .frame(width: 24, alignment: .center)
 
@@ -248,7 +248,7 @@ struct PostCompactionRecoverySheet: View {
             } else {
                 HStack(spacing: theme.spacingSM) {
                     Image(systemName: "doc.text")
-                        .font(.system(size: 15))
+                        .font(.system(size: theme.fontBody))
                         .foregroundStyle(theme.textTertiary)
                     Text("No snapshot was saved before compaction.")
                         .font(.system(size: theme.fontBody, design: theme.fontDesign))
@@ -275,7 +275,7 @@ struct PostCompactionRecoverySheet: View {
                     } label: {
                         HStack(spacing: theme.spacingSM) {
                             Image(systemName: "text.badge.plus")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(.system(size: theme.fontBody, weight: .semibold))
 
                             Text("Paste as Message")
                                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
@@ -283,7 +283,7 @@ struct PostCompactionRecoverySheet: View {
                         .frame(maxWidth: .infinity)
                         .padding(theme.spacingMD)
                         .background(theme.accent)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     }
                     .buttonStyle(.plain)
@@ -295,7 +295,7 @@ struct PostCompactionRecoverySheet: View {
                 } label: {
                     HStack(spacing: theme.spacingSM) {
                         Image(systemName: copiedToClipboard ? "checkmark.circle.fill" : "doc.on.clipboard")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: theme.fontBody, weight: .semibold))
                             .contentTransition(.symbolEffect(.replace))
 
                         Text(copiedToClipboard ? "Copied!" : "Copy Context to Clipboard")

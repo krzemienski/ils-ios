@@ -50,7 +50,7 @@ struct CodeBlockView: View {
                 // Language badge
                 if let language = language {
                     Text(language.uppercased())
-                        .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(theme.accent)
                         .padding(.horizontal, theme.spacingSM)
                         .padding(.vertical, theme.spacingXS)
@@ -74,7 +74,7 @@ struct CodeBlockView: View {
                         }
                     }) {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 13, weight: .semibold, design: theme.fontDesign))
+                            .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                             .foregroundColor(theme.textSecondary)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
@@ -103,7 +103,7 @@ struct CodeBlockView: View {
                     }
                 }) {
                     Image(systemName: showCopyConfirmation ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(showCopyConfirmation ? theme.success : theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
@@ -119,7 +119,7 @@ struct CodeBlockView: View {
                     showShareSheet = true
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 15, weight: .medium, design: theme.fontDesign))
+                        .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
                         .foregroundColor(theme.textSecondary)
                         .frame(width: 44, height: 44)
                         .contentShape(Rectangle())

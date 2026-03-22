@@ -393,7 +393,7 @@ struct HooksManagementView: View {
                     Text("Edit Config")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textOnAccent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, theme.spacingSM)
                 .background(theme.accent)
@@ -502,7 +502,7 @@ struct HooksManagementView: View {
                             Text(isImporting ? "Importing..." : "Import")
                                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingMD)
                         .background(importText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isImporting
@@ -558,7 +558,7 @@ struct HooksManagementView: View {
                         Text("Create Hook")
                             .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, theme.spacingMD)
                     .background(theme.accent)

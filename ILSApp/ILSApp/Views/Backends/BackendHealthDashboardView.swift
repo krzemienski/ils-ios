@@ -107,7 +107,7 @@ struct BackendHealthDashboardView: View {
     private var allHealthyBanner: some View {
         HStack(spacing: theme.spacingMD) {
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: theme.fontTitle1, weight: .semibold))
                 .foregroundStyle(theme.success)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -213,7 +213,7 @@ struct BackendHealthDashboardView: View {
 
             // Last checked relative time
             Text(relativeTimeLabel(lastChecked))
-                .font(.system(size: 11, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(theme.spacingMD)

@@ -221,7 +221,7 @@ struct MCPPresetsView: View {
                         .fill(categoryColor(preset.category).opacity(0.15))
                         .frame(width: 40, height: 40)
                     Image(systemName: categoryIcon(preset.category))
-                        .font(.system(size: 18))
+                        .font(.system(size: theme.fontTitle3))
                         .foregroundStyle(categoryColor(preset.category))
                 }
 

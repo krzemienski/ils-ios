@@ -165,7 +165,7 @@ struct HostProfileDetailView: View {
                         // SPERF-MED-6: Use indices for stable ForEach identity.
                         ForEach(viewModel.logs.indices, id: \.self) { index in
                             Text(viewModel.logs[index])
-                                .font(.system(size: 11, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .foregroundStyle(theme.textSecondary)
                         }
                     }

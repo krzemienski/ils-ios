@@ -259,7 +259,7 @@ struct GlobalSearchView: View {
                             } label: {
                                 HStack(spacing: theme.spacingSM) {
                                     Image(systemName: "clock")
-                                        .font(.system(size: 13, design: theme.fontDesign))
+                                        .font(.system(size: theme.fontBody, design: theme.fontDesign))
                                         .foregroundStyle(theme.textTertiary)
                                         .frame(width: 20, alignment: .center)
 

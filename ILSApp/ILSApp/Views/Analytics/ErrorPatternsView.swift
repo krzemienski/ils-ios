@@ -424,7 +424,7 @@ private struct ErrorPatternRow: View {
     /// Checkmark or clock icon indicating resolution status.
     private var resolutionIcon: some View {
         Image(systemName: pattern.isResolved ? "checkmark.circle.fill" : "clock.badge.exclamationmark")
-            .font(.system(size: 14, design: theme.fontDesign))
+            .font(.system(size: theme.fontBody, design: theme.fontDesign))
             .foregroundStyle(pattern.isResolved ? theme.success : theme.warning)
             .accessibilityLabel(pattern.isResolved ? "Resolved" : "Unresolved")
     }
@@ -538,7 +538,7 @@ private struct ErrorPatternRow: View {
         case "compilation", "compile": return theme.error
         case "test_failure", "test":   return theme.warning
         case "lint", "linting":        return theme.entitySystem
-        case "runtime":                return Color.purple
+        case "runtime":                return theme.accentSecondary
         default:                       return theme.accent
         }
     }

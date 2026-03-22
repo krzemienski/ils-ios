@@ -111,7 +111,7 @@ struct KeyboardShortcutsView: View {
                         actionRow(
                             title: "Reset to Defaults",
                             icon: "arrow.counterclockwise",
-                            color: Color.red.opacity(0.8)
+                            color: theme.error.opacity(0.8)
                         ) {
                             showResetConfirmation = true
                         }
@@ -259,7 +259,7 @@ struct KeyboardShortcutsView: View {
                     .frame(width: 22)
                 Text(title)
                     .font(.system(size: theme.fontBody, design: theme.fontDesign))
-                    .foregroundStyle(title == "Reset to Defaults" ? Color.red.opacity(0.8) : theme.textPrimary)
+                    .foregroundStyle(title == "Reset to Defaults" ? theme.error.opacity(0.8) : theme.textPrimary)
                 Spacer()
             }
             .padding(.vertical, theme.spacingXS)

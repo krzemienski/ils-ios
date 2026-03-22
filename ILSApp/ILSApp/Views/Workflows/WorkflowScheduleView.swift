@@ -177,7 +177,7 @@ struct WorkflowScheduleView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Circle()
-                                .fill(isEnabled ? Color.green : Color.gray)
+                                .fill(isEnabled ? theme.success : theme.textTertiary)
                                 .frame(width: 8, height: 8)
 
                             Text(isEnabled ? "Enabled" : "Disabled")
@@ -215,14 +215,14 @@ struct WorkflowScheduleView: View {
                         if schedule.isDueSoon {
                             HStack(spacing: 4) {
                                 Image(systemName: "clock.badge.exclamationmark")
-                                    .font(.system(size: 12))
+                                    .font(.system(size: theme.fontCaption))
                                 Text("Soon")
                                     .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                             }
-                            .foregroundStyle(Color.orange)
+                            .foregroundStyle(theme.warning)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.orange.opacity(0.15))
+                            .background(theme.warning.opacity(0.15))
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                     }
@@ -450,7 +450,7 @@ struct WorkflowScheduleView: View {
                         sheets.showDeleteConfirmation = true
                     } label: {
                         Image(systemName: "trash")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(theme.error)
                     }
                 }
 

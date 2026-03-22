@@ -420,7 +420,7 @@ struct MessageContentView: View {
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
                         .background(theme.bgTertiary)
-                        .cornerRadius(4)
+                        .cornerRadius(theme.cornerRadiusSmall)
                         .textSelection(.enabled)
                 }
             }

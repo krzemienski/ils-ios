@@ -389,7 +389,9 @@ actor LocalDatabase {
     /// Initialize the database, creating tables if needed.
     func initialize() throws {
         let fileManager = FileManager.default
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw URLError(.fileDoesNotExist)
+        }
         let dbDir = appSupport.appendingPathComponent("ILS", isDirectory: true)
 
         if !fileManager.fileExists(atPath: dbDir.path) {

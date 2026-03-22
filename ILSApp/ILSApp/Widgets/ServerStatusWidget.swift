@@ -78,7 +78,7 @@ struct ServerStatusWidgetView: View {
             HStack(spacing: 6) {
                 Circle()
                     .fill(entry.isConnected ? Color(widgetHex: WidgetColors.success) : Color(widgetHex: WidgetColors.error))
-                    .frame(width: 10, height: 10)
+                    .frame(width: 8, height: 8)
                     .shadow(
                         color: entry.isConnected
                             ? Color(widgetHex: WidgetColors.success).opacity(0.6)

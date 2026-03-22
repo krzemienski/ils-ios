@@ -153,7 +153,7 @@ struct SessionMemoryView: View {
                     .padding(.horizontal, theme.spacingLG)
                     .padding(.vertical, theme.spacingSM)
                     .background(theme.accent)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
             }
             .buttonStyle(.plain)

@@ -257,7 +257,7 @@ struct ConflictResolutionSheet: View {
                         .controlSize(.small)
                 } else {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
+                        .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.textTertiary)
                 }
             }

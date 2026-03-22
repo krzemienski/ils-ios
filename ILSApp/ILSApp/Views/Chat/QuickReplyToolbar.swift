@@ -75,7 +75,7 @@ private struct TemplateChip: View {
                         .foregroundStyle(theme.accent)
                 }
                 Text(displayTitle)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: theme.fontBody, weight: .medium))
                     .foregroundStyle(theme.textPrimary)
                     .lineLimit(1)
             }
@@ -108,7 +108,7 @@ private struct ShowAllChip: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold))
                 .foregroundStyle(theme.accent)
                 .frame(width: 28, height: 28)
                 .background(

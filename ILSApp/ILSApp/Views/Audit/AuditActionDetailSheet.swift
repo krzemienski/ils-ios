@@ -84,7 +84,7 @@ struct AuditActionDetailSheet: View {
     private var headerSection: some View {
         HStack(spacing: 14) {
             Image(systemName: action.actionType.systemImageName)
-                .font(.system(size: 22))
+                .font(.system(size: theme.fontTitle2))
                 .foregroundStyle(action.actionType.tintColor(theme: theme))
                 .frame(width: 48, height: 48)
                 .background(
@@ -287,7 +287,7 @@ struct AuditActionDetailSheet: View {
                 } label: {
                     Label("Rollback This Action", systemImage: "arrow.uturn.backward.circle.fill")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(theme.error, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

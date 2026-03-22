@@ -45,7 +45,7 @@ struct SessionRecoveryBannerView: View {
         HStack(spacing: 10) {
             // Warning icon
             Image(systemName: "exclamationmark.arrow.circlepath")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold))
                 .foregroundStyle(theme.warning)
 
             // Label
@@ -75,7 +75,7 @@ struct SessionRecoveryBannerView: View {
                 handleDismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold))
                     .foregroundStyle(theme.textSecondary)
                     .padding(6)
                     .background(theme.bgSecondary, in: Circle())
@@ -144,7 +144,7 @@ struct SessionRecoveryBannerView: View {
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "exclamationmark.circle")
-                                    .font(.system(size: 16))
+                                    .font(.system(size: theme.fontBody))
                                     .foregroundStyle(theme.warning)
                                     .frame(width: 24)
 

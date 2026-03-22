@@ -314,7 +314,7 @@ struct PermissionHistoryView: View {
                        let policyName = viewModel.policyNames[policyId] {
                         HStack(spacing: 3) {
                             Image(systemName: "bolt.shield")
-                                .font(.system(size: 9, design: theme.fontDesign))
+                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                             Text(policyName)
                                 .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                 .lineLimit(1)
@@ -349,6 +349,7 @@ struct PermissionHistoryView: View {
         .onTapGesture {
             selectedRecord = record
         }
+        .accessibilityAddTraits(.isButton)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(record.toolName), \(statusLabel(for: record))")
     }
@@ -596,7 +597,7 @@ struct PermissionHistoryDetailSheet: View {
                 dismiss()
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22, design: theme.fontDesign))
+                    .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .accessibilityLabel("Close")

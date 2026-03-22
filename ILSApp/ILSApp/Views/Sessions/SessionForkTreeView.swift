@@ -327,7 +327,7 @@ struct SessionForkTreeView: View {
             HStack(spacing: 4) {
                 if isRoot {
                     Image(systemName: "star.fill")
-                        .font(.system(size: 8))
+                        .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.accent)
                 }
                 Text(session.displayName)
@@ -342,11 +342,11 @@ struct SessionForkTreeView: View {
             HStack(spacing: 4) {
                 Image(systemName: nodeStatusIcon(for: session.status))
                     // ACC-007: Use 11pt minimum for Dynamic Type compliance
-                    .font(.system(size: 11))
+                    .font(.system(size: theme.fontCaption))
                     .foregroundStyle(statusColor)
                 Text(session.status.rawValue.capitalized)
                     // ACC-007: Use 11pt minimum for Dynamic Type compliance
-                    .font(.system(size: 11, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(statusColor)
             }
 
@@ -356,14 +356,14 @@ struct SessionForkTreeView: View {
             HStack {
                 Label("\(session.messageCount)", systemImage: "message")
                     // ACC-007: Use 11pt minimum for Dynamic Type compliance
-                    .font(.system(size: 11, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
                 Spacer()
 
                 Text(session.createdAt, style: .date)
                     // ACC-007: Use 11pt minimum for Dynamic Type compliance
-                    .font(.system(size: 11, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
         }
@@ -398,6 +398,7 @@ struct SessionForkTreeView: View {
                 onNavigate(session)
             }
         }
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Status Helpers

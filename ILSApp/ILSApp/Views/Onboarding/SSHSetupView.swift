@@ -80,7 +80,7 @@ struct SSHSetupView: View {
                                     Text("Retry Connection")
                                 }
                                 .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.textOnAccent)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, theme.spacingMD)
                                 .background(theme.accent)
@@ -234,7 +234,7 @@ struct SSHSetupView: View {
                             // SPERF-MED-6: Use indices for stable ForEach identity.
                             ForEach(viewModel.logLines.indices, id: \.self) { index in
                                 Text(viewModel.logLines[index])
-                                    .font(.system(size: 11, design: theme.fontDesign))
+                                    .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                     .foregroundStyle(logLineColor(viewModel.logLines[index]))
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -251,7 +251,7 @@ struct SSHSetupView: View {
                     #else
                     .frame(height: 300)
                     #endif
-                    .background(Color.black.opacity(0.85))
+                    .background(theme.bgPrimary.opacity(0.85))
                     .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                     .onChange(of: viewModel.logLines.count) {
                         proxy.scrollTo("log-bottom", anchor: .bottom)
@@ -340,14 +340,14 @@ struct SSHSetupView: View {
                 if sshViewModel.isConnecting || viewModel.isRunning {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(.white)
+                        .tint(theme.textOnAccent)
                 } else {
                     Image(systemName: "play.fill")
                 }
                 Text("Connect & Set Up")
             }
             .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingMD)
             .background(isFormValid ? theme.accent : theme.bgTertiary)

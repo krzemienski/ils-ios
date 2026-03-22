@@ -238,8 +238,8 @@ struct AgentQueueView: View {
             showAddTask = true
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 22, weight: .semibold, design: theme.fontDesign))
-                .foregroundStyle(.white)
+                .font(.system(size: theme.fontTitle2, weight: .semibold, design: theme.fontDesign))
+                .foregroundStyle(theme.textOnAccent)
                 .frame(width: 56, height: 56)
                 .background(theme.accent)
                 .clipShape(Circle())
@@ -296,7 +296,7 @@ struct AgentQueueView: View {
                 } label: {
                     Text("Add First Task")
                         .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .padding(.horizontal, theme.spacingLG)
                         .padding(.vertical, theme.spacingSM)
                         .background(theme.accent)

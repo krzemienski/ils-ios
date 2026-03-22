@@ -518,7 +518,7 @@ private struct ErrorAlertView: View {
                 .foregroundStyle(theme.textPrimary)
 
             Text(error.localizedDescription)
-                .font(.system(size: 14, design: theme.fontDesign))
+                .font(.system(size: theme.fontBody, design: theme.fontDesign))
                 .foregroundStyle(theme.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -526,7 +526,7 @@ private struct ErrorAlertView: View {
                 onDismiss()
             } label: {
                 Text("OK")
-                    .font(.system(size: 16, weight: .semibold, design: theme.fontDesign))
+                    .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)

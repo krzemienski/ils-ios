@@ -229,6 +229,8 @@ struct WorkflowBuilderView: View {
                     .onTapGesture {
                         handleNodeTap(node)
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Workflow node: \(node.type.rawValue)")
                 }
 
                 if workflowNodes.isEmpty {

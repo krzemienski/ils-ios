@@ -271,7 +271,7 @@ struct ErrorPatternDetailView: View {
                 // Confidence percentage
                 HStack(spacing: 4) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 11, design: theme.fontDesign))
+                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                     Text("\(Int(fix.confidence * 100))% confidence")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                 }
@@ -489,7 +489,7 @@ struct ErrorPatternDetailView: View {
         case "compilation", "compile": return theme.error
         case "test_failure", "test":   return theme.warning
         case "lint", "linting":        return theme.entitySystem
-        case "runtime":                return Color.purple
+        case "runtime":                return theme.accentSecondary
         default:                       return theme.accent
         }
     }

@@ -199,7 +199,7 @@ struct AdvancedOptionsSheet: View {
                 .foregroundColor(theme.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(theme.bgSecondary)
-                .cornerRadius(6)
+                .cornerRadius(theme.cornerRadiusSmall)
                 .accessibilityLabel("System prompt text editor")
 
             Text("Append to System Prompt")
@@ -212,7 +212,7 @@ struct AdvancedOptionsSheet: View {
                 .foregroundColor(theme.textPrimary)
                 .scrollContentBackground(.hidden)
                 .background(theme.bgSecondary)
-                .cornerRadius(6)
+                .cornerRadius(theme.cornerRadiusSmall)
                 .accessibilityLabel("Append system prompt text editor")
         }
         .listRowBackground(theme.bgSecondary)

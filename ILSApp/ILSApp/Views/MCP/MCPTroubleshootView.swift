@@ -91,7 +91,7 @@ struct MCPTroubleshootView: View {
     private var statusBanner: some View {
         HStack(spacing: theme.spacingMD) {
             Image(systemName: statusIcon)
-                .font(.system(size: 28))
+                .font(.system(size: theme.fontTitle1))
                 .foregroundStyle(statusColor)
 
             VStack(alignment: .leading, spacing: 4) {

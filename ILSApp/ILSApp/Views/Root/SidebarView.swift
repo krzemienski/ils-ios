@@ -434,7 +434,7 @@ struct SidebarView: View {
                         badge: activityFeedUnreadCount
                     )
                     sidebarNavItem(icon: "book.fill", label: "Documentation", screen: .documentation)
-                    sidebarNavItem(icon: "split.cells.horizontal", label: "Split View", screen: .splitView)
+                    sidebarNavItem(icon: "rectangle.split.2x1", label: "Split View", screen: .splitView)
                     sidebarNavItem(icon: "magnifyingglass", label: "Search", screen: .search)
                     sidebarNavItem(icon: "bookmark.fill", label: "Bookmarks", screen: .bookmarks)
                     sidebarNavItem(
@@ -742,14 +742,14 @@ struct SidebarView: View {
                                 systemImage: isBookmarked ? "bookmark.fill" : "bookmark"
                             )
                         }
-                        .tint(.orange)
+                        .tint(theme.warning)
                         Button {
                             renameText = session.name ?? ""
                             sessionToRename = session
                         } label: {
                             Label("Rename", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(theme.accent)
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)

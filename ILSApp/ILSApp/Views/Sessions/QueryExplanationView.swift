@@ -148,7 +148,7 @@ private struct FilterChipView: View {
             Button(action: onRemove) {
                 Image(systemName: "xmark")
                     // ACC-007: Use 11pt minimum for Dynamic Type compliance
-                    .font(.system(size: 11, weight: .semibold, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
             }
             .accessibilityLabel("Remove \(label) filter")

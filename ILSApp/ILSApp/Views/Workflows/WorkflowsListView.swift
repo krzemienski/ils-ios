@@ -151,15 +151,15 @@ struct WorkflowsListView: View {
     private func statusInfo(_ status: WorkflowStatus) -> (Color, String) {
         switch status {
         case .draft:
-            return (Color.gray, "Draft")
+            return (theme.textTertiary, "Draft")
         case .active:
-            return (Color.green, "Active")
+            return (theme.success, "Active")
         case .paused:
-            return (Color.orange, "Paused")
+            return (theme.warning, "Paused")
         case .completed:
-            return (Color.blue, "Completed")
+            return (theme.info, "Completed")
         case .failed:
-            return (Color.red, "Failed")
+            return (theme.error, "Failed")
         }
     }
 

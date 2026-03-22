@@ -177,7 +177,7 @@ struct PolicyTemplatesSheet: View {
             } else {
                 Text("Apply")
                     .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(theme.accent)

@@ -273,11 +273,11 @@ struct MemoryUsageView: View {
     private func progressColor(for utilizationPercent: Double) -> Color {
         switch utilizationPercent {
         case ..<60:
-            return Color.green
+            return theme.success
         case ..<80:
-            return Color.yellow
+            return theme.warning
         default:
-            return Color.red
+            return theme.error
         }
     }
 }

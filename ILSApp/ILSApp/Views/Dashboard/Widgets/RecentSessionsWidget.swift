@@ -191,7 +191,7 @@ struct RecentSessionsWidget: View {
                 // Status indicator
                 Circle()
                     .fill(session.status == .active ? theme.success : theme.textTertiary.opacity(0.4))
-                    .frame(width: 7, height: 7)
+                    .frame(width: 8, height: 8)
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -241,7 +241,7 @@ struct RecentSessionsWidget: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Recent Sessions")
@@ -268,7 +268,7 @@ struct RecentSessionsWidget: View {
         HStack(spacing: theme.spacingSM) {
             Circle()
                 .fill(theme.bgTertiary)
-                .frame(width: 7, height: 7)
+                .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 4) {
                 RoundedRectangle(cornerRadius: 3)

@@ -86,10 +86,10 @@ struct SearchResultRowView: View {
     private var roleBadge: some View {
         Text(roleName)
             .font(.system(size: theme.fontCaption - 1, weight: .semibold, design: theme.fontDesign))
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.textOnAccent)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(roleBadgeColor.cornerRadius(4))
+            .background(roleBadgeColor.cornerRadius(theme.cornerRadiusSmall))
             .fixedSize()
     }
 

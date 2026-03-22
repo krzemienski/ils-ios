@@ -173,7 +173,7 @@ struct HookTestSimulatorView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                    .font(.system(size: 11, weight: .medium, design: theme.fontDesign))
+                    .font(.system(size: theme.fontCaption, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textTertiary)
 
                 TextField(placeholder, text: text)
@@ -203,7 +203,7 @@ struct HookTestSimulatorView: View {
                 Text("Simulate Event")
                     .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(theme.textOnAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, theme.spacingMD)
             .background(viewModel.hooks.isEmpty ? theme.accent.opacity(0.4) : theme.accent)
@@ -249,7 +249,7 @@ struct HookTestSimulatorView: View {
     private var noMatchState: some View {
         HStack(spacing: theme.spacingMD) {
             Image(systemName: "bolt.slash")
-                .font(.system(size: 28, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle1, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
                 .accessibilityHidden(true)
 

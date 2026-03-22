@@ -244,7 +244,7 @@ struct UsageDashboardView: View {
                         y: .value("Messages", day.messageCount)
                     )
                     .foregroundStyle(theme.accent.gradient)
-                    .cornerRadius(4)
+                    .cornerRadius(theme.cornerRadiusSmall)
                 }
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: min(data.count, 7))) { value in

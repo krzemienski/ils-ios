@@ -100,7 +100,7 @@ struct ContextCompactionAlertBanner: View {
     private var headerRow: some View {
         HStack(spacing: theme.spacingSM) {
             Image(systemName: severity == .critical ? "exclamationmark.triangle.fill" : "exclamationmark.triangle.fill")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: theme.fontBody, weight: .semibold))
                 .foregroundStyle(severityColor)
                 .contentTransition(.symbolEffect(.replace))
                 .animation(.easeInOut(duration: 0.3), value: severity == .critical)
@@ -133,7 +133,7 @@ struct ContextCompactionAlertBanner: View {
 
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: theme.fontCaption, weight: .semibold))
                     .foregroundStyle(theme.textTertiary)
                     .padding(theme.spacingXS)
             }
@@ -157,7 +157,7 @@ struct ContextCompactionAlertBanner: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacingSM)
                         .background(severityColor)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textOnAccent)
                         .clipShape(RoundedRectangle(cornerRadius: theme.cornerRadius))
                 }
                 .buttonStyle(.plain)

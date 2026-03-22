@@ -64,7 +64,7 @@ struct ContextWindowBar: View {
             HStack(spacing: theme.spacingSM) {
                 // Icon: warning indicator when approaching limit, cpu icon otherwise
                 Image(systemName: percent >= 0.80 ? "exclamationmark.triangle.fill" : "cpu")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium))
                     .foregroundStyle(barColor)
                     .frame(width: 14)
                     .contentTransition(.symbolEffect(.replace))

@@ -67,6 +67,7 @@ struct ThemesListView: View {
                         .onTapGesture {
                             selectedTheme = theme
                         }
+                        .accessibilityAddTraits(.isButton)
                 }
                 .onDelete(perform: deleteTheme)
             }

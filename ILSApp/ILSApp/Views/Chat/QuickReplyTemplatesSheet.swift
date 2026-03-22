@@ -248,9 +248,9 @@ private struct CategoryChip: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: theme.fontCaption, weight: .medium))
                 Text(label)
-                    .font(.system(size: 13, weight: .medium, design: theme.fontDesign))
+                    .font(.system(size: theme.fontBody, weight: .medium, design: theme.fontDesign))
             }
             .foregroundStyle(isSelected ? theme.bgPrimary : theme.textSecondary)
             .padding(.horizontal, 10)
@@ -294,7 +294,7 @@ private struct QuickReplyTemplateRow: View {
             HStack(spacing: theme.spacingSM) {
                 // Category icon
                 Image(systemName: template.category.systemImage)
-                    .font(.system(size: 16))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(theme.accent)
                     .frame(width: 28)
 
@@ -351,7 +351,7 @@ private struct QuickReplyTemplateRow: View {
                 Button(action: onEdit) {
                     Label("Edit", systemImage: "pencil")
                 }
-                .tint(.blue)
+                .tint(theme.accent)
             }
         }
         .contextMenu {

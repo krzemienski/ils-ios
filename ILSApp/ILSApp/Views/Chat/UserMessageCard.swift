@@ -151,7 +151,7 @@ struct UserMessageCard: View, Equatable {
         } else {
             HStack(spacing: 6) {
                 Image(systemName: "doc.fill")
-                    .font(.system(size: 16))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(theme.accent)
                 Text(attachment.filename ?? "Attachment")
                     .font(.system(size: theme.fontCaption, design: theme.fontDesign))

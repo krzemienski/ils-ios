@@ -229,6 +229,7 @@ struct GlobalCommandPaletteView: View {
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
         .onTapGesture { selectCommand(command) }
+        .accessibilityAddTraits(.isButton)
     }
 
     /// Overload that accepts an explicit absolute index for grouped sections.
@@ -247,6 +248,7 @@ struct GlobalCommandPaletteView: View {
         .listRowSeparator(.hidden)
         .contentShape(Rectangle())
         .onTapGesture { selectCommand(command) }
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: - Helpers

@@ -442,7 +442,7 @@ struct ApprovalPoliciesView: View {
                         Text("Create Policy")
                             .font(.system(size: theme.fontBody, weight: .semibold, design: theme.fontDesign))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, theme.spacingMD)
                     .background(theme.accent)

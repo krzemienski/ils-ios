@@ -157,7 +157,7 @@ struct QueueTaskRow: View {
             } label: {
                 Label("Pause", systemImage: "pause.fill")
             }
-            .tint(.orange)
+            .tint(theme.warning)
 
         case .paused:
             Button {

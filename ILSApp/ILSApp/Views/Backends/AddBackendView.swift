@@ -226,8 +226,8 @@ struct AddBackendView: View {
                 )
                 .overlay(
                     Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: theme.fontCaption, weight: .bold))
+                        .foregroundStyle(theme.textOnAccent)
                         .opacity(isSelected ? 1 : 0)
                 )
                 .scaleEffect(isSelected ? 1.15 : 1.0)

@@ -166,7 +166,7 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
                     Spacer()
                     Button(action: onRemove) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(.system(size: theme.fontTitle2, weight: .semibold))
                             .foregroundStyle(theme.error)
                             // Circular backing shape for legibility on any widget background
                             .background(
@@ -183,7 +183,7 @@ struct WidgetContainerView<ViewModel: DashboardWidgetViewModel, Content: View>: 
                 // Drag handle — bottom leading
                 HStack {
                     Image(systemName: "line.3.horizontal")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: theme.fontTitle3, weight: .medium))
                         .foregroundStyle(theme.textSecondary)
                         .accessibilityLabel("Drag to reorder \(widget.type.displayName) widget")
                     Spacer()

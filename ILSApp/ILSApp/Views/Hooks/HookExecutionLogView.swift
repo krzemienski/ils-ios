@@ -184,7 +184,7 @@ struct HookExecutionLogView: View {
             // Output snippet (if any)
             if let output = entry.output, !output.isEmpty {
                 Text(output)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: theme.fontCaption, design: .monospaced))
                     .foregroundStyle(entry.succeeded ? theme.textSecondary : theme.error)
                     .lineLimit(3)
                     .truncationMode(.tail)

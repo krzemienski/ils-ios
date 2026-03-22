@@ -160,7 +160,7 @@ struct SystemMonitorView: View {
                         if !alertManager.alertHistory.isEmpty {
                             Text("\(alertManager.alertHistory.count)")
                                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.textOnAccent)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(theme.error)
@@ -323,8 +323,8 @@ struct SystemMonitorView: View {
                 if !alertManager.alertHistory.isEmpty {
                     let count = alertManager.alertHistory.count
                     Text(count > 99 ? "99+" : "\(count)")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: theme.fontCaption, weight: .bold))
+                        .foregroundStyle(theme.textOnAccent)
                         .padding(2)
                         .background(theme.error)
                         .clipShape(Circle())

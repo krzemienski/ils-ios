@@ -100,7 +100,7 @@ struct QualityTrendView: View {
                 y: .value("Count", entry.count)
             )
             .foregroundStyle(entry.isPositive ? theme.success : theme.error)
-            .cornerRadius(3)
+            .cornerRadius(theme.cornerRadiusSmall)
             .position(by: .value("Rating", entry.label))
         }
         .frame(height: 160)

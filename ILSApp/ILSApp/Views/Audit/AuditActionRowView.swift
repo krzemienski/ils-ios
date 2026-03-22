@@ -39,7 +39,7 @@ struct AuditActionRowView: View {
     /// Coloured icon reflecting the action category.
     private var actionTypeIcon: some View {
         Image(systemName: action.actionType.systemImageName)
-            .font(.system(size: 16))
+            .font(.system(size: theme.fontBody))
             .foregroundStyle(action.actionType.tintColor(theme: theme))
             .frame(width: 28, height: 28)
             .background(
@@ -77,7 +77,7 @@ struct AuditActionRowView: View {
         case .notRolledBack:
             if action.canRollback {
                 Image(systemName: "arrow.uturn.backward.circle")
-                    .font(.system(size: 18))
+                    .font(.system(size: theme.fontTitle3))
                     .foregroundStyle(theme.accent)
             } else {
                 EmptyView()

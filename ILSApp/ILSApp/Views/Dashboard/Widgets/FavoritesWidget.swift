@@ -316,7 +316,7 @@ struct FavoritesWidget: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "star")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Favorites Yet")

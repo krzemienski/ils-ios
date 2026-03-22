@@ -34,9 +34,9 @@ struct ShimmerModifier: ViewModifier {
                     // GeometryReader was unnecessary and caused 60 layout passes/sec
                     LinearGradient(
                         stops: [
-                            .init(color: .clear, location: max(0, phase - 0.3)),
-                            .init(color: .white.opacity(0.08), location: phase),
-                            .init(color: .clear, location: min(1, phase + 0.3))
+                            .init(color: .clear, location: max(0, min(1, phase - 0.3))),
+                            .init(color: .white.opacity(0.08), location: max(0, min(1, phase))),
+                            .init(color: .clear, location: max(0, min(1, phase + 0.3)))
                         ],
                         startPoint: .leading,
                         endPoint: .trailing

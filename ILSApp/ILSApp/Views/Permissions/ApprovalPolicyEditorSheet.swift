@@ -434,7 +434,7 @@ struct ApprovalPolicyEditorSheet: View {
         switch level {
         case .low: return theme.success
         case .medium: return theme.warning
-        case .high: return Color.orange
+        case .high: return theme.warning
         case .critical: return theme.error
         }
     }

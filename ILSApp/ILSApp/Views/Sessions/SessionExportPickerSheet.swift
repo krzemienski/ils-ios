@@ -275,8 +275,10 @@ struct SessionExportPickerSheet: View {
     ///
     /// Returns `nil` and logs an error if the write fails.
     private func writeToShareExports(data: Data, fileName: String) -> URL? {
-        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("ShareExports", isDirectory: true)
+        guard let cacheBase = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        let cachesDir = cacheBase.appendingPathComponent("ShareExports", isDirectory: true)
         do {
             try FileManager.default.createDirectory(at: cachesDir, withIntermediateDirectories: true)
             let fileURL = cachesDir.appendingPathComponent(fileName)

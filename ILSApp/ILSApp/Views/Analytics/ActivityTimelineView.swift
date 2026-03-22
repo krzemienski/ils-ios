@@ -104,7 +104,7 @@ struct ActivityTimelineView: View {
                 y: .value("Sessions", point.sessionCount)
             )
             .foregroundStyle(theme.accent.gradient)
-            .cornerRadius(4)
+            .cornerRadius(theme.cornerRadiusSmall)
 
             // Peak annotation — drawn as a RuleMark at the peak session count
             if let peak = peakDataPoint, peak.sessionCount > 0, point.date == peak.date {

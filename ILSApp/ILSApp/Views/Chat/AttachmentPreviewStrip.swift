@@ -60,7 +60,7 @@ struct AttachmentPreviewStrip: View {
                 }
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: theme.fontTitle3, weight: .semibold))
                     .symbolRenderingMode(.palette)
                     .foregroundStyle(Color.white, Color.black.opacity(0.6))
             }
@@ -75,7 +75,7 @@ struct AttachmentPreviewStrip: View {
     private func documentPlaceholder(for attachment: MessageAttachment) -> some View {
         VStack(spacing: 4) {
             Image(systemName: "doc.fill")
-                .font(.system(size: 22))
+                .font(.system(size: theme.fontTitle2))
                 .foregroundStyle(theme.accent)
 
             if let filename = attachment.filename {

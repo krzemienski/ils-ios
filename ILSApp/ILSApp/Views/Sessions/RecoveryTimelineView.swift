@@ -83,7 +83,7 @@ struct RecoveryTimelineView: View {
             // Interruption icon
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.arrow.circlepath")
-                    .font(.system(size: 28, weight: .medium))
+                    .font(.system(size: theme.fontTitle1, weight: .medium))
                     .foregroundStyle(theme.warning)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -145,7 +145,7 @@ struct RecoveryTimelineView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(theme.accent, in: RoundedRectangle(cornerRadius: 12))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textOnAccent)
                     }
                     .buttonStyle(.plain)
                 }
@@ -178,7 +178,7 @@ struct RecoveryTimelineView: View {
         HStack(spacing: 12) {
             // Checkpoint type indicator
             Image(systemName: checkpoint.isAutomatic ? "clock.arrow.circlepath" : "bookmark.fill")
-                .font(.system(size: 16))
+                .font(.system(size: theme.fontBody))
                 .foregroundStyle(checkpoint.isAutomatic ? theme.textSecondary : theme.accent)
                 .frame(width: 24)
 

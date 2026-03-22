@@ -168,7 +168,7 @@ struct TunnelSettingsView: View {
         case .error:
             Image(systemName: "exclamationmark.circle.fill")
                 .foregroundStyle(theme.error)
-                .font(.system(size: 14))
+                .font(.system(size: theme.fontBody))
         case .disconnected:
             Circle()
                 .fill(theme.textTertiary)

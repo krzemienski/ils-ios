@@ -105,7 +105,9 @@ actor SessionMemoryService {
     /// Must be called once at app launch before any CRUD operations.
     func initialize() throws {
         let fileManager = FileManager.default
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            throw URLError(.fileDoesNotExist)
+        }
         let dbDir = appSupport.appendingPathComponent("ILS", isDirectory: true)
 
         if !fileManager.fileExists(atPath: dbDir.path) {

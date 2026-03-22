@@ -40,7 +40,8 @@ final class AppLogger: Sendable {
 
     private init() {
         logger = Logger(subsystem: "com.ils.app", category: "general")
-        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let docs = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         logFileURL = docs.appendingPathComponent("ils-app.log")
 
         // CONC-13: Plain Task — AppLogger is Sendable, no actor isolation to escape.

@@ -253,8 +253,8 @@ struct TeamActivityWidget: View {
                     .frame(width: 20, height: 20)
                     .overlay(
                         Text(String(member.name.prefix(1)).uppercased())
-                            .font(.system(size: 9, weight: .semibold, design: theme.fontDesign))
-                            .foregroundStyle(.white)
+                            .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
+                            .foregroundStyle(theme.textOnAccent)
                     )
                     .offset(x: CGFloat(index) * 14)
             }
@@ -287,7 +287,7 @@ struct TeamActivityWidget: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "person.3")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Teams")
@@ -304,7 +304,7 @@ struct TeamActivityWidget: View {
     private var offlineState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("Offline")

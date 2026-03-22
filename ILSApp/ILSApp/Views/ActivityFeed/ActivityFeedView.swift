@@ -62,7 +62,7 @@ struct ActivityFeedView: View {
                     HapticManager.impact(.light)
                     showFilterSheet = true
                 } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle\(viewModel.isFilterActive ? ".fill" : "")")
+                    Image(systemName: viewModel.isFilterActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                         .font(.system(size: theme.fontBody, weight: .medium))
                         .foregroundStyle(viewModel.isFilterActive ? theme.accent : theme.textPrimary)
                 }

@@ -259,7 +259,7 @@ struct ProjectStatusWidget: View {
     private var emptyState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "folder")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("No Projects")
@@ -276,7 +276,7 @@ struct ProjectStatusWidget: View {
     private var offlineState: some View {
         VStack(spacing: theme.spacingSM) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 22, design: theme.fontDesign))
+                .font(.system(size: theme.fontTitle2, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
 
             Text("Offline")

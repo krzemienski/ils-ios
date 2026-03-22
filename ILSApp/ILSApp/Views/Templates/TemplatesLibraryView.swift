@@ -128,6 +128,7 @@ struct TemplatesLibraryView: View {
                         onSelect(template)
                         dismiss()
                     }
+                    .accessibilityAddTraits(.isButton)
                 }
             }
         }
@@ -146,6 +147,7 @@ struct TemplatesLibraryView: View {
                     onSelect(template)
                     dismiss()
                 }
+                .accessibilityAddTraits(.isButton)
             }
             .onDelete(perform: deleteUserTemplate)
 

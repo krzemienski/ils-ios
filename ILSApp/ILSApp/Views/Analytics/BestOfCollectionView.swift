@@ -102,7 +102,7 @@ struct BestOfCollectionView: View {
             HStack(alignment: .top, spacing: theme.spacingSM) {
                 // Thumbs up icon
                 Image(systemName: "hand.thumbsup.fill")
-                    .font(.system(size: 14))
+                    .font(.system(size: theme.fontBody))
                     .foregroundStyle(theme.success)
                     .frame(width: 20)
                     .accessibilityHidden(true)
