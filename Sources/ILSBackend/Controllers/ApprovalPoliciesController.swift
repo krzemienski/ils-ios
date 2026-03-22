@@ -166,10 +166,10 @@ struct ApprovalPoliciesController: RouteCollection {
     ///
     /// Request body: `PolicyEvaluateRequest` with toolName, toolInput, riskLevel, and optional projectName.
     @Sendable
-    func evaluate(req: Request) async throws -> APIResponse<PolicyEvaluationResult> {
+    func evaluate(req: Request) async throws -> APIResponse<ILSShared.PolicyEvaluationResult> {
         let input = try req.content.decode(PolicyEvaluateRequest.self)
 
-        let result = await PolicyEvaluationService.shared.evaluate(
+        let result = await PolicyEvaluationService.shared.evaluateApprovalPolicy(
             toolName: input.toolName,
             toolInput: input.toolInput,
             riskLevel: input.riskLevel,

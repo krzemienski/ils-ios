@@ -108,14 +108,14 @@ actor PolicyEvaluationService {
             let toolMatches = matchesTool(toolName, rules: policy.toolRules)
 
             // Check if path globs match (if specified).
-            let pathMatches = matchesPathGlobs(inputDict, globs: policy.pathGlobs)
+            let pathMatches = matchesPathGlobs(inputDict, globs: policy.pathPatterns ?? [])
 
             // Check risk level filter (if specified).
-            let riskMatches = matchesRiskLevel(riskLevel, allowed: policy.riskLevels)
+            let riskMatches = matchesRiskLevel(riskLevel, allowed: policy.confirmationRequiredRiskLevels)
 
             if toolMatches && pathMatches && riskMatches {
                 // Determine the action from tool rules or default action.
-                let action = actionForTool(toolName, rules: policy.toolRules, defaultAction: policy.actionType)
+                let action = actionForTool(toolName, rules: policy.toolRules, defaultAction: policy.defaultAction)
 
                 // Escalate auto-approve to requireConfirmation for high/critical risk levels.
                 let finalAction: PolicyAction
@@ -151,39 +151,37 @@ actor PolicyEvaluationService {
 
     /// Check if a tool name matches any of the policy's tool rules.
     private func matchesTool(_ toolName: String, rules: [PolicyToolRule]) -> Bool {
-        if rules.isEmpty { return true } // No rules = matches all tools
+        if rules.isEmpty { return true }
         let lower = toolName.lowercased()
-        return rules.contains { rule in
-            rule.toolName == "*" || rule.toolName.lowercased() == lower
+        return rules.contains { (rule: PolicyToolRule) in
+            rule.toolPattern == "*" || rule.toolPattern.lowercased() == lower
         }
     }
 
     /// Check if any path in the tool input matches the policy's path globs.
     private func matchesPathGlobs(_ inputDict: [String: Any], globs: [String]) -> Bool {
-        if globs.isEmpty { return true } // No globs = matches all paths
+        if globs.isEmpty { return true }
         let pathKeys = ["file_path", "path", "destination", "file", "dir", "directory", "filepath"]
         let paths = pathKeys.compactMap { inputDict[$0] as? String }
-        if paths.isEmpty { return true } // No path in input = not a path-based operation, matches
+        if paths.isEmpty { return true }
         return paths.contains { path in
             globs.contains { glob in globMatches(pattern: glob, string: path) }
         }
     }
 
     /// Check if the request's risk level matches the policy's risk level filter.
-    private func matchesRiskLevel(_ riskLevel: PermissionRiskLevel, allowed: [String]) -> Bool {
-        if allowed.isEmpty { return true } // No filter = matches all risk levels
-        return allowed.contains(riskLevel.rawValue)
+    private func matchesRiskLevel(_ riskLevel: PermissionRiskLevel, allowed: [PermissionRiskLevel]) -> Bool {
+        if allowed.isEmpty { return true }
+        return allowed.contains(riskLevel)
     }
 
     /// Get the action for a specific tool from tool rules, falling back to the default.
     private func actionForTool(_ toolName: String, rules: [PolicyToolRule], defaultAction: PolicyAction) -> PolicyAction {
         let lower = toolName.lowercased()
-        // Check for specific tool rule first
-        if let specificRule = rules.first(where: { $0.toolName.lowercased() == lower }) {
+        if let specificRule = rules.first(where: { $0.toolPattern.lowercased() == lower }) {
             return specificRule.action
         }
-        // Check for wildcard rule
-        if let wildcardRule = rules.first(where: { $0.toolName == "*" }) {
+        if let wildcardRule = rules.first(where: { $0.toolPattern == "*" }) {
             return wildcardRule.action
         }
         return defaultAction
@@ -192,7 +190,7 @@ actor PolicyEvaluationService {
     /// Map a policy action to its corresponding denial reason code.
     private func reasonCodeFor(action: PolicyAction) -> DenialReasonCode? {
         switch action {
-        case .autoApprove: return .policyAutoApprove
+        case .autoApprove: return nil
         case .autoDeny: return .policyViolation
         case .requireConfirmation: return .highRiskBlocked
         case .alwaysAsk: return nil

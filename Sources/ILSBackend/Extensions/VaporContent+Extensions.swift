@@ -414,7 +414,7 @@ extension DenialReasonCode: Content {}
 extension ApprovalPolicyListResponse: Content {}
 extension CreateApprovalPolicyRequest: Content {}
 extension UpdateApprovalPolicyRequest: Content {}
-extension PolicyEvaluationResult: Content {}
+extension ILSShared.PolicyEvaluationResult: Content {}
 extension PolicyTemplateResponse: Content {}
 extension ListPolicyTemplatesResponse: Content {}
 
