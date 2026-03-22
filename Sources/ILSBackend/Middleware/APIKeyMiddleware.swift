@@ -56,6 +56,15 @@ struct APIKeyMiddleware: AsyncMiddleware {
             return try await next.respond(to: request)
         }
 
+        // Localhost connections are inherently trusted (same machine).
+        // This allows the iOS app to connect without keychain provisioning
+        // when running against a local backend.
+        let clientIP = request.peerAddress?.ipAddress ?? request.remoteAddress?.ipAddress ?? ""
+        if clientIP == "127.0.0.1" || clientIP == "::1" {
+            request.storage[AuthLevelKey.self] = .admin
+            return try await next.respond(to: request)
+        }
+
         // Extract bearer token from Authorization header.
         guard let authHeader = request.headers[.authorization].first else {
             logFailedAttempt(request: request, reason: "Missing Authorization header")
