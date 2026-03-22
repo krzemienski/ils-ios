@@ -1,0 +1,283 @@
+# Instincts generated from https://github.com/krzemienski/ils-ios
+# Generated: 2026-03-22T14:40:00.796Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: ils-ios-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Commit Length
+
+## Action
+
+Write moderate-length commit messages (~82 characters)
+
+## Evidence
+
+- Average commit message length: 82 chars
+- Based on 500 commits
+
+---
+id: ils-ios-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Naming Files
+
+## Action
+
+Use PascalCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: PascalCase
+
+---
+id: ils-ios-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: ils-ios-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: ils-ios-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: ils-ios-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~19x per month
+- Files: ilsapp/ilsapp/theme/components/*, **/*.test.*, **/api/**
+
+---
+id: ils-ios-workflow-add-accessibility-attributes-to-views
+trigger: "when doing add accessibility attributes to views"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Add Accessibility Attributes To Views
+
+## Action
+
+Follow the add-accessibility-attributes-to-views workflow:
+1. Identify a SwiftUI view lacking accessibility attributes.
+2. Add accessibilityIdentifier, accessibilityLabel, accessibilityHint, and/or accessibilityElement modifiers to relevant UI elements.
+3. Group related controls for VoiceOver using accessibilityElement(children: .combine/.contain).
+4. Commit changes with a message referencing the specific view and attributes added.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: ILSApp/ILSApp/Views/Chat/ChatInputBar.swift, ILSApp/ILSApp/Views/Chat/ChatMessageList.swift, ILSApp/ILSApp/Views/Chat/MessageView.swift
+
+---
+id: ils-ios-workflow-implement-responsive-layout-for-ipad-multitasking
+trigger: "when doing implement responsive layout for ipad multitasking"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Implement Responsive Layout For Ipad Multitasking
+
+## Action
+
+Follow the implement-responsive-layout-for-ipad-multitasking workflow:
+1. Create or update a utility (e.g., AdaptiveLayout.swift) for layout environment keys and helpers.
+2. Update target view(s) to read layoutSizeClass or windowWidth from the environment.
+3. Replace fixed layouts (e.g., HStack, fixed grid columns) with adaptive layouts (e.g., AnyLayout, adaptive LazyVGrid).
+4. Apply .adaptiveLayout() modifier to root views as needed.
+5. Test across different iPad multitasking modes.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: ILSApp/ILSApp/Utils/AdaptiveLayout.swift, ILSApp/ILSApp/Views/Home/HomeView.swift, ILSApp/ILSApp/Views/Root/SidebarRootView.swift
+
+---
+id: ils-ios-workflow-add-pointer-hover-and-hoverstate-support
+trigger: "when doing add pointer hover and hoverstate support"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Add Pointer Hover And Hoverstate Support
+
+## Action
+
+Follow the add-pointer-hover-and-hoverstate-support workflow:
+1. Create or update ViewModifiers (e.g., PointerHoverModifier, HoverStateModifier) and associated extensions.
+2. Apply .pointerHover() and/or .hoverState() to interactive elements in target views.
+3. Ensure only one hover effect is applied per element to avoid conflicts.
+4. Test on iPad (trackpad/mouse) and Mac Catalyst.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: ILSApp/ILSApp/Theme/Components/PointerHoverModifier.swift, ILSApp/ILSApp/Views/Root/SidebarSessionRow.swift, ILSApp/ILSApp/Views/Root/SidebarView.swift
+
+---
+id: ils-ios-workflow-enhance-session-export-pipeline
+trigger: "when doing enhance session export pipeline"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Enhance Session Export Pipeline
+
+## Action
+
+Follow the enhance-session-export-pipeline workflow:
+1. Update backend export endpoints and DTOs to support new fields (e.g., toolCalls, durationSeconds, totalTokens).
+2. Update or create export UI components (e.g., SessionExportPickerSheet, MacSessionExportSheet) for new features like format picker, range selection, or progress.
+3. Update export service logic (SessionExportService) to handle new formats, range slicing, and progress reporting.
+4. Wire range/format parameters through ViewModels and export UI.
+5. Test end-to-end export flows on both iOS and macOS.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: Sources/ILSBackend/Controllers/SessionsController.swift, Sources/ILSShared/DTOs/Requests.swift, ILSApp/ILSApp/Services/SessionExportService.swift
+
+---
+id: ils-ios-workflow-refactor-backend-route-auth-levels
+trigger: "when doing refactor backend route auth levels"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Refactor Backend Route Auth Levels
+
+## Action
+
+Follow the refactor-backend-route-auth-levels workflow:
+1. Identify controllers or endpoints with incorrect or missing authorization levels.
+2. Move controller registration between readRoutes, writeRoutes, and adminRoutes in routes.swift.
+3. Update middleware or route registration as needed to match new auth requirements.
+4. Test with different token scopes to verify access control.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: Sources/ILSBackend/App/routes.swift
+
+---
+id: ils-ios-workflow-add-or-update-backend-authentication-flows
+trigger: "when doing add or update backend authentication flows"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/krzemienski/ils-ios
+---
+
+# Ils Ios Workflow Add Or Update Backend Authentication Flows
+
+## Action
+
+Follow the add-or-update-backend-authentication-flows workflow:
+1. Add or update controllers (e.g., AuthController.swift) for authentication endpoints.
+2. Update middleware and backend configuration to use new storage/services for token validation.
+3. Enhance pairing, QR, or Bonjour discovery to support new auth fields.
+4. Add or update E2E test scripts for authentication scenarios.
+5. Test all flows (key generation, rotation, route access, pairing, etc.).
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: Sources/ILSBackend/App/routes.swift, Sources/ILSBackend/Controllers/AuthController.swift, Sources/ILSBackend/App/configure.swift
+
