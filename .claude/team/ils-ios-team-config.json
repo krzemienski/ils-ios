@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "generatedBy": "ecc-tools",
+  "profile": "research",
+  "sharedSkills": [
+    ".claude/skills/ils-ios/SKILL.md",
+    ".agents/skills/ils-ios/SKILL.md"
+  ],
+  "commandFiles": [
+    ".claude/commands/feature-development.md",
+    ".claude/commands/add-accessibility-attributes-to-views.md",
+    ".claude/commands/implement-responsive-layout-for-ipad-multitasking.md"
+  ],
+  "updatedAt": "2026-03-22T14:39:42.974Z"
+}
