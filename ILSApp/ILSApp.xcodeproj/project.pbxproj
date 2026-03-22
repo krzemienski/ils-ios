@@ -3465,7 +3465,6 @@
 				96729241918E14D358517380 /* WorkflowViewModel.swift in Sources */,
 				BE1AD102E7BE63E09AB374E3 /* WorkflowsListView.swift in Sources */,
 				24124F9863758F5EA7191107 /* iPadKeyboardShortcuts.swift in Sources */,
-				86ACB7FE962CC5601C3F9E09 /* CacheStats.swift in Sources */,
 				BFA3C73A11B25C7514255D31 /* MemoryManager.swift in Sources */,
 				1C71E48EE6EA99D1CFCB36EE /* MemoryUsageView.swift in Sources */,
 				A97C460FDC4C9CCFFA5279CD /* ContentDetector.swift in Sources */,
@@ -3478,10 +3477,6 @@
 				4AFD42981CACE5E2001A293D /* WorkflowsListView.swift in Sources */,
 				E1EBAB296CEC1CF581283CD3 /* WorkflowExecutionView.swift in Sources */,
 				021C48B798B9CA8B8ECCBD1A /* WorkflowScheduleView.swift in Sources */,
-				D4E5F6A7B8C9D0E1F2A3B4C5 /* AuditTrailView.swift in Sources */,
-				E5F6A7B8C9D0E1F2A3B4C5D6 /* AuditActionDetailSheet.swift in Sources */,
-				F6A7B8C9D0E1F2A3B4C5D6E7 /* AuditTrailViewModel.swift in Sources */,
-				86469FC92E0A499B94B87F3E /* AuditActionRowView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3966,7 +3961,6 @@
 				84B9233FBB1A35B7C14296E7 /* WorkflowsListView.swift in Sources */,
 				1772EF5BB51274494E7C9589 /* iPadKeyboardShortcuts.swift in Sources */,
 				F6BAB018D683C2958F4DA524 /* MemoryUsageView.swift in Sources */,
-				8A0571B935C630770D2B5FAC /* CacheStats.swift in Sources */,
 				9166A6A519463C9C47E3ECE0 /* AutomationRulesView.swift in Sources */,
 				C79FA295661492A2ECBA262C /* ContentDetector.swift in Sources */,
 				E49419CCDA82F0029C9D939C /* LanguageDetector.swift in Sources */,
@@ -3980,10 +3974,6 @@
 				E4D6D899E275682E9B852112 /* WorkflowScheduleView.swift in Sources */,
 				D41AB48024E97C1CB68F3557 /* WorkflowViewModel.swift in Sources */,
 				7C65E3777844C39699BA3FE6 /* WorkflowsListView.swift in Sources */,
-				A7B8C9D0E1F2A3B4C5D6E7F8 /* AuditTrailView.swift in Sources */,
-				B8C9D0E1F2A3B4C5D6E7F8A9 /* AuditActionDetailSheet.swift in Sources */,
-				C9D0E1F2A3B4C5D6E7F8A9B0 /* AuditTrailViewModel.swift in Sources */,
-				33C6530E9EE64D4CB8B5DC74 /* AuditActionRowView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
