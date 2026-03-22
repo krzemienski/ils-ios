@@ -187,7 +187,7 @@ class ChatViewModel {
     @ObservationIgnored private let syncObserverTaskLock = OSAllocatedUnfairLock<Task<Void, Never>?>(initialState: nil)
 
     private var sseClient: SSEClient?
-    private var apiClient: APIClient?
+    private(set) var apiClient: APIClient?
     @ObservationIgnored private var observationTasks: [Task<Void, Never>] = []
     @ObservationIgnored private var connectingTimer: Task<Void, Never>?
     @ObservationIgnored private var networkObserver: NSObjectProtocol?

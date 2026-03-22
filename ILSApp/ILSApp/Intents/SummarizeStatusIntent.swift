@@ -11,7 +11,7 @@ struct SummarizeStatusIntent: AppIntent {
     static let description = IntentDescription("Get a summary of active ILS sessions and system status")
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Summarize \(.applicationName) status")
+        Summary("Summarize ILS status")
     }
 
     /// Codable response for sessions list.

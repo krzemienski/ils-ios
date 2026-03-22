@@ -489,8 +489,8 @@ final class VoiceCommandQueueObserver {
     private(set) var hasDrainResults: Bool = false
 
     /// Notification observers for queue events.
-    private var drainObserver: NSObjectProtocol?
-    private var expireObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var drainObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var expireObserver: NSObjectProtocol?
 
     init() {
         drainObserver = NotificationCenter.default.addObserver(
@@ -526,8 +526,10 @@ final class VoiceCommandQueueObserver {
     }
 
     deinit {
-        if let drainObserver { NotificationCenter.default.removeObserver(drainObserver) }
-        if let expireObserver { NotificationCenter.default.removeObserver(expireObserver) }
+        let drain = drainObserver
+        let expire = expireObserver
+        if let drain { NotificationCenter.default.removeObserver(drain) }
+        if let expire { NotificationCenter.default.removeObserver(expire) }
     }
 
     /// Refresh state from the actor.
