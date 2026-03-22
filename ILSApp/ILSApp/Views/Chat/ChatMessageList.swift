@@ -447,6 +447,8 @@ struct ChatMessageList: View {
         canLoadMore: false,
         isLoadingMore: false,
         onLoadMore: {},
-        sessionProjectId: nil
+        sessionProjectId: nil,
+        sessionId: UUID(),
+        sessionName: "Preview Session"
     )
 }

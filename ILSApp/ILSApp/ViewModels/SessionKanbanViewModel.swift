@@ -125,7 +125,8 @@ final class SessionKanbanViewModel {
                 case .session(let tagged):
                     return interval.contains(tagged.lastActiveAt)
                 case .queueItem(let queueItem):
-                    return interval.contains(queueItem.createdAt)
+                    guard let created = queueItem.createdAt else { return false }
+                    return interval.contains(created)
                 }
             }
         }

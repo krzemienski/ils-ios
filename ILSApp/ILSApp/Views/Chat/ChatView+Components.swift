@@ -221,7 +221,9 @@ extension ChatView {
             canLoadMore: viewModel.canLoadOlderMessages,
             isLoadingMore: viewModel.isLoadingOlderMessages,
             onLoadMore: { Task { await viewModel.loadOlderMessages() } },
-            sessionProjectId: session.projectId?.uuidString
+            sessionProjectId: session.projectId?.uuidString,
+            sessionId: session.id,
+            sessionName: session.displayName
         )
         .simultaneousGesture(
             sessionSwipeGesture,

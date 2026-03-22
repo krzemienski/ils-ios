@@ -617,14 +617,14 @@ struct SidebarView: View {
                         session: session,
                         isActive: isSessionActive(session),
                         searchText: sessionsViewModel.debouncedSearchText,
+                        bookmarkCount: messageBookmarksManager.bookmarkCount(for: session.id),
                         syncStatus: sessionsViewModel.syncStatus(for: session),
                         onRetrySync: {
                             Task { await sessionsViewModel.retrySync(for: session) }
                         },
                         onConflictTap: {
                             presentConflictSheet(for: session)
-                        },
-                        bookmarkCount: messageBookmarksManager.bookmarkCount(for: session.id)
+                        }
                     ) {
                         QueryLearningService.shared.recordSessionSelected(
                             forQuery: sessionsViewModel.searchText,
