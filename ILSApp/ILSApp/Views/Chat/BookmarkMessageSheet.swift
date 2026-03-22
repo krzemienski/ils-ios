@@ -197,7 +197,7 @@ struct BookmarkMessageSheet: View {
 
         let selectedTags = tagsManager.allTags
             .filter { selectedTagIds.contains($0.id) }
-            .map(\.id.uuidString)
+            .map(\.name)
 
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
 

@@ -97,11 +97,9 @@ struct MessageBookmarkRowView: View {
     }
 
     private var tagChips: some View {
-        let tagsManager = BookmarkTagsManager.shared
-        return HStack(spacing: theme.spacingXS) {
-            ForEach(bookmark.tags.prefix(4), id: \.self) { tagId in
-                let displayName = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? String(tagId.prefix(8))
-                Text(displayName)
+        HStack(spacing: theme.spacingXS) {
+            ForEach(bookmark.tags.prefix(4), id: \.self) { tagName in
+                Text(tagName)
                     .font(.system(size: theme.fontCaption - 1, weight: .medium, design: theme.fontDesign))
                     .foregroundStyle(theme.textSecondary)
                     .padding(.horizontal, 6)
@@ -157,13 +155,7 @@ struct MessageBookmarkRowView: View {
             parts.append(String(content.prefix(100)))
         }
         if !bookmark.tags.isEmpty {
-            let tagsManager = BookmarkTagsManager.shared
-            let tagNames = bookmark.tags.compactMap { tagId in
-                tagsManager.allTags.first { $0.id.uuidString == tagId }?.name
-            }
-            if !tagNames.isEmpty {
-                parts.append("Tags: \(tagNames.joined(separator: ", "))")
-            }
+            parts.append("Tags: \(bookmark.tags.joined(separator: ", "))")
         }
         parts.append(relativeDate)
         return parts.joined(separator: ". ")

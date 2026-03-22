@@ -28,26 +28,24 @@ struct MessageBookmarksView: View {
 
     @State private var manager = MessageBookmarksManager.shared
     @State private var searchText = ""
-    @State private var selectedTagId: String? = nil
+    @State private var selectedTag: String? = nil
     @State private var groupBySession = true
     @State private var showExportSheet = false
 
     // MARK: - Computed
 
-    /// All distinct tags across all bookmarks, resolved to display names, sorted alphabetically.
-    private var allTagDisplayItems: [(id: String, name: String)] {
-        let tagsManager = BookmarkTagsManager.shared
+    /// All distinct tag names across all bookmarks, sorted alphabetically.
+    private var allTagNames: [String] {
         var seen = Set<String>()
-        var result: [(id: String, name: String)] = []
+        var result: [String] = []
         for bookmark in manager.bookmarks {
-            for tagId in bookmark.tags {
-                if seen.insert(tagId).inserted {
-                    let name = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? tagId
-                    result.append((id: tagId, name: name))
+            for tag in bookmark.tags {
+                if seen.insert(tag).inserted {
+                    result.append(tag)
                 }
             }
         }
-        return result.sorted { $0.name < $1.name }
+        return result.sorted()
     }
 
     /// Bookmarks after applying search text and selected tag filter.
@@ -62,18 +60,12 @@ struct MessageBookmarksView: View {
                     (bookmark.messageContent?.lowercased().contains(query) == true)
                     || (bookmark.note?.lowercased().contains(query) == true)
                     || (bookmark.sessionName?.lowercased().contains(query) == true)
-                    || {
-                        let tagsManager = BookmarkTagsManager.shared
-                        return bookmark.tags.contains { tagId in
-                            let name = tagsManager.allTags.first { $0.id.uuidString == tagId }?.name ?? tagId
-                            return name.lowercased().contains(query)
-                        }
-                    }()
+                    || bookmark.tags.contains { $0.lowercased().contains(query) }
             }
 
             let matchesTag: Bool
-            if let tagId = selectedTagId {
-                matchesTag = bookmark.tags.contains(tagId)
+            if let tag = selectedTag {
+                matchesTag = bookmark.tags.contains(tag)
             } else {
                 matchesTag = true
             }
@@ -131,7 +123,7 @@ struct MessageBookmarksView: View {
             VStack(spacing: 0) {
                 searchBar
 
-                if !allTagDisplayItems.isEmpty {
+                if !allTagNames.isEmpty {
                     tagFilterStrip
                         .padding(.bottom, theme.spacingSM)
                 }
@@ -217,13 +209,13 @@ struct MessageBookmarksView: View {
     private var tagFilterStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: theme.spacingXS) {
-                tagChip(label: "All", isSelected: selectedTagId == nil) {
-                    selectedTagId = nil
+                tagChip(label: "All", isSelected: selectedTag == nil) {
+                    selectedTag = nil
                 }
 
-                ForEach(allTagDisplayItems, id: \.id) { item in
-                    tagChip(label: item.name, isSelected: selectedTagId == item.id) {
-                        selectedTagId = selectedTagId == item.id ? nil : item.id
+                ForEach(allTagNames, id: \.self) { tagName in
+                    tagChip(label: tagName, isSelected: selectedTag == tagName) {
+                        selectedTag = selectedTag == tagName ? nil : tagName
                     }
                 }
             }
@@ -467,13 +459,7 @@ private struct BookmarkExportSheet: View {
             }
 
             if !bookmark.tags.isEmpty {
-                let tagsManager = BookmarkTagsManager.shared
-                let tagNames = bookmark.tags.compactMap { tagId in
-                    tagsManager.allTags.first { $0.id.uuidString == tagId }?.name
-                }
-                if !tagNames.isEmpty {
-                    md += "**Tags:** \(tagNames.joined(separator: ", "))\n\n"
-                }
+                md += "**Tags:** \(bookmark.tags.joined(separator: ", "))\n\n"
             }
 
             if let note = bookmark.note, !note.isEmpty {

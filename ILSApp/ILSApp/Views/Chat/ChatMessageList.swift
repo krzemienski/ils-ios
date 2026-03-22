@@ -81,12 +81,10 @@ struct ChatMessageList: View {
     /// On regular (iPad) size class, caps message content at a readable max width.
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    #if os(iOS)
     /// The message currently being bookmarked — non-nil triggers `BookmarkMessageSheet`.
     @State private var messageToBookmark: ChatMessage?
     /// Message IDs for which the key moment suggestion banner has been dismissed.
     @State private var dismissedKeyMomentIds: Set<UUID> = []
-    #endif
 
     /// Shared bookmark manager for state queries and mutation.
     private let bookmarksManager = MessageBookmarksManager.shared
@@ -146,7 +144,6 @@ struct ChatMessageList: View {
                 }
             }
         }
-        #if os(iOS)
         .sheet(item: $messageToBookmark) { message in
             BookmarkMessageSheet(
                 messageId: message.id.uuidString,
@@ -157,7 +154,6 @@ struct ChatMessageList: View {
             )
             .environment(\.theme, theme)
         }
-        #endif
     }
 
     private var messagesContent: some View {
@@ -280,9 +276,7 @@ struct ChatMessageList: View {
             }
         } else {
             Button {
-                #if os(iOS)
                 messageToBookmark = message
-                #endif
             } label: {
                 Label("Bookmark", systemImage: "bookmark")
             }
@@ -320,7 +314,6 @@ struct ChatMessageList: View {
     /// Tapping × dismisses the banner for the current session.
     @ViewBuilder
     private func keyMomentBanner(for message: ChatMessage) -> some View {
-        #if os(iOS)
         let suggestion = KeyMomentsDetector.analyze(message)
         let isAlreadyBookmarked = bookmarksManager.isBookmarked(messageId: message.id.uuidString)
         let isDismissed = dismissedKeyMomentIds.contains(message.id)
@@ -389,7 +382,6 @@ struct ChatMessageList: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Key moment suggestion: \(suggestion.reason)")
         }
-        #endif
     }
 
     /// `true` while Claude is streaming but no tokens have been received yet,
