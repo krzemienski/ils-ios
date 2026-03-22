@@ -282,19 +282,19 @@ struct ErrorPatternDetailView: View {
                 // Success/failure record
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle")
-                        .font(.system(size: 10))
+                        .font(.system(size: theme.fontCaption))
                     Text("\(fix.successCount)")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.success)
 
                     Image(systemName: "xmark.circle")
-                        .font(.system(size: 10))
+                        .font(.system(size: theme.fontCaption))
                     Text("\(fix.failureCount)")
                         .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
                         .foregroundStyle(theme.error)
                 }
                 .foregroundStyle(theme.textSecondary)
-                .font(.system(size: 10, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             }
 
             // Confidence bar

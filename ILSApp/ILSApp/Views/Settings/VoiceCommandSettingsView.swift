@@ -272,7 +272,7 @@ struct VoiceCommandSettingsView: View {
 
                                         if command.isDestructive {
                                             Image(systemName: "exclamationmark.triangle.fill")
-                                                .font(.system(size: 10, design: theme.fontDesign))
+                                                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                                 .foregroundStyle(theme.error)
                                         }
                                     }
@@ -287,7 +287,7 @@ struct VoiceCommandSettingsView: View {
 
                                 if command.offlineCapable {
                                     Image(systemName: "wifi.slash")
-                                        .font(.system(size: 10, design: theme.fontDesign))
+                                        .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                                         .foregroundStyle(theme.textTertiary)
                                 }
                             }

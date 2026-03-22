@@ -378,7 +378,7 @@ struct ChatMessageList: View {
                     }
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .semibold))
+                        .font(.system(size: theme.fontCaption, weight: .semibold))
                         .foregroundStyle(theme.textTertiary)
                         .frame(minWidth: 32, minHeight: 32)
                         .contentShape(Rectangle())

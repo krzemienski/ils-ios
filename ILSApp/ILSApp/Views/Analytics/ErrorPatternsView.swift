@@ -399,7 +399,7 @@ private struct ErrorPatternRow: View {
     private var occurrenceBadge: some View {
         HStack(spacing: 3) {
             Image(systemName: "repeat")
-                .font(.system(size: 10, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             Text("\(pattern.occurrenceCount)×")
                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
         }
@@ -413,7 +413,7 @@ private struct ErrorPatternRow: View {
         let color = confidenceColor(for: confidence)
         return HStack(spacing: 3) {
             Image(systemName: "sparkles")
-                .font(.system(size: 10, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
             Text("\(pct)%")
                 .font(.system(size: theme.fontCaption, weight: .semibold, design: theme.fontDesign))
         }
@@ -523,7 +523,7 @@ private struct ErrorPatternRow: View {
             .frame(height: 4)
 
             Text("\(fix.successCount) successful • \(fix.failureCount) failed")
-                .font(.system(size: 10, design: theme.fontDesign))
+                .font(.system(size: theme.fontCaption, design: theme.fontDesign))
                 .foregroundStyle(theme.textTertiary)
         }
         .padding(.horizontal, theme.spacingMD)

@@ -205,7 +205,7 @@ struct ConflictResolutionSheet: View {
             HStack(spacing: 4) {
                 if hasConflict {
                     Image(systemName: "exclamationmark.circle.fill")
-                        .font(.system(size: 10))
+                        .font(.system(size: theme.fontCaption))
                         .foregroundStyle(theme.warning)
                 }
                 Text(field)

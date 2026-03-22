@@ -429,7 +429,7 @@ struct AutoApproveRulesView: View {
     private func actionBadge(for action: PermissionPolicyAction) -> some View {
         HStack(spacing: 3) {
             Image(systemName: action == .allow ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 10))
+                .font(.system(size: theme.fontCaption))
                 .accessibilityHidden(true)
             Text(action == .allow ? "Allow" : "Deny")
         }
